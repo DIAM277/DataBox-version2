@@ -1,0 +1,342 @@
+.file-list {
+  padding-right: 20px;
+}
+
+:deep(.el-table__cell) {
+  padding: 4px 0px;
+}
+
+:deep(.el-table) {
+  background-color: transparent;
+
+  &::before {
+    display: none;
+  }
+
+  .el-table__inner-wrapper {
+    background-color: transparent;
+  }
+
+  .el-table__header-wrapper,
+  .el-table__body-wrapper {
+    background-color: transparent;
+  }
+
+  tr {
+    background-color: transparent;
+  }
+
+  th.el-table__cell {
+    background-color: rgba(240, 240, 240, 0.603);
+  }
+
+  td.el-table__cell {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+
+  th.el-table__cell {
+    // 表头
+    background-color: rgba(255, 255, 255, 0.568);
+    font-weight: 600; // 加粗表头文字
+    color: #7a7878; // 更深的文字颜色
+    padding: 12px 8px; // 增加内边距
+    font-size: 14px; // 设置合适的字体大小
+    border-bottom: 2px solid rgb(224, 224, 224); // 添加底部边框
+    transition: background-color 0.3s;
+
+    .cell {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 23px;
+    }
+  }
+
+  // 表格行样式优化
+  td.el-table__cell {
+    background-color: rgba(255, 255, 255, 0.493);
+    padding: 10px 8px; // 调整单元格内边距
+    font-size: 13px; // 设置合适的字体大小
+  }
+
+  // 鼠标悬停样式
+  tr.el-table__row:hover td.el-table__cell {
+    background-color: rgba(255, 255, 255, 0.836) !important; // 更浅的悬停背景
+  }
+
+  // 选中行样式
+  tr.is-selected td.el-table__cell {
+    background-color: #e6f7ff !important; // 你可以根据需要调整这个颜色
+  }
+}
+
+.file-name {
+  display: flex;
+  align-items: center;
+  position: relative; // 添加相对定位
+  width: 100%; // 确保宽度占满
+
+  .file-text {
+    font-size: 15px;
+    color: #333;
+    font-weight: 500;
+    transition: all 0.3s;
+    padding: 0 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 12px;
+    flex: 1;
+    overflow: hidden;
+
+    span:first-child {
+      // 只对文件名文本应用悬停效果
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: all 0.3s;
+
+      // 新增的样式用于实现省略号效果
+      display: inline-block; // 使max-width和text-overflow生效
+      white-space: nowrap; // 防止文本换行
+      overflow: hidden; // 隐藏超出部分
+      text-overflow: ellipsis; // 显示省略号
+      vertical-align: middle; // 垂直居中对齐（可选，根据需要调整）
+      max-width: 250px; // 设定最大宽度，超过此宽度将显示省略号，您可以根据需要调整这个值
+
+      &:hover {
+        color: #409eff;
+        background-color: rgba(64, 158, 255, 0.1);
+      }
+    }
+
+    // 移除整个file-text的悬停效果
+    &:hover {
+      color: inherit;
+      background-color: transparent;
+    }
+  }
+
+  .edit-panel {
+    flex: 1;
+    width: 0;
+    display: flex;
+    align-items: center;
+    margin: 0px 5px;
+
+    .iconfont {
+      margin-left: 10px;
+      background: #0c95f7;
+      color: #fff;
+      padding: 3px 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .not-allow {
+      cursor: not-allowed;
+      background: #7cb1d7;
+      color: #ddd;
+      text-decoration: none;
+    }
+  }
+
+  .op {
+    position: absolute; // 使用绝对定位
+    right: 10px; // 距离右侧20px
+    top: 50%; // 垂直居中
+    transform: translateY(-50%); // 垂直居中调整
+    z-index: 2; // 确保操作栏在最上层
+
+    .iconfont {
+      font-size: 12px;
+      margin-left: 15px;
+      color: #06a7ff;
+      cursor: pointer;
+    }
+
+    .iconfont::before {
+      margin-right: 3px;
+    }
+  }
+
+  .transfer-status {
+    font-size: 13px;
+    margin-left: 10px;
+    color: #e6a23c;
+  }
+
+  .transfer-fail {
+    color: #f75000;
+  }
+}
+
+.top-op {
+  display: flex;
+  align-items: center;
+  padding: 15px 0;
+
+  .btn-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .custom-btn {
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    .iconfont {
+      margin-right: 6px;
+      font-size: 16px;
+    }
+
+    &.el-button--primary {
+      background-image: linear-gradient(135deg, #1890ff, #0050b3);
+      border: none;
+
+      &:hover {
+        background-image: linear-gradient(135deg, #40a9ff, #096dd9);
+      }
+    }
+
+    &.el-button--success {
+      background-image: linear-gradient(135deg, #52c41a, #237804);
+      border: none;
+
+      &:hover {
+        background-image: linear-gradient(135deg, #73d13d, #389e0d);
+      }
+    }
+
+    &.el-button--danger {
+      background-image: linear-gradient(135deg, #ff4d4f, #cf1322);
+      border: none;
+
+      &:hover {
+        background-image: linear-gradient(135deg, #ff7875, #f5222d);
+      }
+
+      &:disabled {
+        background-image: linear-gradient(135deg, #ffccc7, #ffa39e);
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    }
+
+    &.el-button--warning {
+      background-image: linear-gradient(135deg, #faad14, #ad6800);
+      border: none;
+
+      &:hover {
+        background-image: linear-gradient(135deg, #ffc53d, #d48806);
+      }
+
+      &:disabled {
+        background-image: linear-gradient(135deg, #ffe58f, #ffd666);
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    }
+
+    &.el-button--info {
+      background-image: linear-gradient(135deg, #8c8c8c, #434343);
+      border: none;
+      color: white;
+
+      &:hover {
+        background-image: linear-gradient(135deg, #a6a6a6, #595959);
+      }
+    }
+  }
+
+  .refresh-btn {
+    cursor: pointer;
+  }
+}
+
+.delete-confirm-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+
+  .icon-container {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #fff7e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+
+    .iconfont {
+      font-size: 30px;
+      color: #faad14;
+    }
+  }
+
+  .message {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  .sub-message {
+    font-size: 14px;
+    color: #999;
+  }
+}
+
+.no-data {
+  height: calc(100vh - 150px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+
+  .no-data-inner {
+    text-align: center;
+
+    .tips {
+      text-align: center;
+      background-color: rgba(255, 255, 255, 0);
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    .op-list {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .op-item {
+        cursor: pointer;
+        width: 100px;
+        height: 100px;
+        margin: 0px 10px;
+        padding: 5px 0px;
+        background: rgba(241, 241, 241, 0.505);
+        border-radius: 12px;
+      }
+    }
+  }
+}

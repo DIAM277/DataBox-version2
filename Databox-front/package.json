@@ -1,0 +1,39 @@
+{
+  "name": "databox_font",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@highlightjs/vue-plugin": "^2.1.0",
+    "@moefe/vue-aplayer": "^2.0.0-beta.5",
+    "aplayer": "^1.10.1",
+    "axios": "^1.9.0",
+    "docx-preview": "^0.3.5",
+    "dplayer": "^1.27.1",
+    "element-plus": "^2.9.9",
+    "highlight.js": "^11.11.1",
+    "hls.js": "^1.6.2",
+    "js-md5": "^0.8.3",
+    "pdfjs-dist": "^5.2.133",
+    "sass": "^1.87.0",
+    "sass-loader": "^16.0.5",
+    "spark-md5": "^3.0.2",
+    "vue": "^3.5.13",
+    "vue-clipboard3": "^2.0.0",
+    "vue-cookies": "^1.8.6",
+    "vue-pdf-embed": "^2.1.2",
+    "vue-router": "^4.5.1",
+    "vue3-pdfjs": "^0.1.6",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.3",
+    "vite": "^6.2.4",
+    "vite-plugin-vue-devtools": "^7.7.2"
+  }
+}
