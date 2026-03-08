@@ -11,6 +11,8 @@ import com.databox.entity.dto.UserSpaceDto;
 import com.databox.entity.enums.VerifyRegexEnum;
 import com.databox.entity.po.UserInfo;
 import com.databox.entity.po.UserLoginLog;
+import com.databox.entity.query.UserLoginLogQuery;
+import com.databox.entity.vo.PaginationResultVO;
 import com.databox.entity.vo.ResponseVO;
 import com.databox.exception.BusinessException;
 import com.databox.service.EmailCodeService;
@@ -86,9 +88,9 @@ public class AccountController extends ABaseController {
 	@RequestMapping("/sendEmailCode")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO sendEmailCode(HttpSession session,
-									@VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
-									@VerifyParam(required = true) String checkCode,
-									@VerifyParam(required = true) Integer type) {
+			@VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
+			@VerifyParam(required = true) String checkCode,
+			@VerifyParam(required = true) Integer type) {
 		try {
 			if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY_EMAIL))) {
 				throw new BusinessException("图片验证码不正确!");
@@ -104,11 +106,11 @@ public class AccountController extends ABaseController {
 	@RequestMapping("/register")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO register(HttpSession session,
-							   @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
-							   @VerifyParam(required = true) String userName,
-							   @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String password,
-							   @VerifyParam(required = true) String checkCode,
-							   @VerifyParam(required = true) String emailCode) {
+			@VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
+			@VerifyParam(required = true) String userName,
+			@VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String password,
+			@VerifyParam(required = true) String checkCode,
+			@VerifyParam(required = true) String emailCode) {
 		try {
 			if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
 				throw new BusinessException("图片验证码不正确!");
@@ -133,10 +135,10 @@ public class AccountController extends ABaseController {
 	@RequestMapping("/login")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO login(HttpSession session,
-							HttpServletRequest request,
-							@VerifyParam(required = true) String email,
-							@VerifyParam(required = true) String password,
-							@VerifyParam(required = true) String checkCode) {
+			HttpServletRequest request,
+			@VerifyParam(required = true) String email,
+			@VerifyParam(required = true) String password,
+			@VerifyParam(required = true) String checkCode) {
 		try {
 			if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
 				throw new BusinessException("图片验证码不正确!");
@@ -173,10 +175,10 @@ public class AccountController extends ABaseController {
 	@RequestMapping("/resetPwd")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO resetPwd(HttpSession session,
-							   @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
-							   @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String password,
-							   @VerifyParam(required = true) String checkCode,
-							   @VerifyParam(required = true) String emailCode) {
+			@VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
+			@VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String password,
+			@VerifyParam(required = true) String checkCode,
+			@VerifyParam(required = true) String emailCode) {
 		try {
 			if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
 				throw new BusinessException("图片验证码不正确!");
@@ -191,6 +193,7 @@ public class AccountController extends ABaseController {
 
 	/**
 	 * 通过邮箱验证码修改密码
+	 * 
 	 * @param session
 	 * @param emailCode
 	 * @param password
@@ -199,8 +202,8 @@ public class AccountController extends ABaseController {
 	@RequestMapping("/updatePasswordByEmailCode")
 	@GlobalInterceptor(checkParams = true)
 	public ResponseVO updatePasswordByEmailCode(HttpSession session,
-												@VerifyParam(required = true) String emailCode,
-												@VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String password) {
+			@VerifyParam(required = true) String emailCode,
+			@VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String password) {
 		SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
 		String email = sessionWebUserDto.getEmail();
 
@@ -215,7 +218,6 @@ public class AccountController extends ABaseController {
 		return getSuccessResponseVO(null);
 	}
 
-
 	/**
 	 * 获取用户头像
 	 *
@@ -224,7 +226,8 @@ public class AccountController extends ABaseController {
 	 */
 	@RequestMapping("/getAvatar/{userId}")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
-	public void getAvatar(HttpServletResponse response, @VerifyParam(required = true) @PathVariable("userId") String userId) {
+	public void getAvatar(HttpServletResponse response,
+			@VerifyParam(required = true) @PathVariable("userId") String userId) {
 		String avatarFolderName = Constants.FILE_FOLDER_FILE + Constants.FILE_FOLDER_AVATAR_NAME;
 		File folder = new File(appConfig.getProjectFolder() + avatarFolderName);
 		if (!folder.exists()) {
@@ -233,7 +236,7 @@ public class AccountController extends ABaseController {
 		// 完整路径
 		String avatarPath = appConfig.getProjectFolder() + avatarFolderName + userId + Constants.AVATAR_SUFFIX;
 		File file = new File(avatarPath);
-		if (!file.exists()) {//头像文件不存在 输出默认头像
+		if (!file.exists()) {// 头像文件不存在 输出默认头像
 			if (!new File(appConfig.getProjectFolder() + avatarFolderName + Constants.AVATAR_DEFAULT).exists()) {
 				printNoDefaultImage(response);
 			}
@@ -293,7 +296,7 @@ public class AccountController extends ABaseController {
 	public ResponseVO updateUserAvatar(HttpSession session, MultipartFile avatar, String newUserName) {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		// 用户名变更时才更新
-		if(!webUserDto.getUserName().equals(newUserName)){
+		if (!webUserDto.getUserName().equals(newUserName)) {
 			UserInfo userInfo = new UserInfo();
 			userInfo.setUserName(newUserName);
 			userInfoService.updateUserInfoByUserId(userInfo, webUserDto.getUserId());
@@ -328,8 +331,8 @@ public class AccountController extends ABaseController {
 	@RequestMapping("/updatePassword")
 	@GlobalInterceptor(checkParams = true)
 	public ResponseVO updatePassword(HttpSession session,
-									 @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String oldPassword,
-									 @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String newPassword) {
+			@VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String oldPassword,
+			@VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, max = 18, min = 8) String newPassword) {
 		SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
 		// 获取当前用户信息
 		UserInfo userInfo = userInfoService.getUserInfoByUserId(sessionWebUserDto.getUserId());
@@ -343,9 +346,9 @@ public class AccountController extends ABaseController {
 		return getSuccessResponseVO(null);
 	}
 
-
 	/**
 	 * qq登录接口
+	 * 
 	 * @param session
 	 * @param callbackUrl
 	 * @return
@@ -358,12 +361,14 @@ public class AccountController extends ABaseController {
 		if (!StringTools.isEmpty(callbackUrl)) {
 			session.setAttribute(state, callbackUrl);
 		}
-		String url = String.format(appConfig.getQqUrlAuthorization(), appConfig.getQqAppId(), URLEncoder.encode(appConfig.getQqUrlRedirect(), "utf-8"), state);
+		String url = String.format(appConfig.getQqUrlAuthorization(), appConfig.getQqAppId(),
+				URLEncoder.encode(appConfig.getQqUrlRedirect(), "utf-8"), state);
 		return getSuccessResponseVO(url);
 	}
 
 	/**
 	 * QQ登录回调
+	 * 
 	 * @param session
 	 * @param code
 	 * @param state
@@ -371,12 +376,29 @@ public class AccountController extends ABaseController {
 	 */
 	@RequestMapping("/qqlogin/callback")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
-	public ResponseVO qqloginCallback(HttpSession session, @VerifyParam(required = true) String code, @VerifyParam(required = true) String state){
+	public ResponseVO qqloginCallback(HttpSession session, @VerifyParam(required = true) String code,
+			@VerifyParam(required = true) String state) {
 		SessionWebUserDto sessionWebUserDto = userInfoService.qqLogin(code);
 		session.setAttribute(Constants.SESSION_KEY, sessionWebUserDto);
 		Map<String, Object> result = new HashMap<>();
 		result.put("callbackUrl", session.getAttribute(state));
 		result.put("userInfo", sessionWebUserDto);
 		return getSuccessResponseVO(result);
+	}
+
+	/**
+	 * 获取用户登录日志列表
+	 */
+	@RequestMapping("/loadLoginLogList")
+	@GlobalInterceptor(checkParams = true, checkAdmin = true)
+	public ResponseVO loadLoginLogList(Integer pageNo, Integer pageSize, String userIdFuzzy, String loginIpFuzzy) {
+		UserLoginLogQuery query = new UserLoginLogQuery();
+		query.setOrderBy("login_time desc");
+		query.setPageNo(pageNo);
+		query.setPageSize(pageSize);
+		query.setUserIdFuzzy(userIdFuzzy);
+		query.setLoginIpFuzzy(loginIpFuzzy);
+		PaginationResultVO result = userLoginLogService.findListByPage(query);
+		return getSuccessResponseVO(convert2PaginationVO(result, UserLoginLog.class));
 	}
 }

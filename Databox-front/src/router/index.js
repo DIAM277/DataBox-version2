@@ -66,13 +66,22 @@ const router = createRouter({
         },
         {
           path: "/settings/fileList",
-          name: "文件管理",
+          name: "用户文件",
           meta: {
             needLogin: true,
             menuCode: "settings",
             requireAdmin: true,
           },
           component: () => import("@/views/admin/FileList.vue"),
+        },
+        {
+          path: "settings/loginLog",
+          name: "登录日志",
+          meta: {
+            needLogin: true,
+            menuCode: "settings",
+          },
+          component: () => import("@/views/admin/LoginLog.vue"),
         },
       ],
     },
