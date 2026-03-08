@@ -205,6 +205,10 @@ const menus = [
       {
         name: '系统设置',
         path: '/settings/sysSetting'
+      },
+      {
+        name: '登录日志',
+        path: '/settings/loginLog'
       }
     ]
   }
