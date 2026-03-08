@@ -10,12 +10,16 @@ import com.databox.entity.dto.SessionWebUserDto;
 import com.databox.entity.dto.UserSpaceDto;
 import com.databox.entity.enums.VerifyRegexEnum;
 import com.databox.entity.po.UserInfo;
+import com.databox.entity.po.UserLoginLog;
 import com.databox.entity.vo.ResponseVO;
 import com.databox.exception.BusinessException;
 import com.databox.service.EmailCodeService;
 import com.databox.service.UserInfoService;
+import com.databox.service.UserLoginLogService;
+import com.databox.utils.IpUtils;
 import com.databox.utils.StringTools;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
@@ -30,6 +35,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,6 +59,9 @@ public class AccountController extends ABaseController {
 
 	@Resource
 	private RedisComponent redisComponent;
+
+	@Resource
+	private UserLoginLogService userLoginLogService;
 
 	// 获取网页验证码
 	@RequestMapping("/checkCode")
@@ -124,6 +133,7 @@ public class AccountController extends ABaseController {
 	@RequestMapping("/login")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO login(HttpSession session,
+							HttpServletRequest request,
 							@VerifyParam(required = true) String email,
 							@VerifyParam(required = true) String password,
 							@VerifyParam(required = true) String checkCode) {
@@ -133,6 +143,17 @@ public class AccountController extends ABaseController {
 			}
 			SessionWebUserDto sessionWebUserDto = userInfoService.login(email, password);
 			session.setAttribute(Constants.SESSION_KEY, sessionWebUserDto);
+			// 获取IP和归属地
+			String ip = IpUtils.getIpAddr(request);
+			String location = IpUtils.getIpLocation(ip);
+			// 封装日志信息实体
+			UserLoginLog loginLog = new UserLoginLog();
+			loginLog.setUserId(sessionWebUserDto.getUserId());
+			loginLog.setLoginIp(ip);
+			loginLog.setLoginLocation(location);
+			loginLog.setLoginTime(new Date());
+			// 入库
+			userLoginLogService.add(loginLog);
 			return getSuccessResponseVO(sessionWebUserDto);
 		} finally {
 			session.removeAttribute(Constants.CHECK_CODE_KEY);
