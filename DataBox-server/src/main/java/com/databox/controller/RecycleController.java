@@ -1,6 +1,7 @@
 package com.databox.controller;
 
 import com.databox.annotation.GlobalInterceptor;
+import com.databox.annotation.OpLog;
 import com.databox.annotation.VerifyParam;
 import com.databox.entity.dto.SessionWebUserDto;
 import com.databox.entity.enums.FileDelFlagEnum;
@@ -73,6 +74,7 @@ public class RecycleController extends ABaseController{
      */
     @RequestMapping("/recoverFile")
     @GlobalInterceptor
+    @OpLog(module = "回收站", action = "恢复回收站文件")
     public ResponseVO recoverFile(HttpSession session, @VerifyParam(required = true) String fileIds){
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         fileInfoService.recoverFileBatch(webUserDto.getUserId(), fileIds);
@@ -87,6 +89,7 @@ public class RecycleController extends ABaseController{
      */
     @RequestMapping("/delFile")
     @GlobalInterceptor
+    @OpLog(module = "回收站", action = "彻底删除回收站文件")
     public ResponseVO delFile(HttpSession session, @VerifyParam(required = true) String fileIds){
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         fileInfoService.delFileBatch(webUserDto.getUserId(), fileIds, false);

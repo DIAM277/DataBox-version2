@@ -1,6 +1,7 @@
 package com.databox.controller;
 
 import com.databox.annotation.GlobalInterceptor;
+import com.databox.annotation.OpLog;
 import com.databox.annotation.VerifyParam;
 import com.databox.entity.constants.Constants;
 import com.databox.entity.dto.SessionShareDto;
@@ -254,6 +255,7 @@ public class WebShareController extends CommonFileController{
      */
     @RequestMapping("/saveShare")
     @GlobalInterceptor(checkParams = true)
+    @OpLog(module = "文件分享", action = "保存分享的文件到自己的网盘")
     public ResponseVO saveShare(HttpSession session,
                           @VerifyParam(required = true) String shareId,
                           @VerifyParam(required = true) String shareFileIds,

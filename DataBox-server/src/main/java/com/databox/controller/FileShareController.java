@@ -1,6 +1,7 @@
 package com.databox.controller;
 
 import com.databox.annotation.GlobalInterceptor;
+import com.databox.annotation.OpLog;
 import com.databox.annotation.VerifyParam;
 import com.databox.entity.dto.SessionWebUserDto;
 import com.databox.entity.po.FileShare;
@@ -68,6 +69,7 @@ public class FileShareController extends ABaseController{
      */
     @RequestMapping("/shareFile")
     @GlobalInterceptor(checkParams = true)
+    @OpLog(module = "文件分享", action = "分享文件")
     public ResponseVO shareFile(HttpSession session,
                                 @VerifyParam(required = true) String fileId,
                                 @VerifyParam(required = true) Integer validType,
@@ -89,6 +91,7 @@ public class FileShareController extends ABaseController{
      * @return
      */
     @RequestMapping("/cancelShare")
+    @OpLog(module = "文件分享", action = "取消分享文件")
     public ResponseVO cancelShare(HttpSession session,
                                  @VerifyParam(required = true) String shareIds){
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
