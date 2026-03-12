@@ -209,6 +209,10 @@ const menus = [
       {
         name: '登录日志',
         path: '/settings/loginLog'
+      },
+      {
+        name: '用户操作日志',
+        path: '/settings/operationLog'
       }
     ]
   }

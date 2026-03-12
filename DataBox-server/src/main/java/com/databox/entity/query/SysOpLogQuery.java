@@ -63,6 +63,13 @@ public class SysOpLogQuery extends BaseParam {
 
 	private String createTimeEnd;
 
+	/**
+	 * 操作详情(如：操作的文件名称列表)
+	 */
+	private String detail;
+
+	private String detailFuzzy;
+
 
 	public void setLogId(Integer logId){
 		this.logId = logId;
@@ -181,6 +188,22 @@ public class SysOpLogQuery extends BaseParam {
 
 	public String getCreateTimeEnd(){
 		return this.createTimeEnd;
+	}
+
+	public void setDetail(String detail){
+		this.detail = detail;
+	}
+
+	public String getDetail(){
+		return this.detail;
+	}
+
+	public void setDetailFuzzy(String detailFuzzy){
+		this.detailFuzzy = detailFuzzy;
+	}
+
+	public String getDetailFuzzy(){
+		return this.detailFuzzy;
 	}
 
 }

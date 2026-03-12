@@ -58,6 +58,11 @@ public class SysOpLog implements Serializable {
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date createTime;
 
+	/**
+	 * 操作详情(如：操作的文件名称列表)
+	 */
+	private String detail;
+
 
 	public void setLogId(Integer logId){
 		this.logId = logId;
@@ -123,8 +128,16 @@ public class SysOpLog implements Serializable {
 		return this.createTime;
 	}
 
+	public void setDetail(String detail){
+		this.detail = detail;
+	}
+
+	public String getDetail(){
+		return this.detail;
+	}
+
 	@Override
 	public String toString (){
-		return "日志ID:"+(logId == null ? "空" : logId)+"，用户ID:"+(userId == null ? "空" : userId)+"，用户名:"+(userName == null ? "空" : userName)+"，操作模块（如：文件管理）:"+(module == null ? "空" : module)+"，操作动作（如：删除文件）:"+(action == null ? "空" : action)+"，状态 1:成功 0:失败:"+(status == null ? "空" : status)+"，返回信息或异常提示:"+(resultMsg == null ? "空" : resultMsg)+"，操作时间:"+(createTime == null ? "空" : DateUtil.format(createTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()));
+		return "日志ID:"+(logId == null ? "空" : logId)+"，用户ID:"+(userId == null ? "空" : userId)+"，用户名:"+(userName == null ? "空" : userName)+"，操作模块（如：文件管理）:"+(module == null ? "空" : module)+"，操作动作（如：删除文件）:"+(action == null ? "空" : action)+"，状态 1:成功 0:失败:"+(status == null ? "空" : status)+"，返回信息或异常提示:"+(resultMsg == null ? "空" : resultMsg)+"，操作时间:"+(createTime == null ? "空" : DateUtil.format(createTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()))+"，操作详情(如：操作的文件名称列表):"+(detail == null ? "空" : detail);
 	}
 }
