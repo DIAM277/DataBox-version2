@@ -1,69 +1,119 @@
 <template>
-  <div class="uploader-panel">
-    <div class="uploader-title">
-      <span>上传任务</span>
-      <span class="tips"> (仅展示本次上传任务)</span>
+  <!-- Apple 的半透明毛玻璃风面板 -->
+  <div
+    class="w-full flex flex-col bg-white/80 dark:bg-[#1c1c1e]/90 backdrop-blur-3xl rounded-xl border border-[#e5e5e9] dark:border-[#38383a]/80 overflow-hidden shadow-2xl select-none">
+
+    <!-- 头部：平滑标题和极简信息 -->
+    <div
+      class="flex items-center justify-between px-5 py-3.5 border-b border-[#e5e5e9]/70 dark:border-[#38383a]/70 bg-white/40 dark:bg-black/20">
+      <div class="flex flex-col">
+        <span class="text-[14px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-wider">传输列表</span>
+        <span class="text-[11px] text-[#86868b] dark:text-gray-400 mt-0.5">仅展示本次任务</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- 预留给可能的全局操作图标 -->
+      </div>
     </div>
-    <div class="file-list">
-      <div v-for="(item, index) in fileList" class="file-item">
-        <div class="upload-panel">
-          <div class="file-name">
-            {{ item.fileName }}
-          </div>
-          <div class="progress">
-            <el-progress :percentage="item.uploadProgress"
-              v-if="item.status == STATUS.uploading.value || item.status == STATUS.upload_seconds.value || item.status == STATUS.upload_finish.value">
-            </el-progress>
-          </div>
-          <div class="upload-status">
-            <span :class="['iconfont', 'icon-' + STATUS[item.status].icon]"
-              :style="{ color: STATUS[item.status].color }">
+
+    <!-- 列表主体 (定制流线型滚动条) -->
+    <div class="overflow-y-auto p-2 min-h-[220px] max-h-[480px] apple-scrollbar space-y-1">
+
+      <div v-for="(item, index) in fileList" :key="item.uid"
+        class="group flex items-center p-3 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl transition-all duration-300">
+
+        <!-- 左侧状态/类型图标 (提取原有的 STATUS 状态字典注入) -->
+        <div
+          class="flex-shrink-0 w-[42px] h-[42px] flex items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800/80 mr-3.5 border border-black/5 dark:border-white/5 shadow-sm">
+          <span :class="['iconfont text-[22px]', 'icon-' + STATUS[item.status].icon]"
+            :style="{ color: STATUS[item.status].color }"></span>
+        </div>
+
+        <!-- 中间：信息与进度条 -->
+        <div class="flex-1 min-w-0 mr-3 flex flex-col justify-center">
+          <div class="flex justify-between items-end mb-1.5">
+            <!-- 文件名 -->
+            <span class="text-[13px] font-medium text-[#1d1d1f] dark:text-gray-300 truncate tracking-wide pr-2">
+              {{ item.fileName }}
             </span>
-            <span class="status" :style="{ color: STATUS[item.status].color }">
+            <!-- 状态描述文字 (变色) -->
+            <span class="text-[11px] whitespace-nowrap font-medium" :style="{ color: STATUS[item.status].color }">
               {{ item.status == 'fail' ? item.errorMsg : STATUS[item.status].desc }}
             </span>
-            <!-- 上传中 -->
-            <span class="upload-info" v-if="item.status == STATUS.uploading.value">
-              {{ proxy.Utils.size2Str(item.fileUploadSize) }} / {{ proxy.Utils.size2Str(item.totalSize) }}
+          </div>
+
+          <!-- 极简流线型 h-1.5 进度条轨道 -->
+          <div class="w-full h-1.5 bg-gray-200/80 dark:bg-gray-700/80 rounded-full overflow-hidden shadow-inner">
+            <!-- MD5 解析进度 -->
+            <div v-if="item.status === STATUS.init.value || item.status === STATUS.md5_complete.value"
+              class="h-full rounded-full transition-all duration-500 ease-out"
+              :class="item.status === STATUS.md5_complete.value ? 'bg-[#34C759]' : 'bg-[#007AFF] dark:bg-[#0a84ff]'"
+              :style="{ width: item.md5Progress + '%' }">
+            </div>
+            <!-- 实际文件上传进度 -->
+            <div v-else class="h-full rounded-full transition-all duration-500 ease-out"
+              :class="item.status === STATUS.upload_finish.value || item.status === STATUS.upload_seconds.value ? 'bg-[#34C759]' : (item.status === 'fail' ? 'bg-[#FF3B30]' : 'bg-[#007AFF] dark:bg-[#0a84ff]')"
+              :style="{ width: item.uploadProgress + '%' }">
+            </div>
+          </div>
+
+          <!-- 底部容量提示层 -->
+          <div class="mt-1.5 text-[10px] text-[#86868b] dark:text-gray-500 flex justify-between font-medium">
+            <span v-if="item.status == STATUS.uploading.value">{{ proxy.Utils.size2Str(item.fileUploadSize) }} / {{
+              proxy.Utils.size2Str(item.totalSize) }}</span>
+            <span v-else>{{ proxy.Utils.size2Str(item.totalSize) }}</span>
+
+            <!-- 动态数字百分比 -->
+            <span v-if="item.status === STATUS.init.value || item.status === STATUS.uploading.value"
+              class="tabular-nums font-semibold"
+              :class="{ 'text-[#007AFF] dark:text-[#0a84ff]': item.status === STATUS.uploading.value }">
+              {{ item.status === STATUS.init.value ? item.md5Progress : item.uploadProgress }}%
             </span>
           </div>
         </div>
-        <div class="op">
-          <!-- md5 -->
-          <el-progress type="circle" :width="50" :percentage="item.md5Progress"
-            v-if="item.status == STATUS.init.value || item.status == STATUS.md5_complete.value"
-            :status="item.status == STATUS.md5_complete.value ? 'success' : ''">
-            <template #default="{ percentage }">
-              <div class="progress-content" v-if="item.status != STATUS.md5_complete.value">
-                <span class="progress-percentage">{{ percentage }}%</span>
-              </div>
-              <div class="progress-content" v-else>
-                <span class="iconfont icon-right1" style="color: #67c23a; font-size: 20px"></span>
-              </div>
-            </template>
-          </el-progress>
-          <div class="op-btn">
-            <span v-if="item.status == STATUS.uploading.value" class="action-btn-container">
-              <Icon :width="28" class="btn-item action-btn" iconName="upload" v-if="item.pause" title="开始"
-                @click="startUpload(item.uid)"></Icon>
-              <Icon :width="28" class="btn-item action-btn" iconName="pause" v-else @click="pauseUpload(item.uid)"
-                title="暂停">
-              </Icon>
-            </span>
-            <Icon :width="28" class="delete-btn del btn-item" iconName="del"
-              v-if="item.status != STATUS.init.value && item.status != STATUS.upload_finish.value && item.status != STATUS.upload_seconds.value && item.status != STATUS.md5_complete.value"
-              title="删除" @click="delUpload(item.uid)">
-            </Icon>
-            <Icon :width="28" class="clean btn-item clean-btn" iconName="clean"
-              v-if="item.status == STATUS.upload_finish.value || item.status == STATUS.upload_seconds.value"
-              title="清除记录" @click="delUpload(item.uid, index)">
-            </Icon>
-          </div>
+
+        <!-- 右侧：操作按钮组 (移除 opacity-0 和 group-hover:opacity-100，让其永远显示) -->
+        <div class="flex-shrink-0 flex items-center pl-1 space-x-1">
+          <!-- 开始按钮 -->
+          <button v-if="item.status == STATUS.uploading.value && item.pause" @click="startUpload(item.uid)"
+            class="w-8 h-8 flex items-center justify-center text-[#007AFF] hover:bg-[#007AFF]/10 rounded-full transition-colors"
+            title="继续上传">
+            <span class="iconfont icon-upload text-[15px]"></span>
+          </button>
+
+          <!-- 暂停按钮 -->
+          <button v-if="item.status == STATUS.uploading.value && !item.pause" @click="pauseUpload(item.uid)"
+            class="w-8 h-8 flex items-center justify-center text-[#86868b] hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
+            title="暂停">
+            <span class="iconfont icon-pause text-[15px]"></span>
+          </button>
+
+          <!-- 删除按钮 (等候、进行中、失败状态可删) -->
+          <button
+            v-if="item.status != STATUS.init.value && item.status != STATUS.upload_finish.value && item.status != STATUS.upload_seconds.value && item.status != STATUS.md5_complete.value"
+            @click="delUpload(item.uid, index)"
+            class="w-8 h-8 flex items-center justify-center text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-full transition-colors"
+            title="取消并删除">
+            <span class="iconfont icon-del text-[15px]"></span>
+          </button>
+
+          <!-- 清除按钮 (完成状态可清)：替换为库里存在的 icon-del，并改为醒目的红色背景 -->
+          <button v-if="item.status == STATUS.upload_finish.value || item.status == STATUS.upload_seconds.value"
+            @click="delUpload(item.uid, index)"
+            class="w-7 h-7 flex items-center justify-center bg-[#FF3B30] text-white hover:bg-[#ff2015] shadow-sm rounded-full transition-all duration-200 hover:scale-105"
+            title="清除记录">
+            <span class="iconfont icon-del text-[13px]"></span>
+          </button>
         </div>
+
       </div>
-      <div v-if="fileList.length == 0">
-        <NoData msg="暂无上传任务"></NoData>
+
+      <!-- 缺省状态视图 (无数据时) -->
+      <div v-if="fileList.length === 0"
+        class="flex flex-col items-center justify-center h-[200px] text-[#86868b] dark:text-gray-500">
+        <span class="iconfont icon-transfer text-[40px] mb-3 opacity-40"></span>
+        <span class="text-[13px] font-medium tracking-wide">暂无传输任务</span>
       </div>
+
     </div>
   </div>
 </template>
@@ -344,190 +394,22 @@ const startUpload = (uid) => {
 </script>
 
 <style lang="scss" scoped>
-.uploader-panel {
-  background-color: #f9fafc;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  border-radius: 12px;
-  max-height: 600px;
+/* 定制苹果原生风格极细滚动条，替代之前的杂乱样式 */
+.apple-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
 
-  .uploader-title {
-    background: #ffffff;
-    color: rgb(48, 46, 46);
-    line-height: 50px;
-    padding: 0px 15px;
-    font-size: 16px;
-    font-weight: 500;
-    border-bottom: 1px solid #e0e6ed;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.apple-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(134, 134, 139, 0.3);
+  border-radius: 4px;
+}
 
-    .tips {
-      font-size: 14px;
-      color: rgba(41, 38, 38, 0.89);
-      font-weight: normal;
-    }
-  }
+.apple-scrollbar::-webkit-scrollbar-track {
+  background-color: transparent;
+}
 
-  .file-list {
-    overflow: auto;
-    padding: 10px;
-    min-height: calc(100vh / 2);
-    max-height: calc(600px - 50px);
-    scrollbar-width: thin;
-
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background-color: rgba(5, 161, 245, 0.3);
-      border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background-color: transparent;
-    }
-
-    .file-item {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 12px 15px;
-      background-color: #fff;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.205);
-      transition: all 0.3s ease;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      }
-    }
-
-    //可选样式 斑马纹
-    // .file-item:nth-child(even) {
-    //   background-color: #f8f9fa;
-    // }
-
-    .upload-panel {
-      flex: 1;
-      overflow: hidden;
-
-      .file-name {
-        color: #333;
-        font-size: 14px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 0 5px;
-      }
-
-      .upload-status {
-        display: flex;
-        align-items: center;
-        margin-top: 5px;
-
-        .iconfont {
-          margin-right: 5px;
-          font-size: 12px;
-        }
-
-        .status {
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .upload-info {
-          margin-left: 8px;
-          font-size: 12px;
-          color: #909399;
-        }
-      }
-    }
-
-    .op {
-      width: 100px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-
-      .progress-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .progress-percentage {
-        font-size: 14px;
-        font-weight: bold;
-        color: #409eff;
-        line-height: 1;
-      }
-
-      .op-btn {
-        display: flex;
-        align-items: center;
-
-        .btn-item {
-          cursor: pointer;
-          border-radius: 50%;
-          color: #606266;
-          transition: all 0.2s;
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 4px;
-
-          &:hover {
-            transform: scale(1.1);
-            box-shadow: 0 2px 6px rgba(5, 161, 245, 0.2);
-          }
-
-          &:active {
-            transform: scale(0.9);
-          }
-        }
-
-        .action-btn {
-          color: #409eff;
-
-          &:hover {
-            color: #1989fa;
-            background-color: rgba(64, 158, 255, 0.1);
-          }
-        }
-
-        .delete-btn {
-          color: #f56c6c !important;
-
-          &:hover {
-            color: #f56c6c;
-            background-color: rgba(245, 108, 108, 0.1);
-          }
-        }
-
-        .clean-btn {
-          color: #67c23a;
-
-          &:hover {
-            color: #67c23a;
-            background-color: rgba(103, 194, 58, 0.1);
-          }
-        }
-
-        .del,
-        .clean {
-          margin-left: 8px;
-        }
-      }
-    }
-  }
+.apple-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(134, 134, 139, 0.3) transparent;
 }
 </style>

@@ -2,11 +2,16 @@
     <div>
         <Dialog :show="dialogConfig.show" :title="dialogConfig.title" :buttons="dialogConfig.buttons" width="400px"
             :showCancel="true" @close="dialogConfig.show = false" :showCustomTitle="true">
-            <div class="logout-content">
-                <div class="icon-container">
-                    <span class="iconfont icon-close3"></span>
+            <div class="flex flex-col items-center py-6">
+                <!-- 红底图标容器，适配了暗色模式的微弱红底 -->
+                <div
+                    class="w-16 h-16 rounded-full bg-[#fff2f0] dark:bg-red-900/30 flex items-center justify-center mb-5 shadow-sm">
+                    <span class="iconfont icon-close3 text-[32px] text-[#ff4d4f]"></span>
                 </div>
-                <div class="message">确定要退出登录吗？</div>
+                <!-- 退出提示文字 -->
+                <div class="text-[17px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] tracking-wide">
+                    确定要退出登录吗？
+                </div>
             </div>
         </Dialog>
     </div>
@@ -59,34 +64,3 @@ const show = () => {
 
 defineExpose({ show });
 </script>
-
-<style lang="scss" scoped>
-.logout-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-
-    .icon-container {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background-color: #fff2f0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-
-        .iconfont {
-            font-size: 30px;
-            color: #ff4d4f;
-        }
-    }
-
-    .message {
-        font-size: 16px;
-        color: #333;
-        margin-bottom: 10px;
-    }
-}
-</style>

@@ -297,6 +297,9 @@ public class AccountController extends ABaseController {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		// 用户名变更时才更新
 		if (!webUserDto.getUserName().equals(newUserName)) {
+			if(newUserName.length() > 20) {
+				throw new BusinessException("用户名长度不能超过20个字符");
+			}
 			UserInfo userInfo = new UserInfo();
 			userInfo.setUserName(newUserName);
 			userInfoService.updateUserInfoByUserId(userInfo, webUserDto.getUserId());

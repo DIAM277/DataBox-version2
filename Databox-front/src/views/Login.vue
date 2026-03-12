@@ -1,137 +1,163 @@
 <template>
-  <div class="login-body" :style="{ background: `url(${currentBg}) center/cover no-repeat` }">
+  <div
+    class="relative flex items-center justify-center min-h-screen bg-center bg-cover transition-all duration-700 font-sans"
+    :style="{ backgroundImage: `url(${currentBg})` }">
+    <!-- 装饰性全屏背景遮罩 (提升玻璃质感和暗色模式兼容) -->
+    <div
+      class="absolute inset-0 bg-white/10 dark:bg-black/40 backdrop-blur-[2px] pointer-events-none transition-colors duration-500">
+    </div>
+
+    <div class="absolute top-6 left-6 z-20">
       <ChangeBgButton @change-background="switchBackground" />
-    <div class="login-panel" :style="{ marginTop: panelMarginTop }">
-      <!-- <div class="app-title">DataBox</div> -->
-      <AppTitle1></AppTitle1>
-      <el-form class="login-register" :model="formData" :rules="rules" ref="formDataRef" @submit.prevent
-        @keyup.enter="doSubmit">
-        <!-- 根据操作类型显示不同的标题 -->
-        <div class="login-title">{{ opType == 0 ? '注 册' : (opType == 1 ? '登 录' : '修改密码') }}</div>
-        <!-- 邮箱输入 -->
+    </div>
+
+    <!-- 登录注册毛玻璃主卡片 -->
+    <div class="relative z-10 w-full max-w-[440px] px-8 py-10 mx-4 sm:mx-auto 
+             bg-white/75 dark:bg-[#1c1c1e]/80 backdrop-blur-2xl 
+             border border-white/40 dark:border-white/10 
+             rounded-[2rem] shadow-[0_20px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)]
+             transition-all duration-500 ease-[cubic-bezier(0.25,0.8,0.25,1)]"
+      :style="{ marginTop: opType === 1 ? '0' : '-8vh' }">
+
+      <!-- 顶部 Logo 模块 -->
+      <div class="flex justify-center mb-8 transform scale-110">
+        <AppTitle1></AppTitle1>
+      </div>
+
+      <el-form class="w-full" :model="formData" :rules="rules" ref="formDataRef" @submit.prevent @keyup.enter="doSubmit"
+        size="large">
+        <!-- 动态标题 -->
+        <h2 class="text-2xl font-semibold text-center tracking-widest text-[#1d1d1f] dark:text-[#f5f5f7] mb-8">
+          {{ opType === 0 ? '创建账号' : (opType === 1 ? '登 录' : '重置密码') }}
+        </h2>
+
+        <!-- 通用：邮箱输入 -->
         <el-form-item prop="email">
-          <el-input size="large" clearable placeholder="请输入邮箱" v-model.trim="formData.email" maxLength="150">
-            <template #prefix>
-              <span class="iconfont icon-account"></span>
-            </template>
+          <el-input v-model.trim="formData.email" placeholder="请输入邮箱" maxLength="150" clearable>
+            <template #prefix><span class="iconfont icon-account text-gray-400"></span></template>
           </el-input>
         </el-form-item>
-        <!-- 密码输入 -->
-        <el-form-item prop="password" v-if="opType == 1">
-          <el-input size="large" placeholder="请输入密码" v-model.trim="formData.password" maxLength="150" type="password"
-            clearable>
-            <template #prefix>
-              <span class="iconfont icon-password"></span>
-            </template>
+
+        <!-- 注册专有：用户名 -->
+        <el-form-item prop="userName" v-if="opType === 0">
+          <el-input v-model.trim="formData.userName" placeholder="请输入用户名" maxLength="20" clearable>
+            <template #prefix><span class="iconfont icon-account text-gray-400"></span></template>
           </el-input>
         </el-form-item>
-        <!-- 注册 -->
-        <div v-if="opType == 0 || opType == 2">
-          <el-form-item prop="emailCode">
-            <div class="send-email-panel">
-              <el-input clearable placeholder="请输入邮箱验证码" v-model.trim="formData.emailCode" size="large" maxLength="6">
-                <template #prefix>
-                  <span class="iconfont icon-checkcode"></span>
-                </template>
-              </el-input>
-              <el-button class="send-mail-btn" type="primary" size="large" @click="getEmailCode">获取验证码</el-button>
-            </div>
-          </el-form-item>
-          <!-- 用户名 -->
-          <el-form-item prop="userName" v-if="opType == 0">
-            <el-input clearable placeholder="请输入用户名" v-model.trim="formData.userName" size="large" maxLength="20">
-              <template #prefix>
-                <span class="iconfont icon-account"></span>
-              </template>
+
+        <!-- 通用：登录密码 -->
+        <el-form-item prop="password" v-if="opType === 1">
+          <el-input v-model.trim="formData.password" placeholder="请输入密码" type="password" maxLength="150" clearable
+            show-password>
+            <template #prefix><span class="iconfont icon-password text-gray-400"></span></template>
+          </el-input>
+        </el-form-item>
+
+        <!-- 注册及修改密码 -->
+        <el-form-item prop="registerPassword" v-if="opType === 0 || opType === 2">
+          <el-input v-model.trim="formData.registerPassword" placeholder="请设置密码" type="password" show-password>
+            <template #prefix><span class="iconfont icon-password text-gray-400"></span></template>
+          </el-input>
+        </el-form-item>
+
+        <!-- 确认密码 -->
+        <el-form-item prop="reRegisterPassword" v-if="opType === 0 || opType === 2">
+          <el-input v-model.trim="formData.reRegisterPassword" placeholder="请再次输入密码" type="password" show-password>
+            <template #prefix><span class="iconfont icon-password text-gray-400"></span></template>
+          </el-input>
+        </el-form-item>
+
+        <!-- 注册/改密：邮箱验证码域 -->
+        <el-form-item prop="emailCode" v-if="opType === 0 || opType === 2">
+          <div class="flex w-full items-center gap-3">
+            <el-input v-model.trim="formData.emailCode" placeholder="邮箱验证码" maxLength="6" class="flex-1" clearable>
+              <template #prefix><span class="iconfont icon-checkcode text-gray-400"></span></template>
             </el-input>
-          </el-form-item>
-          <!--注册密码/修改密码-->
-          <el-form-item prop="registerPassword">
-            <el-input show-password placeholder="请输入密码" v-model.trim="formData.registerPassword" type="password"
-              size="large">
-              <template #prefix>
-                <span class="iconfont icon-password"></span>
-              </template>
-            </el-input>
-          </el-form-item>
-          <!-- 再次输入密码 -->
-          <el-form-item prop="reRegisterPassword">
-            <el-input show-password placeholder="请再次输入密码" v-model.trim="formData.reRegisterPassword" type="password"
-              size="large">
-              <template #prefix>
-                <span class="iconfont icon-password"></span>
-              </template>
-            </el-input>
-          </el-form-item>
-        </div>
-        <!-- 验证码 -->
+            <el-button class="apple-btn" type="primary" @click="getEmailCode">
+              获取验证码
+            </el-button>
+          </div>
+        </el-form-item>
+
+        <!-- 通用：图形验证码域 -->
         <el-form-item prop="checkCode">
-          <div class="check-code-panel">
-            <el-input size="large" clearable placeholder="请输入验证码" v-model.trim="formData.checkCode" maxLength="5">
-              <template #prefix>
-                <span class="iconfont icon-checkcode"></span>
-              </template>
+          <div class="flex w-full items-center gap-3">
+            <el-input v-model.trim="formData.checkCode" placeholder="图形验证码" maxLength="5" class="flex-1" clearable>
+              <template #prefix><span class="iconfont icon-checkcode text-gray-400"></span></template>
             </el-input>
-            <img class="check-code" :src="checkCodeUrl" @click="changeCheckCode(0)" />
+            <div
+              class="h-[40px] w-[110px] border border-gray-200 dark:border-gray-700 bg-white/50 cursor-pointer shadow-sm hover:opacity-80 transition-opacity"
+              @click="changeCheckCode(0)">
+              <img class="w-full h-full" :src="checkCodeUrl" alt="验证码" />
+            </div>
           </div>
         </el-form-item>
-        <!-- 登录 -->
-        <el-form-item v-if="opType == 1">
-          <div class="rememberme-panel">
-            <el-checkbox v-model="formData.rememberMe">记住我</el-checkbox>
-            <a href="javascript:void(0)" class="a-link" @click="showPanel(2)">忘记密码❓</a>
-          </div>
-        </el-form-item>
-        <!-- 找回密码 -->
-        <el-form-item v-if="opType == 2">
-          <div class="rememberme-panel">
-            <div></div> <!-- 空div占位 -->
-            <a href="javascript:void(0)" class="a-link" @click="showPanel(1)">前往登录✅</a>
-          </div>
-        </el-form-item>
-        <!-- 登录按钮 -->
-        <el-form-item>
-          <!-- <el-button type="primary" class="op-btn" size="large" @click="submit">
-            <span v-if="opType == 0">注 册</span>
-            <span v-if="opType == 1">登 录</span>
-            <span v-if="opType == 2">修 改 密 码</span>
-          </el-button> -->
-          <CustomButton :text="opType == 0 ? '注 册' : (opType == 1 ? '登 录' : '修 改 密 码')" :width="380"
-            @click="doSubmit" />
-        </el-form-item>
-        <!-- 账号注册/登录链接 -->
-        <div v-if="opType == 1" class="account-link-container">
-          <span>没有账号？<a href="javascript:void(0)" class="a-link" @click="showPanel(0)">前往注册</a></span>
+
+        <!-- 登录专有：记住我与忘记密码 -->
+        <div v-if="opType === 1"
+          class="flex justify-between items-center mb-6 px-1 text-sm text-[#86868b] dark:text-gray-400">
+          <el-checkbox v-model="formData.rememberMe" class="custom-checkbox">记住我的登录状态</el-checkbox>
+          <a href="javascript:void(0)" class="text-[#007AFF] hover:text-[#0056b3] transition-colors"
+            @click="showPanel(2)">密码恢复</a>
         </div>
-        <div v-if="opType == 0" class="account-link-container">
-          <span>已有账号？<a href="javascript:void(0)" class="a-link" @click="showPanel(1)">前往登录✅</a></span>
+
+        <!-- 返回登录节点 (改密用) -->
+        <div v-if="opType === 2" class="flex justify-end mb-6 text-sm">
+          <a href="javascript:void(0)"
+            class="text-[#007AFF] hover:text-[#0056b3] transition-colors flex items-center gap-1" @click="showPanel(1)">
+            <span class="iconfont icon-right"></span> 记起密码？返回登录
+          </a>
+        </div>
+
+        <!-- 主操作按钮 -->
+        <div class="mt-8 flex justify-center w-full">
+          <CustomButton :text="opType === 0 ? '注 册 账 号' : (opType === 1 ? '登 录 空 间' : '确 认 重 置')" :width="360"
+            @click="doSubmit" />
+        </div>
+
+        <!-- 底部模式切换辅助文字 -->
+        <div class="mt-6 text-center text-sm text-[#86868b] dark:text-gray-400">
+          <p v-if="opType === 1">
+            尚未拥有账号？
+            <a href="javascript:void(0)" class="text-[#007AFF] font-medium hover:underline transition-all"
+              @click="showPanel(0)">马上创建</a>
+          </p>
+          <p v-if="opType === 0">
+            已有？
+            <a href="javascript:void(0)" class="text-[#007AFF] font-medium hover:underline transition-all"
+              @click="showPanel(1)">直接登录</a>
+          </p>
         </div>
       </el-form>
     </div>
+
+    <!-- 邮箱验证码发送内嵌对话框 (保持原有逻辑框架，做轻量 Tailwind 润色) -->
     <Dialog :show="dialogConfig4SendMailCode.show" :title="dialogConfig4SendMailCode.title"
-      :buttons="dialogConfig4SendMailCode.buttons" width="500px" :showCancel="false" :showCustomTitle="true"
+      :buttons="dialogConfig4SendMailCode.buttons" width="450px" :showCancel="false" :showCustomTitle="true"
       @close="dialogConfig4SendMailCode.show = false">
       <el-form :model="formData4SendMailCode" :rules="rules" ref="formData4SendMailCodeRef" label-width="80px"
-        @submit.prevent>
-        <el-form-item label="邮箱">
-          <div class="email-display">
-            <span class="email-text">{{ formData.email }}</span>
+        @submit.prevent size="large">
+        <el-form-item label="投递邮箱">
+          <div
+            class="w-full px-4 py-2 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-none text-gray-700 dark:text-gray-200">
+            {{ formData.email }}
           </div>
         </el-form-item>
-        <el-form-item label="验证码" prop="checkCode">
-          <div class="check-code-panel">
-            <el-input size="large" clearable placeholder="请输入验证码" v-model.trim="formData4SendMailCode.checkCode"
-              maxLength="5">
-              <template #prefix>
-                <span class="iconfont icon-checkcode"></span>
-              </template>
+        <el-form-item label="安全验证" prop="checkCode">
+          <div class="flex items-center gap-3 w-full">
+            <el-input v-model.trim="formData4SendMailCode.checkCode" placeholder="图形验证码" maxLength="5" clearable
+              class="flex-1">
+              <template #prefix><span class="iconfont icon-checkcode text-gray-400"></span></template>
             </el-input>
-            <img class="check-code" :src="checkCodeUrl4SendMailCode" @click="changeCheckCode(1)" />
+            <div class="h-[40px] w-[110px] cursor-pointer shadow-sm" @click="changeCheckCode(1)">
+              <img class="w-full h-full" :src="checkCodeUrl4SendMailCode" alt="点我换一张" />
+            </div>
           </div>
         </el-form-item>
       </el-form>
     </Dialog>
-    <RandomQuote />
+
+    <RandomQuote class="absolute bottom-6 mx-auto z-20 opacity-80" />
   </div>
 </template>
 
@@ -388,216 +414,81 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.login-body {
-  height: calc(100vh);
-  display: flex;
-  position: relative;
-  user-select: none;
-  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif; // 现代字体栈
+/* 
+  利用 Element Plus 变量深度覆盖：实现苹果风格输入框
+  使输入框融入毛玻璃背景，圆润、无违和感
+*/
+:deep(.el-input__wrapper) {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+  border-radius: 12px !important;
+  padding: 0 16px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 
-  .bg-button-container {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 10;
+:deep(.el-input__wrapper.is-focus),
+:deep(.el-input__wrapper:hover) {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3) !important;
+  /* Apple Blue glow */
+}
+
+/* 暗黑模式下输入框适配 */
+html.dark :deep(.el-input__wrapper) {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+html.dark :deep(.el-input__wrapper.is-focus),
+html.dark :deep(.el-input__wrapper:hover) {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.5) !important;
+  /* Dark Apple Blue glow */
+}
+
+:deep(.el-input__inner) {
+  color: #1d1d1f !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+html.dark :deep(.el-input__inner) {
+  color: #f5f5f7 !important;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 24px;
+}
+
+/* 自定义右侧 Apple 风格按钮 */
+.apple-btn {
+  height: 40px !important;
+  border-radius: 12px !important;
+  background-color: #007AFF !important;
+  border: none !important;
+  font-weight: 600;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #0066d6 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
   }
 
-  .login-panel {
-    width: 430px;
-    margin: 0 auto;
-    //margin-top: calc((100vh - 500px) / 2);
-    transition: margin-top 0.3s ease;
-
-    /* 添加DataBox标题样式 */
-    .app-title {
-      text-align: center;
-      font-size: 36px;
-      font-weight: bold;
-      color: #fff;
-      margin-bottom: 20px;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-      letter-spacing: 2px; // 增加字间距
-    }
-
-    .login-register {
-      padding: 30px;
-      background: rgba(255, 255, 255, 0.96);
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-      border-radius: 10px;
-
-      .login-title {
-        text-align: center;
-        font-size: 22px; // 增大字体
-        font-weight: 600;
-        margin-bottom: 25px; // 增加下边距
-        color: #409EFF; // 使用Element Plus主题色
-        position: relative;
-
-        // 添加下划线装饰
-        &::after {
-          content: '';
-          position: absolute;
-          bottom: -9px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 50px;
-          height: 2px;
-          background-color: #409EFF;
-        }
-      }
-
-      .send-email-panel {
-        display: flex;
-        width: 100%;
-        justify-content: space-between;
-        align-items: center;
-
-        .send-mail-btn {
-          margin-left: 5px;
-          /* 增加左侧间距 */
-        }
-      }
-
-      .rememberme-panel {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .login-btn-container {
-        display: flex;
-        align-items: center;
-        width: 100%;
-
-        .op-btn {
-          flex: 1;
-
-          span {
-            letter-spacing: 2px;
-            font-weight: 500;
-            font-size: 16px;
-          }
-        }
-      }
-
-      .register-link-container {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 10px;
-      }
-
-      .no-account {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-      }
-
-      .op-btn {
-        width: 100%;
-
-        span {
-          letter-spacing: 2px;
-          font-weight: 500;
-          font-size: 16px;
-        }
-      }
-    }
+  &:active {
+    transform: translateY(1px);
   }
+}
 
-  .check-code-panel {
-    width: 100%;
-    display: flex;
+/* 复选框暗黑/白天优化 */
+:deep(.custom-checkbox .el-checkbox__label) {
+  color: inherit !important;
+}
 
-    .check-code {
-      margin-left: 5px;
-      cursor: pointer;
-    }
-  }
-
-  .login-btn-qq {
-    margin-top: 20px;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    img {
-      cursor: pointer;
-      margin-left: 10px;
-      width: 20px;
-    }
-  }
-
-  :deep(.el-form-item__label) {
-    font-weight: 500;
-    color: #606266;
-  }
-
-  :deep(.el-button) {
-    letter-spacing: 1px;
-  }
-
-  /* 美化链接样式 */
-  .a-link {
-    color: #409EFF;
-    text-decoration: none;
-    transition: color 0.3s;
-
-    &:hover {
-      color: #66b1ff;
-      text-decoration: underline;
-    }
-  }
-
-  .email-display {
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    background-color: #f5f7fa;
-    border-radius: 4px;
-    border: 1px solid #e4e7ed;
-
-    .iconfont {
-      color: #909399;
-      margin-right: 8px;
-      font-size: 16px;
-    }
-
-    .email-text {
-      color: #606266;
-      font-weight: 500;
-      word-break: break-all;
-    }
-  }
-
-  .account-link-container {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-top: 15px;
-
-    span,
-    a {
-      color: #606266;
-      font-size: 15px;
-      line-height: 1.5;
-      font-family: inherit;
-      vertical-align: baseline;
-    }
-
-    .a-link {
-      color: #409EFF;
-      font-weight: normal;
-      text-decoration: none;
-      transition: color 0.3s;
-
-      &:hover {
-        color: #66b1ff;
-        text-decoration: underline;
-      }
-    }
-  }
+html.dark :deep(.el-checkbox__inner) {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 </style>

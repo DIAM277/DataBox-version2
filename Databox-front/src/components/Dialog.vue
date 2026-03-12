@@ -9,7 +9,7 @@
             </div>
             <template v-if="(buttons && buttons.length > 0) || showCancel">
                 <div class="dialog-footer">
-                    <el-button link @click="close" v-if="showCancel">取消</el-button>
+                    <!-- <el-button link @click="close" v-if="showCancel">取消</el-button> -->
                     <el-button v-for="(btn, index) in buttons" :key="index" :type="btn.type || 'primary'"
                         @click="btn.click">
                         {{ btn.text }}
@@ -68,80 +68,72 @@ const close = () => {
 
 <style lang="scss" scoped>
 .cust-dialog {
-    //margin: 30px auto 10px !important;
-    border-radius: 12px;
-    overflow: hidden;
-    background-color: #ffffff;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 
-    :deep(.el-dialog__header) {
-        padding: 20px 24px;
-        margin-right: 0;
-        background-color: #f5f7fa;
-        border-bottom: 1px solid #0045e7;
-    }
+    /* 强行覆盖 Element Plus 默认样式，注入苹果毛玻璃基因 */
+    :deep(.el-dialog) {
+        @apply bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur-3xl rounded-[20px] shadow-2xl overflow-hidden border border-white/40 dark:border-white/10 !important;
 
-    :deep(.el-dialog__headerbtn) {
-        top: 20px; // 根据新的padding调整
-        right: 24px; // 统一关闭按钮位置
+        /* 头部背景纯透明且无下划线 */
+        .el-dialog__header {
+            @apply bg-transparent p-6 mr-0 border-none !important;
+        }
 
-        .el-dialog__close {
-            color: #909399;
+        /* 细化右上角的关闭按钮 */
+        .el-dialog__headerbtn {
+            @apply top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus:outline-none !important;
 
-            &:hover {
-                color: #409EFF; // 悬停时使用主题色
+            .el-dialog__close {
+                @apply text-[#86868b] dark:text-[#a1a1a6] text-[16px] transition-colors focus:outline-none;
             }
         }
-    }
 
-    :deep(.el-dialog__title) {
-        font-size: 20px;
-        font-weight: 600;
-        color: #303133;
-    }
-
-    :deep(.el-dialog__body) {
-        padding: 0px;
-    }
-
-    .dialog-title {
-        text-align: center;
-        font-size: 22px;
-        font-weight: 600;
-        margin: 10px 0 25px;
-        color: #409EFF;
-        position: relative;
-        display: inline-block;
-        left: 50%;
-        transform: translateX(-50%);
-
-        &::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: #409EFF;
+        /* 默认标题属性保持极简 */
+        .el-dialog__title {
+            @apply text-[17px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-wide;
         }
+
+        /* 原有自带内补清零，全部交由自定义容器接管 */
+        .el-dialog__body {
+            @apply p-0 bg-transparent;
+        }
+    }
+
+    /* ------------------------------
+       自定义内容区域
+    ------------------------------ */
+
+    /* 替换之前冗余带下划线的旧标题，改为居中平滑大字 */
+    .dialog-title {
+        @apply text-center text-[20px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-wider mt-2 mb-6 block w-full;
     }
 
     .dialog-body {
-        min-height: 80px;
-        overflow: auto;
+        @apply overflow-auto min-h-[80px];
+
+        /* 苹果原生滚动条微调 */
+        &::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+        }
+
+        &::-webkit-scrollbar-track {
+            @apply bg-transparent;
+        }
     }
 
+    /* 底部操作区变透明，去除顶部生硬的横线 */
     .dialog-footer {
-        text-align: right;
-        padding: 16px 24px;
-        border-top: 2px solid #ebeef5;
-        background-color: #fcfcfc;
+        @apply flex justify-end items-center px-6 py-5 bg-transparent border-none;
 
         .el-button {
-            margin-left: 10px;
+            @apply ml-3 rounded-xl font-medium tracking-wide transition-all;
 
             &:first-child {
-                margin-left: 0;
+                @apply ml-0;
             }
         }
     }

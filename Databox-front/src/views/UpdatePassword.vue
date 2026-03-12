@@ -1,55 +1,51 @@
 <template>
+    <!-- 修改密码/验证邮箱 主弹窗 -->
     <Dialog :show="dialogConfig.show" :title="dialogConfig.title" :buttons="dialogConfig.buttons" width="550px"
         :showCancel="true" @close="dialogConfig.show = false" :showCustomTitle="true">
+
         <!-- 修改密码表单 -->
         <el-form v-if="!isEmailVerify" :model="formData" :rules="rules" ref="formDataRef" label-width="90px"
-            @submit.prevent>
+            @submit.prevent class="px-4">
             <!-- 输入旧密码 -->
             <el-form-item label="旧密码" prop="oldPassword">
                 <el-input type="password" v-model.trim="formData.oldPassword" size="large" placeholder="请输入旧密码"
                     show-password>
-                    <template #prefix>
-                        <span class="iconfont icon-password"></span>
-                    </template>
+                    <template #prefix><span class="iconfont icon-password text-gray-400"></span></template>
                 </el-input>
             </el-form-item>
             <!-- 输入新密码 -->
             <el-form-item label="新密码" prop="password">
                 <el-input type="password" v-model.trim="formData.password" size="large" placeholder="请输入新密码"
                     show-password>
-                    <template #prefix>
-                        <span class="iconfont icon-password"></span>
-                    </template>
+                    <template #prefix><span class="iconfont icon-password text-gray-400"></span></template>
                 </el-input>
             </el-form-item>
             <!-- 确认密码 -->
             <el-form-item label="确认密码" prop="rePassword">
                 <el-input type="password" v-model.trim="formData.rePassword" size="large" placeholder="请再次输入新密码"
                     show-password>
-                    <template #prefix>
-                        <span class="iconfont icon-password"></span>
-                    </template>
+                    <template #prefix><span class="iconfont icon-password text-gray-400"></span></template>
                 </el-input>
             </el-form-item>
         </el-form>
 
         <!-- 邮箱验证表单 -->
         <el-form v-else :model="formData4EmailCode" :rules="emailCodeRules" ref="formData4EmailCodeRef"
-            label-width="90px" @submit.prevent>
+            label-width="90px" @submit.prevent class="px-4">
             <el-form-item label="邮箱">
-                <div class="email-display">
-                    <span class="email-text">{{ userInfo.email }}</span>
+                <div
+                    class="w-full px-4 py-2.5 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-none flex items-center">
+                    <span class="font-medium text-gray-700 dark:text-gray-200 tracking-wide">{{ userInfo.email }}</span>
                 </div>
             </el-form-item>
             <el-form-item label="验证码" prop="emailCode">
-                <div class="verify-code-panel">
-                    <el-input size="large" clearable placeholder="请输入邮箱验证码" v-model.trim="formData4EmailCode.emailCode"
-                        maxLength="6">
-                        <template #prefix>
-                            <span class="iconfont icon-checkcode"></span>
-                        </template>
+                <div class="flex items-center gap-3 w-full">
+                    <el-input class="flex-1" size="large" clearable placeholder="请输入邮箱验证码"
+                        v-model.trim="formData4EmailCode.emailCode" maxLength="6">
+                        <template #prefix><span class="iconfont icon-checkcode text-gray-400"></span></template>
                     </el-input>
-                    <el-button type="primary" :disabled="sendCodeDisabled" @click="showSendCodeDialog">
+                    <el-button type="primary" :disabled="sendCodeDisabled" @click="showSendCodeDialog"
+                        class="!rounded-xl h-[40px] px-5 font-semibold tracking-wide">
                         {{ sendCodeButtonText }}
                     </el-button>
                 </div>
@@ -57,46 +53,47 @@
             <el-form-item label="新密码" prop="password">
                 <el-input type="password" v-model.trim="formData4EmailCode.password" size="large" placeholder="请输入新密码"
                     show-password>
-                    <template #prefix>
-                        <span class="iconfont icon-password"></span>
-                    </template>
+                    <template #prefix><span class="iconfont icon-password text-gray-400"></span></template>
                 </el-input>
             </el-form-item>
             <el-form-item label="确认密码" prop="rePassword">
                 <el-input type="password" v-model.trim="formData4EmailCode.rePassword" size="large"
                     placeholder="请再次输入新密码" show-password>
-                    <template #prefix>
-                        <span class="iconfont icon-password"></span>
-                    </template>
+                    <template #prefix><span class="iconfont icon-password text-gray-400"></span></template>
                 </el-input>
             </el-form-item>
         </el-form>
 
         <!-- 底部链接区域 -->
-        <div class="form-footer-links">
-            <div v-if="!isEmailVerify" class="link-container">
-                <span class="normal-text">忘记旧密码？</span>
-                <a href="javascript:void(0)" class="highlight-link" @click="switchToEmailVerify">验证邮箱📩</a>
+        <div class="flex justify-end items-center px-4 mt-2 mb-1">
+            <div v-if="!isEmailVerify" class="flex items-center gap-1.5">
+                <span class="text-[13px] text-gray-500 dark:text-gray-400">忘记旧密码？</span>
+                <a href="javascript:void(0)"
+                    class="text-[13px] font-medium text-[#007AFF] hover:text-[#0056b3] transition-colors"
+                    @click="switchToEmailVerify">验证邮箱📩</a>
             </div>
-            <a v-else href="javascript:void(0)" class="highlight-link" @click="switchToPasswordChange">验证旧密码🔑</a>
+            <a v-else href="javascript:void(0)"
+                class="text-[13px] font-medium text-[#007AFF] hover:text-[#0056b3] transition-colors"
+                @click="switchToPasswordChange">验证旧密码🔑</a>
         </div>
     </Dialog>
 
     <!-- 图形验证码对话框 -->
     <Dialog :show="dialogConfig4SendMailCode.show" :title="dialogConfig4SendMailCode.title"
-        :buttons="dialogConfig4SendMailCode.buttons" width="500px" :showCancel="false" :showCustomTitle="true"
+        :buttons="dialogConfig4SendMailCode.buttons" width="450px" :showCancel="false" :showCustomTitle="true"
         @close="dialogConfig4SendMailCode.show = false">
         <el-form :model="formData4SendMailCode" :rules="emailVerifyRules" ref="formData4SendMailCodeRef"
-            label-width="80px" @submit.prevent>
+            label-width="80px" class="px-2" @submit.prevent>
             <el-form-item label="验证码" prop="checkCode">
-                <div class="check-code-panel">
-                    <el-input size="large" clearable placeholder="请输入验证码" v-model.trim="formData4SendMailCode.checkCode"
-                        maxLength="5">
-                        <template #prefix>
-                            <span class="iconfont icon-checkcode"></span>
-                        </template>
+                <div class="flex items-center gap-3 w-full">
+                    <el-input class="flex-1" size="large" clearable placeholder="请输入图形验证码"
+                        v-model.trim="formData4SendMailCode.checkCode" maxLength="5">
+                        <template #prefix><span class="iconfont icon-checkcode text-gray-400"></span></template>
                     </el-input>
-                    <img class="check-code" :src="checkCodeUrl4SendMailCode" @click="changeCheckCode" />
+                    <div class="h-[40px] w-[110px] cursor-pointer shadow-sm hover:opacity-80 transition-opacity border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                        @click="changeCheckCode">
+                        <img class="w-full h-full object-cover" :src="checkCodeUrl4SendMailCode" alt="点我换一张" />
+                    </div>
                 </div>
             </el-form-item>
         </el-form>
@@ -369,61 +366,3 @@ defineExpose({
     show
 })
 </script>
-
-<style lang="scss" scoped>
-.verify-code-panel {
-    width: 100%;
-    display: flex;
-    gap: 10px;
-
-    .el-input {
-        flex: 1;
-    }
-}
-
-.check-code-panel {
-    width: 100%;
-    display: flex;
-
-    .check-code {
-        margin-left: 5px;
-        cursor: pointer;
-    }
-}
-
-.email-display {
-    padding: 10px;
-    background-color: #f5f7fa;
-    border-radius: 4px;
-
-    .email-text {
-        font-weight: 500;
-    }
-}
-
-.form-footer-links {
-    margin-top: 10px;
-    padding-right: 10px;
-    display: flex;
-    justify-content: flex-end;
-
-    .link-container {
-        display: flex;
-    }
-
-    .normal-text {
-        color: #606266;
-        font-size: 14px;
-    }
-
-    .highlight-link {
-        color: #409EFF;
-        font-size: 14px;
-        text-decoration: none;
-
-        &:hover {
-            text-decoration: underline;
-        }
-    }
-}
-</style>

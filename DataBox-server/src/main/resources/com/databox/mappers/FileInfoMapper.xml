@@ -238,6 +238,9 @@
 			<if test="bean.delFlag != null">
 				del_flag,
 			</if>
+			<if test="bean.referenceCount != null">
+				reference_count,
+			</if>
 		</trim>
 		<trim prefix="values (" suffix=")" suffixOverrides="," >
 			<if test="bean.fileId!=null">
@@ -345,6 +348,9 @@
 			</if>
 			<if test="bean.delFlag != null">
 				del_flag,
+			</if>
+			<if test="bean.referenceCount != null">
+				reference_count,
 			</if>
 		</trim>
 		<trim prefix="values (" suffix=")" suffixOverrides=",">
