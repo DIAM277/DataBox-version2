@@ -83,6 +83,15 @@ const router = createRouter({
           },
           component: () => import("@/views/admin/LoginLog.vue"),
         },
+        {
+          path: "/settings/operationLog",
+          name: "操作日志",
+          meta: {
+            needLogin: true,
+            menuCode: "settings",
+          },
+          component: () => import("@/views/admin/OperationLog.vue"),
+        },
       ],
     },
     {

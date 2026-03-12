@@ -4,12 +4,15 @@ import com.databox.annotation.GlobalInterceptor;
 import com.databox.annotation.VerifyParam;
 import com.databox.component.RedisComponent;
 import com.databox.entity.dto.SysSettingDto;
+import com.databox.entity.po.SysOpLog;
 import com.databox.entity.query.FileInfoQuery;
+import com.databox.entity.query.SysOpLogQuery;
 import com.databox.entity.query.UserInfoQuery;
 import com.databox.entity.vo.PaginationResultVO;
 import com.databox.entity.vo.ResponseVO;
 import com.databox.entity.vo.UserInfoVO;
 import com.databox.service.FileInfoService;
+import com.databox.service.SysOpLogService;
 import com.databox.service.UserInfoService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +34,9 @@ public class AdminController extends CommonFileController{
 
     @Resource
     private RedisComponent redisComponent;
+
+    @Resource
+    private SysOpLogService sysOpLogService;
 
     /**
      * 获取系统设置
@@ -231,5 +237,18 @@ public class AdminController extends CommonFileController{
             fileInfoService.delFileBatch(itemArray[0], itemArray[1], true);
         }
         return getSuccessResponseVO(null);
+    }
+
+    /**
+     * 获取操作日志列表
+     * @param query
+     * @return
+     */
+    @RequestMapping("/loadOperationLog")
+    @GlobalInterceptor(checkAdmin = true)
+    public ResponseVO loadOperationLog(SysOpLogQuery query) {
+        query.setOrderBy("create_time desc");
+        PaginationResultVO<SysOpLog> result = sysOpLogService.findListByPage(query);
+        return getSuccessResponseVO(result);
     }
 }

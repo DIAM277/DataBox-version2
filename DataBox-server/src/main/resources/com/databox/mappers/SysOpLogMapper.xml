@@ -21,13 +21,15 @@
 		<result column="result_msg" property="resultMsg"  />
 		<!--操作时间-->
 		<result column="create_time" property="createTime"  />
+		<!--操作详情(如：操作的文件名称列表)-->
+		<result column="detail" property="detail"  />
 	</resultMap>
 
 
 	<!-- 通用查询结果列-->
 	<sql id="base_column_list">
 		 log_id,user_id,user_name,module,action,
-		 status,result_msg,create_time
+		 status,result_msg,create_time,detail
 	</sql>
 
 	<sql id="base_condition_filed">
@@ -54,6 +56,9 @@
 			</if>
 			<if test="query.createTime != null and query.createTime!=''">
 				 <![CDATA[ and  create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.detail != null and query.detail!=''">
+				 and  detail = #{query.detail}
 			</if>
 	</sql>
 	<!-- 通用条件列-->
@@ -87,6 +92,9 @@
 			</if>
 			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
 				 <![CDATA[ and  create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.detailFuzzy!= null  and query.detailFuzzy!=''">
+				 and  detail like concat('%', #{query.detailFuzzy}, '%')
 			</if>
 	 </where>
 	</sql>
@@ -135,6 +143,9 @@
 			<if test="bean.createTime != null">
 				 create_time,
 			</if>
+			<if test="bean.detail != null">
+				 detail,
+			</if>
 		 </trim>
 		 <trim prefix="values (" suffix=")" suffixOverrides="," >
 			<if test="bean.userId!=null">
@@ -157,6 +168,9 @@
 			</if>
 			<if test="bean.createTime!=null">
 				 #{bean.createTime},
+			</if>
+			<if test="bean.detail!=null">
+				 #{bean.detail},
 			</if>
 		 </trim>
 	</insert>
@@ -189,6 +203,9 @@
 			<if test="bean.createTime != null">
 				 create_time,
 			</if>
+			<if test="bean.detail != null">
+				 detail,
+			</if>
 		 </trim>
 		 <trim prefix="values (" suffix=")" suffixOverrides=",">
 			<if test="bean.logId!=null">
@@ -215,6 +232,9 @@
 			<if test="bean.createTime!=null">
 				 #{bean.createTime},
 			</if>
+			<if test="bean.detail!=null">
+				 #{bean.detail},
+			</if>
 		 </trim>
 		 on DUPLICATE key update 
 		 <trim prefix="" suffix="" suffixOverrides=",">
@@ -239,6 +259,9 @@
 			<if test="bean.createTime!=null">
 				 create_time = VALUES(create_time),
 			</if>
+			<if test="bean.detail!=null">
+				 detail = VALUES(detail),
+			</if>
 		 </trim>
 	</insert>
 
@@ -251,7 +274,8 @@
 			 action,
 			 status,
 			 result_msg,
-			 create_time
+			 create_time,
+			 detail
 		 )values
 		 <foreach collection="list" item="item" separator=",">
 			 (
@@ -261,7 +285,8 @@
 				 #{item.action},
 				 #{item.status},
 				 #{item.resultMsg},
-				 #{item.createTime}
+				 #{item.createTime},
+				 #{item.detail}
 			 )
 		 </foreach>
 	</insert>
@@ -275,7 +300,8 @@
 			 action,
 			 status,
 			 result_msg,
-			 create_time
+			 create_time,
+			 detail
 		 )values
 		 <foreach collection="list" item="item" separator=",">
 			 (
@@ -285,7 +311,8 @@
 				 #{item.action},
 				 #{item.status},
 				 #{item.resultMsg},
-				 #{item.createTime}
+				 #{item.createTime},
+				 #{item.detail}
 			 )
 		 </foreach>
 			on DUPLICATE key update 
@@ -295,7 +322,8 @@
 			action = VALUES(action),
 			status = VALUES(status),
 			result_msg = VALUES(result_msg),
-			create_time = VALUES(create_time)
+			create_time = VALUES(create_time),
+			detail = VALUES(detail)
 	</insert>
 
 	<!--多条件修改-->
@@ -322,6 +350,9 @@
 			</if>
 			<if test="bean.createTime != null">
 				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.detail != null">
+				 detail = #{bean.detail},
 			</if>
  		 </set>
  		 <include refid="query_condition" />
@@ -357,6 +388,9 @@
 			</if>
 			<if test="bean.createTime != null">
 				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.detail != null">
+				 detail = #{bean.detail},
 			</if>
  		 </set>
  		 where log_id=#{logId}
