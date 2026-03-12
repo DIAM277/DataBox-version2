@@ -2,12 +2,16 @@
     <div>
         <Dialog :show="dialogConfig.show" :title="dialogConfig.title" :buttons="dialogConfig.buttons" width="400px"
             :showCancel="true" @close="dialogConfig.show = false" :showCustomTitle="true">
-            <el-form :model="formData" ref="formDataRef" label-width="95px" @submit.prevent>
-                <el-form-item>
-                    <AvatarUpload v-model="formData.avatar"></AvatarUpload>
-                </el-form-item>
-                <el-form-item label="用户名">
-                    <el-input v-model="formData.newUserName" placeholder="请输入新用户名"></el-input>
+            <el-form :model="formData" ref="formDataRef" label-width="80px" class="px-5 py-2" @submit.prevent>
+
+                <!-- 头像部位居中展示：移出了 el-form-item 避免被 label-width 标签占位挤压 -->
+                <div class="flex justify-center mb-8 w-full">
+                    <AvatarUpload v-model="formData.avatar" />
+                </div>
+
+                <!-- 用户名输入框 -->
+                <el-form-item label="用户名" class="mb-2 font-medium">
+                    <el-input v-model="formData.newUserName" placeholder="请输入新用户名" size="large" clearable></el-input>
                 </el-form-item>
             </el-form>
         </Dialog>
@@ -104,5 +108,3 @@ const submitForm = async () => {
     });
 };
 </script>
-
-<style lang="scss" scoped></style>

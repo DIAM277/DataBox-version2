@@ -1,9 +1,12 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
+import { createPinia } from "pinia"; // 引入 Pinia
 import ElementPlus from "element-plus";
 import { ElInfiniteScroll } from "element-plus";
 import "element-plus/dist/index.css";
+import "element-plus/theme-chalk/dark/css-vars.css";
+import '@/assets/main.scss'
 import "@/assets/icon/iconfont.css";
 import "@/assets/base.scss";
 import VueCookies from "vue-cookies";
@@ -26,6 +29,9 @@ import Utils from "@/utils/Utils";
 import confirm from "@/utils/Confirm";
 
 const app = createApp(App);
+const pinia = createPinia(); // 实例化 Pinia
+
+app.use(pinia); // 注册 Pinia
 app.use(ElementPlus);
 app.use(router);
 app.use(ElInfiniteScroll);
