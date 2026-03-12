@@ -1,6 +1,7 @@
 package com.databox.controller;
 
 import com.databox.annotation.GlobalInterceptor;
+import com.databox.annotation.OpLog;
 import com.databox.annotation.VerifyParam;
 import com.databox.entity.dto.SessionWebUserDto;
 import com.databox.entity.dto.UploadResultDto;
@@ -92,6 +93,7 @@ public class FileInfoController extends CommonFileController{
 	 */
 	@RequestMapping("/uploadFile")
 	@GlobalInterceptor(checkParams = true)
+	@OpLog(module = "文件管理", action = "上传文件")
 	public ResponseVO uploadFile(HttpSession session,
 								 String fileId,
 								 MultipartFile file,
@@ -148,6 +150,7 @@ public class FileInfoController extends CommonFileController{
 	 */
 	@RequestMapping("/newFolder")
 	@GlobalInterceptor(checkParams = true)
+	@OpLog(module = "文件管理", action = "新建目录")
 	public ResponseVO newFolder(HttpSession session,
 								@VerifyParam(required = true) String filePid,
 								@VerifyParam(required = true) String fileName){
@@ -179,6 +182,7 @@ public class FileInfoController extends CommonFileController{
 	 */
 	@RequestMapping("/rename")
 	@GlobalInterceptor(checkParams = true)
+	@OpLog(module = "文件管理", action = "重命名文件")
 	public ResponseVO rename(HttpSession session,
 							 @VerifyParam(required = true) String fileId,
 							 @VerifyParam(required = true) String fileName){
@@ -222,6 +226,7 @@ public class FileInfoController extends CommonFileController{
 	 */
 	@RequestMapping("/changeFileFolder")
 	@GlobalInterceptor(checkParams = true)
+	@OpLog(module = "文件管理", action = "移动文件目录")
 	public ResponseVO changeFileFolder(HttpSession session,
 									  @VerifyParam(required = true) String fileIds,
 									  @VerifyParam(required = true) String filePid){
@@ -251,6 +256,7 @@ public class FileInfoController extends CommonFileController{
 	 */
 	@RequestMapping("/download/{code}")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
+	@OpLog(module = "文件管理", action = "下载文件")
 	public void download(HttpServletRequest request, HttpServletResponse response,
 							   @VerifyParam(required = true) @PathVariable("code")String code) throws Exception {
 		super.download(request, response, code);
@@ -264,6 +270,7 @@ public class FileInfoController extends CommonFileController{
 	 */
 	@RequestMapping("/delFile")
 	@GlobalInterceptor(checkParams = true)
+	@OpLog(module = "文件管理", action = "删除文件")
 	public ResponseVO delFile(HttpSession session, @VerifyParam(required = true) String fileIds){
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		fileInfoService.removeFile2RecycleBinBatch(webUserDto.getUserId(), fileIds);
