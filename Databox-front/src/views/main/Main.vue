@@ -1,116 +1,169 @@
 <template>
-  <div>
-    <div class="top" style="margin-top: 20px;">
-      <div class="top-op">
-        <div class="btn-group">
-          <div class="action-btn upload-btn">
-            <el-upload :show-file-list="false" :with-credentials="true" :multiple="true" :http-request="addFile"
-              :accept="fileAccept">
-              <el-button type="primary" class="custom-btn">
-                <span class="iconfont icon-upload"></span>
-                上传
-              </el-button>
-            </el-upload>
-          </div>
-          <el-button type="success" @click="newFolder" class="custom-btn">
-            <span class="iconfont icon-folder-add"></span>
-            新建
-          </el-button>
-          <el-button type="danger" :disabled="selectFileList.length === 0" @click="delFileBatch" class="custom-btn">
-            <span class="iconfont icon-del"></span>
-            删除
-          </el-button>
-          <el-button type="warning" :disabled="selectFileList.length === 0" @click="moveFileBatch" class="custom-btn">
-            <span class="iconfont icon-move"></span>
-            移动
-          </el-button>
-          <el-button type="info" class="custom-btn refresh-btn" @click="loadDataList(false)">
-            <span class="iconfont icon-refresh"></span>
-            刷新
-          </el-button>
-        </div>
+  <div class="flex flex-col h-full space-y-4 pt-4 pb-1">
+
+    <!-- 顶栏：导航区与全局操作按钮 -->
+    <div class="flex justify-between items-center w-full px-2 mb-2">
+
+      <!-- 左：面包屑导航 -->
+      <div class="flex-1 overflow-hidden mr-4">
+        <Navigation ref="navigationRef" @navChange="navChange"></Navigation>
       </div>
-      <!-- 文件导航栏 -->
-      <Navigation ref="navigationRef" @navChange="navChange"></Navigation>
-    </div>
-    <div class="file-list" v-if="tableData.list && tableData.list.length > 0">
-      <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList" :initFetch="false"
-        :options="tableOptions" @rowSelected="rowSelected" @sortChange="handleSortChange"
-        :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
-        <!-- 文件名称 -->
-        <template #fileName="{ index, row }">
-          <div class="file-name" @mouseenter="showOp(row)" @mouseleave="cancelShowOp(row)">
-            <!-- fileType：1视频 3：图片 status:0:转码中 1：转码失败 2：转码成功使用中-->
-            <template v-if="(row.fileType == 3 || row.fileType == 1) && row.status == 2">
-              <Icon :cover="row.fileCover" :width="32"></Icon>
-            </template>
-            <template v-else>
-              <!-- folderType:0: 文件 1:目录 -->
-              <Icon v-if="row.folderType == 0" :fileType="row.fileType"></Icon>
-              <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
-            </template>
-            <span class="file-text" :title="row.fileName" v-if="!row.showEdit">
-              <span class="file-name-1" @click="preview(row)">{{ row.fileName }}</span>
-              <span v-if="row.status == 0" class="transfer-status">转码中</span>
-              <span v-if="row.status == 1" class="transfer-status transfer-fail">转码失败</span>
-            </span>
-            <div class="edit-panel" v-if="row.showEdit">
-              <el-input v-model.trim="row.fileNameReal" ref="editNameRef" :maxLength="190"
-                @keyup.enter.stop="saveNameEdit(index)">
-                <template #suffix>{{ row.fileSuffix }}</template>
-              </el-input>
-              <span :class="['iconfont icon-right1', row.fileNameReal ? '' : 'not-allow']"
-                @click.stop="saveNameEdit(index)"></span>
-              <span class="iconfont icon-error" @click="cancelNameEdit(index, $event)"></span>
-            </div>
-            <OpButton :fileData="row" :index="index" :showOp="row.showOp" @share="share" @download="handleDownloadClick"
-              @delete="delFile" @rename="editFileName" @move="moveFolder" />
-          </div>
-        </template>
-        <template #fileSize="{ index, row }">
-          <span v-if="row.fileSize">{{ proxy.Utils.size2Str(row.fileSize) }}</span>
-          <!-- 目录无大小 显示"-" -->
-          <span v-else style="font-size: 20px;">-</span>
-        </template>
-        <!-- 文件类型插槽 -->
-        <template #fileType="{ index, row }">
-          <span v-if="row.folderType === 1">文件夹</span>
-          <span v-else>
-            {{ getFileExtension(row.fileName) }}文件
-          </span>
-        </template>
-      </Table>
-    </div>
-    <!-- 骨架屏 -->
-    <SkeletonLoader v-else-if="isLoading" :rowCount="14" />
-    <!-- 无数据显示 -->
-    <div class="no-data" v-else>
-      <div class="no-data-inner">
-        <Icon iconName="no_data" :width="150" fit="fill"></Icon>
-        <div class="tips">当前列表为空，上传你的第一个文件吧</div>
-        <div class="op-list">
+
+      <!-- 右：微拟物纯组件按键组 -->
+      <div class="flex items-center gap-2.5 shrink-0 select-none">
+
+        <!-- 【苹果核心亮色】：上传按钮 -->
+        <div class="action-btn upload-btn">
           <el-upload :show-file-list="false" :with-credentials="true" :multiple="true" :http-request="addFile"
             :accept="fileAccept">
-            <div class="op-item">
-              <Icon iconName="file" :width="60"></Icon>
-              <div>上传文件</div>
+            <div
+              class="flex items-center justify-center gap-1 bg-[#007AFF] text-white px-4 py-2 rounded-xl shadow-[0_2px_10px_rgba(0,122,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,122,255,0.4)] transition-all font-semibold text-[13px] cursor-pointer">
+              <span class="iconfont icon-upload font-bold"></span> 上传
             </div>
           </el-upload>
-          <div class="op-item" v-if="category == 'all'" @click="newFolder">
-            <Icon iconName="folder" :width="60"></Icon>
-            <div>新建目录</div>
-          </div>
+        </div>
+
+        <!-- 【原生灰】：新建文件夹 -->
+        <div v-if="category == 'all'" @click="newFolder"
+          class="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer group shadow-sm">
+          <span
+            class="iconfont icon-folder-add text-gray-400 group-hover:text-[#007AFF] transition-colors leading-none"></span>新建
+        </div>
+
+        <!-- 【警示红】：批量删除 (附带空状态灰度) -->
+        <div @click="selectFileList.length > 0 ? delFileBatch() : null"
+          class="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border rounded-xl transition-all shadow-sm"
+          :class="selectFileList.length === 0 ? 'opacity-40 cursor-not-allowed border-gray-200 dark:border-[#38383a] text-gray-400 bg-gray-50 dark:bg-black/20' : 'cursor-pointer text-red-600 border-red-200 bg-red-50 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/20 dark:hover:bg-red-900/40'">
+          <span class="iconfont icon-del leading-none"></span>删除
+        </div>
+
+        <!-- 【中庸灰】：批量移动 (附带空状态灰度) -->
+        <div @click="selectFileList.length > 0 ? moveFileBatch() : null"
+          class="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border rounded-xl transition-all shadow-sm"
+          :class="selectFileList.length === 0 ? 'opacity-40 cursor-not-allowed border-gray-200 dark:border-[#38383a] text-gray-400 bg-gray-50 dark:bg-black/20' : 'cursor-pointer text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#38383a] bg-white dark:bg-[#1c1c1e] hover:bg-gray-50 dark:hover:bg-[#2c2c2e]'">
+          <span class="iconfont icon-move leading-none"></span>移动
+        </div>
+
+        <!-- 极简刷新按钮 -->
+        <div @click="loadDataList(false)"
+          class="flex items-center justify-center w-[34px] h-[34px] text-gray-500 hover:text-[#007AFF] bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] shadow-sm rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer">
+          <span class="iconfont icon-refresh text-[14px]"></span>
         </div>
       </div>
     </div>
+
+    <!-- 主体：包裹底层 Table 与缺省插图的现代化容器 -->
+    <div
+      class="flex-1 bg-white dark:bg-[#1c1c1e]/50 rounded-2xl shadow-sm border border-[#e5e5e9] dark:border-[#38383a]/60 overflow-hidden relative flex flex-col">
+
+      <!-- 有数据：原生表格 -->
+      <div class="flex-1 overflow-hidden file-list" v-if="tableData.list && tableData.list.length > 0">
+        <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList" :initFetch="false"
+          :options="tableOptions" @rowSelected="rowSelected" @sortChange="handleSortChange"
+          :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
+
+          <template #fileName="{ index, row }">
+            <div class="file-name flex items-center pr-10 relative group w-full" @mouseenter="showOp(row)"
+              @mouseleave="cancelShowOp(row)">
+              <template v-if="(row.fileType == 3 || row.fileType == 1) && row.status == 2">
+                <Icon :cover="row.fileCover" :width="32"></Icon>
+              </template>
+              <template v-else>
+                <Icon v-if="row.folderType == 0" :fileType="row.fileType"></Icon>
+                <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
+              </template>
+
+              <span class="file-text ml-3 flex-1 overflow-hidden" :title="row.fileName" v-if="!row.showEdit">
+                <span
+                  class="file-name-1 text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF]"
+                  @click="preview(row)">{{ row.fileName }}</span>
+                <span v-if="row.status == 0"
+                  class="text-xs text-blue-500 ml-2 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded">转码中</span>
+                <span v-if="row.status == 1"
+                  class="text-xs text-red-500 ml-2 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">转码失败</span>
+              </span>
+
+              <div class="edit-panel flex-1 flex items-center ml-2" v-if="row.showEdit">
+                <el-input v-model.trim="row.fileNameReal" ref="editNameRef" :maxLength="190"
+                  @keyup.enter.stop="saveNameEdit(index)">
+                  <template #suffix>{{ row.fileSuffix }}</template>
+                </el-input>
+                <span
+                  :class="['iconfont icon-right1 ml-2 p-1 rounded-md text-white cursor-pointer', row.fileNameReal ? 'bg-[#007AFF] hover:bg-[#0056b3]' : 'bg-gray-300 cursor-not-allowed']"
+                  @click.stop="saveNameEdit(index)"></span>
+                <span class="iconfont icon-error ml-2 text-gray-400 hover:text-red-500 cursor-pointer"
+                  @click="cancelNameEdit(index, $event)"></span>
+              </div>
+
+              <OpButton :fileData="row" :index="index" :showOp="row.showOp" @share="share"
+                @download="handleDownloadClick" @delete="delFile" @rename="editFileName" @move="moveFolder"
+                class="opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </template>
+
+          <template #fileSize="{ index, row }">
+            <span class="font-medium text-[#86868b] dark:text-[#a1a1a6] text-[13px]" v-if="row.fileSize">{{
+              proxy.Utils.size2Str(row.fileSize) }}</span>
+            <span v-else class="text-gray-300 dark:text-[#424245] text-lg">-</span>
+          </template>
+
+          <template #fileType="{ index, row }">
+            <span v-if="row.folderType === 1" class="text-[#86868b] dark:text-[#a1a1a6] text-[13px]">文件夹</span>
+            <span v-else class="text-[#86868b] dark:text-[#a1a1a6] text-[13px]">{{ getFileExtension(row.fileName)
+            }}文件</span>
+          </template>
+        </Table>
+      </div>
+
+      <!-- 加载中包裹 -->
+      <SkeletonLoader v-else-if="isLoading" :rowCount="14" class="p-4" />
+
+      <!-- 无数据底盘：重新排版的大引导，并新增原生拖拽接收区 -->
+      <div v-else @dragover.prevent="isDragOver = true" @dragleave.prevent="isDragOver = false"
+        @drop.prevent="handleDrop"
+        :class="isDragOver ? 'bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-[#007AFF] rounded-2xl m-2' : ''"
+        class="flex-1 flex flex-col justify-center items-center h-full inset-0 pb-16 transition-all duration-300">
+
+        <!-- 当文件悬浮时改变图标表现层 -->
+        <Icon iconName="no_data" :width="130" fit="fill" class="transition-all duration-300"
+          :class="isDragOver ? 'opacity-100 scale-110' : 'opacity-80'"></Icon>
+
+        <!-- 动态引导文案 -->
+        <div class="mt-5 text-[#86868b] text-[14px] tracking-wide font-medium transition-colors"
+          :class="isDragOver ? 'text-[#007AFF] font-bold' : ''">
+          {{ isDragOver ? '松开鼠标极速上传文件' : '当前列表为空，点击上传或拖拽上传文件' }}
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-5">
+          <el-upload :show-file-list="false" :with-credentials="true" :multiple="true" :http-request="addFile"
+            :accept="fileAccept">
+            <div
+              class="w-[110px] h-[110px] rounded-2xl bg-gray-50/80 dark:bg-[#2c2c2e]/60 border border-[#e5e5e9] dark:border-[#38383a] flex flex-col items-center justify-center cursor-pointer hover:border-[#007AFF] hover:shadow-sm transition-all group">
+              <Icon iconName="file" :width="45" class="transition-transform group-hover:scale-105"></Icon>
+              <span
+                class="text-[13px] font-semibold mt-3 text-gray-600 dark:text-gray-300 group-hover:text-[#007AFF]">上传文件</span>
+            </div>
+          </el-upload>
+          <div v-if="category == 'all'" @click="newFolder"
+            class="w-[110px] h-[110px] rounded-2xl bg-gray-50/80 dark:bg-[#2c2c2e]/60 border border-[#e5e5e9] dark:border-[#38383a] flex flex-col items-center justify-center cursor-pointer hover:border-[#007AFF] hover:shadow-sm transition-all group">
+            <Icon iconName="folder" :width="48" class="transition-transform group-hover:scale-105"></Icon>
+            <span
+              class="text-[13px] font-semibold mt-3 text-gray-600 dark:text-gray-300 group-hover:text-[#007AFF]">新建目录</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 弹窗合集 (保持不变) -->
     <Dialog :show="deleteDialogConfig.show" :title="deleteDialogConfig.title" :buttons="deleteDialogConfig.buttons"
       width="500px" :showCancel="true" @close="handleDialogClose" :showCustomTitle="true">
-      <div class="delete-confirm-content">
-        <div class="icon-container">
-          <img src="@/assets/icon-image/warning.png" style="background-color:white">
+      <div class="flex flex-col items-center py-6">
+        <div class="w-16 h-16 rounded-full bg-[#fff2f0] dark:bg-red-900/30 flex items-center justify-center mb-5">
+          <img src="@/assets/icon-image/warning.png" class="w-10 h-10 rounded-full bg-white object-cover">
         </div>
-        <div class="message">确定删除所选的文件吗？</div>
-        <div class="sub-message">删除的文件可在10天内通过回收站还原</div>
+        <div class="text-[17px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] mb-2 tracking-wide">确定删除所选的文件吗？</div>
+        <div class="text-[13px] text-[#86868b] dark:text-[#a1a1a6]">删除的文件可在10天内通过回收站还原</div>
       </div>
     </Dialog>
     <FolderSelect ref="folderSelectRef" @folderSelect="moveFolderDone"></FolderSelect>
@@ -149,7 +202,7 @@ const columns = computed(() => [
     prop: 'fileName',
     scopedSlots: 'fileName',
     align: 'left',
-    sortable:true
+    sortable: true
   },
   {
     label: '大小',
@@ -157,7 +210,7 @@ const columns = computed(() => [
     scopedSlots: 'fileSize',
     width: 200,
     align: 'center',
-    sortable:true
+    sortable: true
   },
   {
     label: '类型',
@@ -165,14 +218,14 @@ const columns = computed(() => [
     scopedSlots: 'fileType',
     width: 200,
     align: 'center',
-    sortable:true
+    sortable: true
   },
   {
     label: '修改时间',
     prop: 'lastUpdateTime',
     width: 300,
     align: 'center',
-    sortable:true
+    sortable: true
   }
 ]);
 
@@ -518,9 +571,31 @@ const addFile = (fileData) => {
   emit('addFile', { file: fileData.file, filePid: currentFolder.value.fileId })
 }
 
+// ---------------- 新增：拖拽上传响应逻辑 ----------------
+const isDragOver = ref(false);
+
+const handleDrop = (e) => {
+  isDragOver.value = false;
+  // 获取浏览器拖入产生的文件对象
+  const files = e.dataTransfer.files;
+  if (!files || files.length === 0) return;
+
+  // 遍历多个文件并利用现有的 addFile 口子分发上传
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    // 修复：原生文件对象没有 ElUpload 提供的 uid，必须手动生成一个唯一 id 供 Uploader 追踪进度
+    if (!file.uid) {
+      file.uid = new Date().getTime() + i + Math.random().toString(36).substr(2, 5);
+    }
+    addFile({ file: file });
+  }
+};
+// ---------------------------------------------------
+
 // 添加文件回调
 const reload = () => {
-  loadDataList()
+  showLoading.value = false;
+  loadDataList();
 }
 
 // 搜索文件方法，供父组件调用

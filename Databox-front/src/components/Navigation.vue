@@ -1,34 +1,82 @@
 <template>
-    <div class="top-navigation">
+    <!-- 使用 flex-nowrap 防止过度换行，统一为 text-sm 级别灰度字体 -->
+    <div
+        class="flex items-center flex-nowrap gap-1 text-sm text-gray-600 dark:text-gray-400 select-none overflow-hidden">
+
+        <!-- 返回上一级 -->
         <template v-if="folderList.length > 0">
-            <span class="back link" @click="backParent">
-                <i class="iconfont icon-back"></i>
-                返回上一级
+            <span
+                class="flex items-center hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded-md transition-colors cursor-pointer shrink-0"
+                @click="backParent">
+                <i class="iconfont icon-back text-[12px] mr-1.5"></i>返回上一级
             </span>
-            <el-divider direction="vertical"></el-divider>
+            <span class="text-gray-300 dark:text-gray-700 px-1 font-light shrink-0">|</span>
         </template>
-        <span v-if="folderList.length == 0" class="all-file">
-            <i class="iconfont icon-folder"></i>
-            全部文件
+
+        <!-- 根目录 (不可点击状态：此时就是根目录) -->
+        <span v-if="folderList.length == 0"
+            class="flex items-center font-semibold text-gray-900 dark:text-gray-100 px-2 py-1 shrink-0">
+            <i class="iconfont icon-all text-[#007AFF] mr-2 text-[15px]"></i>全部文件
         </span>
-        <span v-if="folderList.length > 0" class="link all-file-link" @click="goToRoot">
-            <i class="iconfont icon-folder"></i>
-            全部文件
+
+        <!-- 根目录 (可点击状态：说明当前在子目录中) -->
+        <span v-if="folderList.length > 0"
+            class="flex items-center hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded-md transition-colors cursor-pointer shrink-0"
+            @click="goToRoot">
+            <i class="iconfont icon-all text-[#007AFF] mr-2 text-[15px] opacity-80"></i>全部文件
         </span>
-        <template v-for="(item, index) in folderList">
-            <span class="iconfont icon-right nav-arrow"></span>
-            <span class="link folder-item" v-if="index < folderList.length - 1" @click="setCurrentFolder(index)">
+
+        <!-- ================== 折叠区 ================== -->
+        <template v-if="collapsedFolders.length > 0">
+            <span class="iconfont icon-right text-gray-300 dark:text-gray-600 text-[10px] mx-0.5 shrink-0"></span>
+
+            <el-dropdown trigger="hover" class="shrink-0">
+                <!-- 悬浮触发块：极简圆角点阵 -->
+                <span
+                    class="flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded-md transition-colors cursor-pointer tracking-widest focus:outline-none">
+                    ...
+                </span>
+
+                <!-- 被折叠的历史目录菜单 -->
+                <template #dropdown>
+                    <el-dropdown-menu
+                        class="dark:border-[#38383a] dark:bg-[#1c1c1e] rounded-xl shadow-xl min-w-[120px]">
+                        <el-dropdown-item v-for="item in collapsedFolders" :key="item.originalIndex"
+                            @click="setCurrentFolder(item.originalIndex)">
+                            <span
+                                class="text-[13px] text-gray-700 dark:text-gray-300 max-w-[200px] truncate block py-0.5">
+                                {{ item.fileName }}
+                            </span>
+                        </el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
+            </el-dropdown>
+        </template>
+
+        <!-- ================== 可见区 ================== -->
+        <template v-for="(item, index) in visibleFolders" :key="item.originalIndex">
+            <span class="iconfont icon-right text-gray-300 dark:text-gray-600 text-[10px] mx-0.5 shrink-0"></span>
+
+            <!-- 不是最后一项：灰色可点击的历史路径 -->
+            <span v-if="index < visibleFolders.length - 1"
+                class="hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded-md transition-colors cursor-pointer max-w-[150px] truncate shrink-0"
+                @click="setCurrentFolder(item.originalIndex)">
                 {{ item.fileName }}
             </span>
-            <span v-if="index == folderList.length - 1" class="text current-folder">
+
+            <!-- 最后一项：加粗、颜色深的不可点击现层级 -->
+            <span v-if="index == visibleFolders.length - 1"
+                class="font-semibold text-gray-900 dark:text-gray-100 px-2 py-1 max-w-[200px] truncate shrink-0">
                 {{ item.fileName }}
             </span>
         </template>
+
     </div>
 </template>
 
 <script setup>
-import { ref, reactive, getCurrentInstance, nextTick, watch } from "vue"
+// 新增引入 computed
+import { ref, reactive, getCurrentInstance, nextTick, watch, computed } from "vue"
 const { proxy } = getCurrentInstance();
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
@@ -62,6 +110,36 @@ const folderList = ref([])
 // 当前目录
 const currentFolder = ref({ fileId: '0' })
 
+
+// ================== 新增：层级折叠控制逻辑 ==================
+
+// 1. 生成带有原始索引的文件夹列表（防止数组截取后丢失原位关系）
+const folderListWithIndex = computed(() => {
+    return folderList.value.map((item, index) => ({
+        ...item,
+        originalIndex: index
+    }));
+});
+
+// 2. 折叠区：当长度大于3时，截取 0 到 length-2 的元素
+const collapsedFolders = computed(() => {
+    if (folderListWithIndex.value.length > 8) {
+        return folderListWithIndex.value.slice(0, folderListWithIndex.value.length - 2);
+    }
+    return [];
+});
+
+// 3. 可见区：当长度大于3时，截取并显示最后2个元素；否则展示所有
+const visibleFolders = computed(() => {
+    if (folderListWithIndex.value.length > 8) {
+        return folderListWithIndex.value.slice(-4);
+    }
+    return folderListWithIndex.value;
+});
+
+// ==========================================================
+
+
 const init = () => {
     folderList.value = []
     currentFolder.value = { fileId: '0' }
@@ -80,7 +158,7 @@ const openFolder = (data) => {
     setPath()
 }
 
-//点击导航栏 设置当前目录
+// 点击导航栏 设置当前目录
 const setCurrentFolder = (index) => {
     // 确保索引有效
     if (index >= 0 && index < folderList.value.length) {
@@ -186,99 +264,3 @@ const backParent = () => {
 }
 defineExpose({ openFolder, goToRoot })
 </script>
-
-<style lang="scss" scoped>
-.top-navigation {
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    line-height: 40px;
-    background-color: #f5f7fac0;
-    padding: 0 15px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    margin-right: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    flex-wrap: wrap; // 允许内容换行
-    overflow: hidden; // 防止溢出
-
-    .all-file {
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-
-        i {
-            margin-right: 5px;
-            font-size: 16px;
-            color: #409EFF;
-        }
-    }
-
-    .all-file-link {
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-
-        i {
-            margin-right: 5px;
-            font-size: 16px;
-        }
-    }
-
-    .link {
-        color: #409EFF;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        padding: 0 5px;
-        border-radius: 4px;
-
-        &:hover {
-            background-color: #ecf5ff;
-            color: #66b1ff;
-        }
-
-        &:active {
-            color: #3a8ee6;
-        }
-    }
-
-    .back {
-        display: flex;
-        align-items: center;
-
-        i {
-            margin-right: 4px;
-            font-size: 14px;
-        }
-    }
-
-    .folder-item {
-        max-width: 150px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        display: inline-block;
-    }
-
-    .nav-arrow {
-        color: #909399;
-        padding: 0 5px;
-        font-size: 12px;
-    }
-
-    .current-folder {
-        color: #606266;
-        font-weight: 500;
-        max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        display: inline-block;
-    }
-
-    :deep(.el-divider--vertical) {
-        margin: 0 10px;
-        height: 1em;
-    }
-}
-</style>
