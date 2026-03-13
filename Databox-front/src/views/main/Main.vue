@@ -117,39 +117,53 @@
       <!-- 加载中包裹 -->
       <SkeletonLoader v-else-if="isLoading" :rowCount="14" class="p-4" />
 
-      <!-- 无数据底盘：重新排版的大引导，并新增原生拖拽接收区 -->
-      <div v-else @dragover.prevent="isDragOver = true" @dragleave.prevent="isDragOver = false"
-        @drop.prevent="handleDrop"
-        :class="isDragOver ? 'bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-[#007AFF] rounded-2xl m-2' : ''"
-        class="flex-1 flex flex-col justify-center items-center h-full inset-0 pb-16 transition-all duration-300">
+      <!-- 无数据底盘：区分搜索无果与目录为空 -->
+      <div v-else
+        class="flex-1 flex flex-col justify-center items-center h-full inset-0 pb-16 transition-all duration-300"
+        @dragover.prevent="!fileNameFuzzy ? isDragOver = true : null"
+        @dragleave.prevent="!fileNameFuzzy ? isDragOver = false : null"
+        @drop.prevent="!fileNameFuzzy ? handleDrop($event) : null"
+        :class="isDragOver && !fileNameFuzzy ? 'bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-[#007AFF] rounded-2xl m-2' : ''">
 
-        <!-- 当文件悬浮时改变图标表现层 -->
-        <Icon iconName="no_data" :width="130" fit="fill" class="transition-all duration-300"
-          :class="isDragOver ? 'opacity-100 scale-110' : 'opacity-80'"></Icon>
-
-        <!-- 动态引导文案 -->
-        <div class="mt-5 text-[#86868b] text-[14px] tracking-wide font-medium transition-colors"
-          :class="isDragOver ? 'text-[#007AFF] font-bold' : ''">
-          {{ isDragOver ? '松开鼠标极速上传文件' : '当前列表为空，点击上传或拖拽上传文件' }}
-        </div>
-
-        <div class="mt-6 flex flex-wrap gap-5">
-          <el-upload :show-file-list="false" :with-credentials="true" :multiple="true" :http-request="addFile"
-            :accept="fileAccept">
-            <div
-              class="w-[110px] h-[110px] rounded-2xl bg-gray-50/80 dark:bg-[#2c2c2e]/60 border border-[#e5e5e9] dark:border-[#38383a] flex flex-col items-center justify-center cursor-pointer hover:border-[#007AFF] hover:shadow-sm transition-all group">
-              <Icon iconName="file" :width="45" class="transition-transform group-hover:scale-105"></Icon>
-              <span
-                class="text-[13px] font-semibold mt-3 text-gray-600 dark:text-gray-300 group-hover:text-[#007AFF]">上传文件</span>
-            </div>
-          </el-upload>
-          <div v-if="category == 'all'" @click="newFolder"
-            class="w-[110px] h-[110px] rounded-2xl bg-gray-50/80 dark:bg-[#2c2c2e]/60 border border-[#e5e5e9] dark:border-[#38383a] flex flex-col items-center justify-center cursor-pointer hover:border-[#007AFF] hover:shadow-sm transition-all group">
-            <Icon iconName="folder" :width="48" class="transition-transform group-hover:scale-105"></Icon>
-            <span
-              class="text-[13px] font-semibold mt-3 text-gray-600 dark:text-gray-300 group-hover:text-[#007AFF]">新建目录</span>
+        <!-- 状态 1：搜索无结果空背景 -->
+        <template v-if="fileNameFuzzy">
+          <Icon iconName="no_data" :width="130" fit="fill" class="opacity-60 grayscale transition-all"></Icon>
+          <div class="mt-5 text-[#86868b] text-[14px] tracking-wide font-medium">
+            未能找到与 "<span class="text-[#007AFF] font-semibold mx-1">{{ fileNameFuzzy }}</span>" 匹配的文件
           </div>
-        </div>
+        </template>
+
+        <!-- 状态 2：常规空目录 (含拖拽响应与上传按钮) -->
+        <template v-else>
+          <!-- 当文件悬浮时改变图标表现层 -->
+          <Icon iconName="no_data" :width="130" fit="fill" class="transition-all duration-300"
+            :class="isDragOver ? 'opacity-100 scale-110' : 'opacity-80'"></Icon>
+
+          <!-- 动态引导文案 -->
+          <div class="mt-5 text-[#86868b] text-[14px] tracking-wide font-medium transition-colors"
+            :class="isDragOver ? 'text-[#007AFF] font-bold' : ''">
+            {{ isDragOver ? '松开鼠标极速上传文件' : '当前列表为空，点击上传或拖拽上传文件' }}
+          </div>
+
+          <div class="mt-6 flex flex-wrap gap-5">
+            <el-upload :show-file-list="false" :with-credentials="true" :multiple="true" :http-request="addFile"
+              :accept="fileAccept">
+              <div
+                class="w-[110px] h-[110px] rounded-2xl bg-gray-50/80 dark:bg-[#2c2c2e]/60 border border-[#e5e5e9] dark:border-[#38383a] flex flex-col items-center justify-center cursor-pointer hover:border-[#007AFF] hover:shadow-sm transition-all group">
+                <Icon iconName="file" :width="45" class="transition-transform group-hover:scale-105"></Icon>
+                <span
+                  class="text-[13px] font-semibold mt-3 text-gray-600 dark:text-gray-300 group-hover:text-[#007AFF]">上传文件</span>
+              </div>
+            </el-upload>
+
+            <div v-if="category == 'all'" @click="newFolder"
+              class="w-[110px] h-[110px] rounded-2xl bg-gray-50/80 dark:bg-[#2c2c2e]/60 border border-[#e5e5e9] dark:border-[#38383a] flex flex-col items-center justify-center cursor-pointer hover:border-[#007AFF] hover:shadow-sm transition-all group">
+              <Icon iconName="folder" :width="48" class="transition-transform group-hover:scale-105"></Icon>
+              <span
+                class="text-[13px] font-semibold mt-3 text-gray-600 dark:text-gray-300 group-hover:text-[#007AFF]">新建目录</span>
+            </div>
+          </div>
+        </template>
       </div>
 
     </div>
@@ -677,8 +691,10 @@ const navChange = (data) => {
   const { categoryId, curFolder } = data
   currentFolder.value = curFolder
   category.value = categoryId
+
   // 清空选中的文件列表
   selectFileList.value = []
+  fileNameFuzzy.value = ''
   loadDataList()
 }
 
