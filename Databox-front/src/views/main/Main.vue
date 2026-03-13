@@ -44,6 +44,12 @@
           <span class="iconfont icon-move leading-none"></span>移动
         </div>
 
+        <!-- 柔和垂直分割线 -->
+        <div class="w-[1px] h-4 bg-gray-200 dark:bg-gray-700 mx-1"></div>
+
+        <!-- 高级悬浮筛选组件 -->
+        <FileFilter @filter-change="handleFilterChange" />
+
         <!-- 极简刷新按钮 -->
         <div @click="loadDataList(false)"
           class="flex items-center justify-center w-[34px] h-[34px] text-gray-500 hover:text-[#007AFF] bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] shadow-sm rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer">
@@ -117,13 +123,13 @@
       <!-- 加载中包裹 -->
       <SkeletonLoader v-else-if="isLoading" :rowCount="14" class="p-4" />
 
-      <!-- 无数据底盘：区分搜索无果与目录为空 -->
+      <!-- 无数据底盘：区分搜索无果、筛选无果与目录为空 -->
       <div v-else
         class="flex-1 flex flex-col justify-center items-center h-full inset-0 pb-16 transition-all duration-300"
-        @dragover.prevent="!fileNameFuzzy ? isDragOver = true : null"
-        @dragleave.prevent="!fileNameFuzzy ? isDragOver = false : null"
-        @drop.prevent="!fileNameFuzzy ? handleDrop($event) : null"
-        :class="isDragOver && !fileNameFuzzy ? 'bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-[#007AFF] rounded-2xl m-2' : ''">
+        @dragover.prevent="(!fileNameFuzzy && !isAdvancedFiltered) ? isDragOver = true : null"
+        @dragleave.prevent="(!fileNameFuzzy && !isAdvancedFiltered) ? isDragOver = false : null"
+        @drop.prevent="(!fileNameFuzzy && !isAdvancedFiltered) ? handleDrop($event) : null"
+        :class="isDragOver && (!fileNameFuzzy && !isAdvancedFiltered) ? 'bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-[#007AFF] rounded-2xl m-2' : ''">
 
         <!-- 状态 1：搜索无结果空背景 -->
         <template v-if="fileNameFuzzy">
@@ -133,7 +139,15 @@
           </div>
         </template>
 
-        <!-- 状态 2：常规空目录 (含拖拽响应与上传按钮) -->
+        <!-- 状态 2：高级筛选无结果空背景 -->
+        <template v-else-if="isAdvancedFiltered">
+          <Icon iconName="no_data" :width="130" fit="fill" class="opacity-60 grayscale transition-all"></Icon>
+          <div class="mt-5 text-[#86868b] text-[14px] tracking-wide font-medium">
+            未找到符合条件的文件
+          </div>
+        </template>
+
+        <!-- 状态 3：常规空目录 (含拖拽响应与上传按钮) -->
         <template v-else>
           <!-- 当文件悬浮时改变图标表现层 -->
           <Icon iconName="no_data" :width="130" fit="fill" class="transition-all duration-300"
@@ -192,6 +206,7 @@
 <script setup>
 import OpButton from "@/components/Button/OpButton.vue";
 import ShareFile from "./ShareFile.vue";
+import FileFilter from "@/components/FileFilter/FileFilter.vue"; // 🔴 导入高级筛选组件
 import CategoryInfo from "@/js/CategoryInfo";
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import { ref, reactive, getCurrentInstance, nextTick, computed } from "vue"
@@ -253,6 +268,19 @@ const tableOptions = ref({
 })
 const fileNameFuzzy = ref()
 const category = ref()
+
+const currentFilters = ref({})
+const handleFilterChange = (payload) => {
+  currentFilters.value = payload
+  loadDataList(false) // 筛选条件变更后，重置分页并刷新列表
+}
+
+const isAdvancedFiltered = computed(() => {
+  const f = currentFilters.value;
+  if (!f) return false;
+  return !!(f.fileCategory || f.createTimeStart || f.createTimeEnd || f.fileSizeMin || f.fileSizeMax);
+});
+
 // 添加加载状态变量
 const isLoading = ref(false);
 // 排序相关状态
@@ -297,6 +325,10 @@ const loadDataList = async (append = false) => {
     filePid: currentFolder.value.fileId,
     category: category.value
   }
+
+  // 🔴 增补：将高级筛选组件抛出的参数合并到后端请求对象中
+  Object.assign(params, currentFilters.value);
+
   // 添加排序参数
   if (sortConfig.value.prop && sortConfig.value.order) {
     params.sortField = sortConfig.value.prop;

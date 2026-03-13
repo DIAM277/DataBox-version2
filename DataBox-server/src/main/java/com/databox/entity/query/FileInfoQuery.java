@@ -46,6 +46,13 @@ public class FileInfoQuery extends BaseParam {
 	private Long fileSize;
 
 	/**
+	 * 文件大小范围查询（最小/最大）
+	 */
+	private Long fileSizeMin;
+
+	private Long fileSizeMax;
+
+	/**
 	 * 文件名称
 	 */
 	private String fileName;
@@ -129,5 +136,6 @@ public class FileInfoQuery extends BaseParam {
 	private String sortOrder;
 
 	private Integer referenceCount;
+
 
 }
