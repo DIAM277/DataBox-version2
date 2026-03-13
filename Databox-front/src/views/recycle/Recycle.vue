@@ -1,86 +1,128 @@
 <template>
-  <div>
-    <!-- 顶部按钮操作栏 -->
-    <div class="top" style="margin-top: 20px;">
-      <div class="top-op">
-        <div class="btn-group">
-          <el-button type="success" @click="revertBatch" class="custom-btn" :disabled="selectFileList.length === 0">
-            <span class="iconfont icon-revert"></span>
-            还原文件
-          </el-button>
-          <el-button type="danger" class="custom-btn refresh-btn" @click="delFileBatch"
-            :disabled="selectFileList.length === 0">
-            <span class="iconfont icon-del"></span>
-            彻底删除
-          </el-button>
-          <el-button type="info" class="custom-btn refresh-btn" @click="loadDataList(false)">
-            <span class="iconfont icon-refresh"></span>
-            刷新
-          </el-button>
+  <div class="flex flex-col h-full pt-4 pb-1">
+
+    <!-- 顶栏：标题与局部操作按钮区 -->
+    <div class="flex justify-between items-center px-6 mb-5">
+
+      <!-- 左：标题与说明 -->
+      <div class="flex flex-col">
+        <h1 class="text-[22px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight leading-snug">回收站</h1>
+        <span class="text-[13px] text-[#86868b] dark:text-[#98989d] mt-0.5 font-medium">文件保留30天后将被自动彻底清除，请及时处理</span>
+      </div>
+
+      <!-- 右：操作按钮 -->
+      <div class="flex gap-3 items-center shrink-0 select-none">
+
+        <!-- 【新生绿】：批量还原 -->
+        <div @click="selectFileList.length > 0 ? revertBatch() : null"
+          class="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border rounded-xl transition-all shadow-sm"
+          :class="selectFileList.length === 0 ? 'opacity-40 cursor-not-allowed border-gray-200 dark:border-[#38383a] text-gray-400 bg-gray-50 dark:bg-black/20' : 'cursor-pointer text-emerald-600 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40'">
+          <span class="iconfont icon-revert leading-none"></span>还原文件
         </div>
+
+        <!-- 【警示红】：彻底删除 -->
+        <div @click="selectFileList.length > 0 ? delFileBatch() : null"
+          class="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border rounded-xl transition-all shadow-sm"
+          :class="selectFileList.length === 0 ? 'opacity-40 cursor-not-allowed border-gray-200 dark:border-[#38383a] text-gray-400 bg-gray-50 dark:bg-black/20' : 'cursor-pointer text-red-600 border-red-200 bg-red-50 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/20 dark:hover:bg-red-900/40'">
+          <span class="iconfont icon-del leading-none"></span>彻底删除
+        </div>
+
+        <!-- 极简刷新按钮 -->
+        <div @click="loadDataList(false)"
+          class="flex items-center justify-center w-[34px] h-[34px] text-gray-500 hover:text-[#007AFF] bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] shadow-sm rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer">
+          <span class="iconfont icon-refresh text-[14px]"></span>
+        </div>
+
       </div>
     </div>
-    <!-- 数据表格 -->
-    <div class="file-list" v-if="tableData.list && tableData.list.length > 0">
-      <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList" :initFetch="false"
-        :options="tableOptions" @rowSelected="rowSelected" @sortChange="handleSortChange"
-        :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
-        <template #fileName="{ index, row }">
-          <div class="file-item" @mouseenter="showOp(row)" @mouseleave="cancelShowOp(row)">
-            <template v-if="(row.fileType == 3 || row.fileType == 1) && row.status !== 0">
-              <Icon :cover="row.fileCover" :width="32"></Icon>
-            </template>
-            <template v-else>
-              <Icon v-if="row.folderType == 0" :fileType="row.fileType"></Icon>
-              <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
-            </template>
-            <span class="file-text" :title="row.fileName">
-              <span class="file-name-1">{{ row.fileName }}</span>
-            </span>
-            <span class="op">
-              <template v-if="row.showOp">
-                <span class="iconfont icon-link" @click="revert(row)">还原</span>
-                <span class="iconfont icon-cancel" @click="delFile(row)">删除</span>
+
+    <!-- 主体：底层 Table 容器 (去除内层生硬嵌套的卡片边框与背景) -->
+    <div class="flex-1 overflow-hidden relative flex flex-col">
+
+      <!-- 有数据：原生表格 -->
+      <div class="flex-1 overflow-hidden" v-if="tableData.list && tableData.list.length > 0">
+        <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList" :initFetch="false"
+          :options="tableOptions" @rowSelected="rowSelected" @sortChange="handleSortChange"
+          :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
+
+          <!-- 文件名称插槽 -->
+          <template #fileName="{ index, row }">
+            <div class="flex items-center pr-10 relative group w-full" @mouseenter="showOp(row)"
+              @mouseleave="cancelShowOp(row)">
+
+              <template v-if="(row.fileType == 3 || row.fileType == 1) && row.status !== 0">
+                <Icon :cover="row.fileCover" :width="32"></Icon>
               </template>
-            </span>
-          </div>
-        </template>
-        <template #fileSize="{ index, row }">
-          <span v-if="row.fileSize">{{ proxy.Utils.size2Str(row.fileSize) }}</span>
-          <!-- 目录无大小 显示"-" -->
-          <span v-else style="font-size: 20px;">-</span>
-        </template>
-      </Table>
-    </div>
-    <!-- 骨架屏 -->
-    <SkeletonLoader v-else-if="isLoading" :rowCount="14" />
-    <!-- 无数据提示 -->
-    <div class="no-data" v-else>
-      <div class="no-data-inner">
-        <Icon iconName="no_data" :width="150" fit="fill"></Icon>
-        <div class="tips">回收站中没有文件</div>
+              <template v-else>
+                <Icon v-if="row.folderType == 0" :fileType="row.fileType"></Icon>
+                <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
+              </template>
+
+              <span class="ml-3 flex-1 overflow-hidden text-ellipsis whitespace-nowrap" :title="row.fileName">
+                <span class="text-[#1d1d1f] dark:text-[#f5f5f7] font-medium">{{ row.fileName }}</span>
+              </span>
+
+              <!-- 行内悬浮操作区 -->
+              <div v-if="row.showOp"
+                class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+
+                <el-tooltip content="还原" placement="top" effect="dark" :show-after="300">
+                  <span
+                    class="iconfont icon-revert w-7 h-7 flex items-center justify-center rounded-md text-[14px] text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-[#007AFF] hover:shadow-sm transition-all cursor-pointer"
+                    @click="revert(row)"></span>
+                </el-tooltip>
+
+                <el-tooltip content="彻底删除" placement="top" effect="dark" :show-after="300">
+                  <span
+                    class="iconfont icon-del w-7 h-7 flex items-center justify-center rounded-md text-[14px] text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-red-500 hover:shadow-sm transition-all cursor-pointer"
+                    @click="delFile(row)"></span>
+                </el-tooltip>
+
+              </div>
+            </div>
+          </template>
+
+          <template #fileSize="{ index, row }">
+            <span class="font-medium text-[#86868b] dark:text-[#a1a1a6] text-[13px]" v-if="row.fileSize">{{
+              proxy.Utils.size2Str(row.fileSize) }}</span>
+            <span v-else class="text-gray-300 dark:text-[#424245] text-lg">-</span>
+          </template>
+
+        </Table>
       </div>
+
+      <!-- 骨架屏 -->
+      <SkeletonLoader v-else-if="isLoading" :rowCount="14" class="p-4" />
+
+      <!-- 无数据底盘 -->
+      <div v-else class="flex-1 flex flex-col justify-center items-center h-full inset-0 pb-16">
+        <Icon iconName="no_data" :width="130" fit="fill" class="opacity-80"></Icon>
+        <div class="mt-5 text-[#86868b] text-[14px] tracking-wide font-medium">回收站中没有文件</div>
+      </div>
+
     </div>
-    <!-- 删除确认对话框 -->
+
+    <!-- 彻底删除确认对话框 -->
     <Dialog :show="deleteDialogConfig.show" :title="deleteDialogConfig.title" :buttons="deleteDialogConfig.buttons"
       width="500px" :showCancel="true" @close="handleDialogClose" :showCustomTitle="true">
-      <div class="delete-confirm-content">
-        <div class="icon-container">
-          <img src="@/assets/icon-image/warning.png" style="background-color:white">
+      <div class="flex flex-col items-center py-6">
+        <div class="w-16 h-16 rounded-full bg-[#fff2f0] dark:bg-red-900/30 flex items-center justify-center mb-5">
+          <img src="@/assets/icon-image/warning.png" class="w-10 h-10 rounded-full bg-white object-cover">
         </div>
-        <div class="message">确定彻底删除所选的文件吗？</div>
-        <div class="sub-message">彻底删除后将无法恢复</div>
+        <div class="text-[17px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] mb-2 tracking-wide">确定彻底删除所选的文件吗？</div>
+        <div class="text-[13px] text-[#86868b] dark:text-[#a1a1a6]">彻底删除后将彻底无法恢复，请谨慎操作</div>
       </div>
     </Dialog>
+
     <!-- 还原确认对话框 -->
     <Dialog :show="revertDialogConfig.show" :title="revertDialogConfig.title" :buttons="revertDialogConfig.buttons"
       width="500px" :showCancel="true" @close="handleRevertDialogClose" :showCustomTitle="true">
-      <div class="delete-confirm-content">
-        <div class="icon-container">
-          <img src="@/assets/icon-image/warning.png" style="background-color:white">
+      <div class="flex flex-col items-center py-6">
+        <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-5">
+          <span class="iconfont icon-revert text-[30px] text-[#007AFF]"></span>
         </div>
-        <div class="message">确定还原所选的文件吗？</div>
-        <div class="sub-message">文件将被还原到原来的位置</div>
+        <div class="text-[17px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] mb-2 tracking-wide">确定还原所选的文件吗？</div>
+        <div class="text-[13px] text-[#86868b] dark:text-[#a1a1a6]">文件将被还原到原来的位置</div>
       </div>
     </Dialog>
   </div>
@@ -115,14 +157,14 @@ const columns = [
     prop: 'fileName',
     scopedSlots: 'fileName',
     align: 'left',
-    sortable:true
+    sortable: true
   },
   {
     label: '删除时间',
     prop: 'recoveryTime',
     width: 300,
     align: 'center',
-    sortable:true
+    sortable: true
   },
   {
     label: '大小',
@@ -130,7 +172,7 @@ const columns = [
     width: 300,
     align: 'center',
     scopedSlots: 'fileSize',
-    sortable:true
+    sortable: true
   }
 ]
 
@@ -365,139 +407,58 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@use "../../assets/main.scss" as *;
+/* 苹果级悬浮 (Hover) 和选中 (Active/Selected) 视觉重构 */
+:deep(.el-table) {
 
-.file-list {
-  margin-top: 10px;
+  /* 1. 给所有单元格注入颜色变化的平滑过渡 (解决生硬突变问题) */
+  td.el-table__cell {
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out !important;
+  }
 
-  .file-item {
+  .el-table__body {
 
-    .file-text {
-      font-size: 15px;
-      color: #333;
-      font-weight: 500;
-      transition: all 0.3s;
-      padding: 0 5px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-left: 12px;
-      flex: 1;
-      overflow: hidden;
-
-      span:first-child {
-        // 只对文件名文本应用悬停效果
-        padding: 2px 5px;
-        border-radius: 4px;
-        transition: all 0.3s;
-
-        // 实现省略号效果
-        display: inline-block; // 使max-width和text-overflow生效
-        white-space: nowrap; // 防止文本换行
-        overflow: hidden; // 隐藏超出部分
-        text-overflow: ellipsis; // 显示省略号
-        vertical-align: middle; // 垂直居中对齐
-        max-width: 250px; // 设定最大宽度，超过此宽度将显示省略号
-
-        &:hover {
-          color: #409eff;
-          background-color: rgba(64, 158, 255, 0.1);
-        }
-      }
-
-      // 移除整个file-text的悬停效果
-      &:hover {
-        color: inherit;
-        background-color: transparent;
-      }
+    /* 2. 普通未选中状态的丝滑悬浮效果 (强制穿透 td 渲染) */
+    tr:hover>td.el-table__cell,
+    tr.hover-row>td.el-table__cell {
+      background-color: rgba(0, 0, 0, 0.04) !important;
     }
 
-    .op {
-      position: absolute; // 使用绝对定位
-      right: 10px; // 距离右侧20px
-      top: 50%; // 垂直居中
-      transform: translateY(-50%); // 垂直居中调整
-      z-index: 2; // 确保操作栏在最上层
+    /* 3. 选中态：纯正苹果蓝微透明背板 */
+    tr.current-row>td.el-table__cell,
+    tr:has(.el-checkbox__input.is-checked)>td.el-table__cell {
+      background-color: rgba(0, 122, 255, 0.08) !important;
+      border-bottom-color: rgba(0, 122, 255, 0.1) !important;
+    }
 
-      .iconfont {
-        font-size: 12px;
-        margin-left: 15px;
-        color: #06a7ff;
-        cursor: pointer;
-      }
-
-      .iconfont::before {
-        margin-right: 3px;
-      }
+    /* 4. 选中态进一步触发的悬浮效果 (加深颜色反馈) */
+    tr.current-row:hover>td.el-table__cell,
+    tr:has(.el-checkbox__input.is-checked):hover>td.el-table__cell {
+      background-color: rgba(0, 122, 255, 0.12) !important;
     }
   }
 }
 
-/* 无数据样式 */
-.no-data {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 50px;
+/* 适配暗黑模式的高亮与边界线反调 */
+html.dark :deep(.el-table) {
+  .el-table__body {
 
-  .no-data-inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    .tips {
-      margin-top: 20px;
-      font-size: 16px;
-      color: #909399;
+    /* 暗黑模式下的普通悬浮 (微白光) */
+    tr:hover>td.el-table__cell,
+    tr.hover-row>td.el-table__cell {
+      background-color: rgba(255, 255, 255, 0.04) !important;
     }
-  }
-}
 
-.delete-confirm-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-
-  .icon-container {
-    margin-bottom: 20px;
-
-    img {
-      width: 60px;
-      height: 60px;
+    /* 暗黑模式下苹果蓝需要相对明亮一点以保障可视度 */
+    tr.current-row>td.el-table__cell,
+    tr:has(.el-checkbox__input.is-checked)>td.el-table__cell {
+      background-color: rgba(10, 132, 255, 0.15) !important;
+      border-bottom-color: transparent !important;
     }
-  }
 
-  .message {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: #303133;
-  }
-
-  .sub-message {
-    font-size: 14px;
-    color: #909399;
-  }
-}
-
-/* 添加自定义按钮样式 */
-.top-op {
-  .btn-group {
-    .custom-btn {
-      &.el-button--success {
-        background-image: linear-gradient(135deg, #52c41a, #237804);
-        border: none;
-
-        &:hover {
-          background-image: linear-gradient(135deg, #73d13d, #389e0d);
-        }
-
-        &:disabled {
-          background-image: linear-gradient(135deg, #b7e49d, #bdd3b4);
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
-      }
+    /* 暗色下选中后悬浮的微强化 */
+    tr.current-row:hover>td.el-table__cell,
+    tr:has(.el-checkbox__input.is-checked):hover>td.el-table__cell {
+      background-color: rgba(10, 132, 255, 0.22) !important;
     }
   }
 }
