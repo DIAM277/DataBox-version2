@@ -2,345 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
-.file-list {
-  padding-right: 20px;
-}
-
-:deep(.el-table__cell) {
-  padding: 4px 0px;
-}
-
-:deep(.el-table) {
-  background-color: transparent;
-
-  &::before {
-    display: none;
+@layer base {
+  /* 基础抗锯齿渲染，让字体表现更像 macOS */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  .el-table__inner-wrapper {
-    background-color: transparent;
+  body {
+    @apply text-[#1d1d1f] dark:text-[#f5f5f7] bg-[#f5f5f7] dark:bg-[#000000];
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
   }
 
-  .el-table__header-wrapper,
-  .el-table__body-wrapper {
-    background-color: transparent;
+  /* 全局极简滚动条 */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
   }
-
-  tr {
-    background-color: transparent;
-  }
-
-  th.el-table__cell {
-    background-color: rgba(240, 240, 240, 0.603);
-  }
-
-  td.el-table__cell {
-    background-color: rgba(255, 255, 255, 0.5);
-  }
-
-  th.el-table__cell {
-    // 表头
-    background-color: rgba(255, 255, 255, 0.568);
-    font-weight: 600; // 加粗表头文字
-    color: #7a7878; // 更深的文字颜色
-    padding: 12px 8px; // 增加内边距
-    font-size: 14px; // 设置合适的字体大小
-    border-bottom: 2px solid rgb(224, 224, 224); // 添加底部边框
-    transition: background-color 0.3s;
-
-    .cell {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 23px;
-    }
-  }
-
-  // 表格行样式优化
-  td.el-table__cell {
-    background-color: rgba(255, 255, 255, 0.493);
-    padding: 10px 8px; // 调整单元格内边距
-    font-size: 13px; // 设置合适的字体大小
-  }
-
-  // 鼠标悬停样式
-  tr.el-table__row:hover td.el-table__cell {
-    background-color: rgba(255, 255, 255, 0.836) !important; // 更浅的悬停背景
-  }
-
-  // 选中行样式
-  tr.is-selected td.el-table__cell {
-    background-color: #e6f7ff !important; // 你可以根据需要调整这个颜色
-  }
-}
-
-.file-name {
-  display: flex;
-  align-items: center;
-  position: relative; // 添加相对定位
-  width: 100%; // 确保宽度占满
-
-  .file-text {
-    font-size: 15px;
-    color: #333;
-    font-weight: 500;
-    transition: all 0.3s;
-    padding: 0 5px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 12px;
-    flex: 1;
-    overflow: hidden;
-
-    span:first-child {
-      // 只对文件名文本应用悬停效果
-      padding: 2px 5px;
-      border-radius: 4px;
-      transition: all 0.3s;
-
-      // 新增的样式用于实现省略号效果
-      display: inline-block; // 使max-width和text-overflow生效
-      white-space: nowrap; // 防止文本换行
-      overflow: hidden; // 隐藏超出部分
-      text-overflow: ellipsis; // 显示省略号
-      vertical-align: middle; // 垂直居中对齐（可选，根据需要调整）
-      max-width: 250px; // 设定最大宽度，超过此宽度将显示省略号，您可以根据需要调整这个值
-
-      &:hover {
-        color: #409eff;
-        background-color: rgba(64, 158, 255, 0.1);
-      }
-    }
-
-    // 移除整个file-text的悬停效果
-    &:hover {
-      color: inherit;
-      background-color: transparent;
-    }
-  }
-
-  .edit-panel {
-    flex: 1;
-    width: 0;
-    display: flex;
-    align-items: center;
-    margin: 0px 5px;
-
-    .iconfont {
-      margin-left: 10px;
-      background: #0c95f7;
-      color: #fff;
-      padding: 3px 5px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .not-allow {
-      cursor: not-allowed;
-      background: #7cb1d7;
-      color: #ddd;
-      text-decoration: none;
-    }
-  }
-
-  .op {
-    position: absolute; // 使用绝对定位
-    right: 10px; // 距离右侧20px
-    top: 50%; // 垂直居中
-    transform: translateY(-50%); // 垂直居中调整
-    z-index: 2; // 确保操作栏在最上层
-
-    .iconfont {
-      font-size: 12px;
-      margin-left: 15px;
-      color: #06a7ff;
-      cursor: pointer;
-    }
-
-    .iconfont::before {
-      margin-right: 3px;
-    }
-  }
-
-  .transfer-status {
-    font-size: 13px;
-    margin-left: 10px;
-    color: #e6a23c;
-  }
-
-  .transfer-fail {
-    color: #f75000;
-  }
-}
-
-.top-op {
-  display: flex;
-  align-items: center;
-  padding: 15px 0;
-
-  .btn-group {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-
-  .custom-btn {
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-weight: 500;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  ::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    @apply bg-black/15 dark:bg-white/20;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
-
-    .iconfont {
-      margin-right: 6px;
-      font-size: 16px;
-    }
-
-    &.el-button--primary {
-      background-image: linear-gradient(135deg, #1890ff, #0050b3);
-      border: none;
-
-      &:hover {
-        background-image: linear-gradient(135deg, #40a9ff, #096dd9);
-      }
-    }
-
-    &.el-button--success {
-      background-image: linear-gradient(135deg, #52c41a, #237804);
-      border: none;
-
-      &:hover {
-        background-image: linear-gradient(135deg, #73d13d, #389e0d);
-      }
-    }
-
-    &.el-button--danger {
-      background-image: linear-gradient(135deg, #ff4d4f, #cf1322);
-      border: none;
-
-      &:hover {
-        background-image: linear-gradient(135deg, #ff7875, #f5222d);
-      }
-
-      &:disabled {
-        background-image: linear-gradient(135deg, #ffccc7, #ffa39e);
-        opacity: 0.7;
-        cursor: not-allowed;
-      }
-    }
-
-    &.el-button--warning {
-      background-image: linear-gradient(135deg, #faad14, #ad6800);
-      border: none;
-
-      &:hover {
-        background-image: linear-gradient(135deg, #ffc53d, #d48806);
-      }
-
-      &:disabled {
-        background-image: linear-gradient(135deg, #ffe58f, #ffd666);
-        opacity: 0.7;
-        cursor: not-allowed;
-      }
-    }
-
-    &.el-button--info {
-      background-image: linear-gradient(135deg, #8c8c8c, #434343);
-      border: none;
-      color: white;
-
-      &:hover {
-        background-image: linear-gradient(135deg, #a6a6a6, #595959);
-      }
+      @apply bg-black/25 dark:bg-white/30;
     }
   }
-
-  .refresh-btn {
-    cursor: pointer;
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 
-.delete-confirm-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px 0;
+/* ========================================= */
+/* 强制修复 Element Plus 残留的突兀原生样式 */
+/* ========================================= */
 
-  .icon-container {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: #fff7e6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-
-    .iconfont {
-      font-size: 30px;
-      color: #faad14;
-    }
-  }
-
-  .message {
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 10px;
-    font-weight: 500;
-  }
-
-  .sub-message {
-    font-size: 14px;
-    color: #999;
-  }
+/* 取消所有的气泡框小箭头（旋转的菱形） */
+.el-popper__arrow {
+  display: none !important;
 }
 
-.no-data {
-  height: calc(100vh - 150px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: transparent;
+/* 令全局气泡框(Dropdown/Tooltip)具备 Apple 毛玻璃与圆角特性 */
+.el-popper.is-light {
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 8px !important;
+  padding: 6px 12px !important;
+}
 
-  .no-data-inner {
-    text-align: center;
+/* 彻底重构暗色模式下的气泡样式 (解决文字发黑、样式生硬的问题) */
+.el-popper.is-dark {
+  background: rgba(28, 28, 30, 0.85) !important; /* 增加透明度以支持毛玻璃 */
+  backdrop-filter: blur(12px) !important; /* 苹果毛玻璃 */
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 6px 12px !important;
+  color: #f5f5f7 !important; /* 强制白偏灰的字体颜色 */
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+}
 
-    .tips {
-      text-align: center;
-      background-color: rgba(255, 255, 255, 0);
-      padding: 20px;
-      border-radius: 8px;
-      font-size: 15px;
-    }
+/* 遮罩层增加物理模糊感 */
+.el-overlay {
+  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.35) !important;
+}
 
-    .op-list {
-      margin-top: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      .op-item {
-        cursor: pointer;
-        width: 100px;
-        height: 100px;
-        margin: 0px 10px;
-        padding: 5px 0px;
-        background: rgba(241, 241, 241, 0.505);
-        border-radius: 12px;
-      }
-    }
-  }
+/* 消除所有没必要的焦边 */
+* {
+  outline: none !important;
 }

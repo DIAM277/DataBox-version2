@@ -1,25 +1,26 @@
 <template>
-    <div>
-        <el-table ref="dataTable" :data="dataSource.list || []" :height="tableHeight" :stripe="options.stripe"
+    <div class="apple-table-container w-full h-full flex flex-col">
+        <el-table ref="dataTable" class="flex-1" height="100%" :data="dataSource.list || []" :stripe="options.stripe"
             :border="options.border" header-row-class-name="table-header-row" @row-click="handleRowClick"
             @sort-change="handleSortChange" @selection-change="handleSelectionChange" v-infinite-scroll="loadMore"
             :infinite-scroll-disabled="infiniteScrollDisabled" :infinite-scroll-distance="20"
             :default-sort="defaultSort">
+
             <!-- 选择列 -->
             <el-table-column type="selection" width="50" v-if="options.selectType && options.selectType == 'checkbox'"
-                align="center">
-            </el-table-column>
+                align="center"></el-table-column>
+
             <!-- 序号 -->
-            <el-table-column type="index" width="60" v-if="options.showIndex" align="center" label="序号">
-            </el-table-column>
+            <el-table-column type="index" width="60" v-if="options.showIndex" align="center"
+                label="序号"></el-table-column>
+
             <!-- 数据列 -->
             <template v-for="(column, index) in columns">
                 <template v-if="column.scopedSlots">
                     <el-table-column :key="index" :prop="column.prop" :label="column.label" :width="column.width"
                         :align="column.align || 'left'" :sortable="column.sortable">
                         <template #default="scope">
-                            <slot :name="column.scopedSlots" :index="scope.$index" :row="scope.row">
-                            </slot>
+                            <slot :name="column.scopedSlots" :index="scope.$index" :row="scope.row"></slot>
                         </template>
                     </el-table-column>
                 </template>
@@ -29,6 +30,7 @@
                     </el-table-column>
                 </template>
             </template>
+
             <!-- 加载更多提示 -->
             <template #append>
                 <div v-if="loading" class="loading-more">
@@ -38,12 +40,13 @@
                     <span>加载中...</span>
                 </div>
                 <div v-else-if="noMore && dataSource.list && dataSource.list.length > 0" class="no-more-data">
-                    <span>没有更多数据了...</span>
+                    <span>到底了...</span>
                 </div>
             </template>
         </el-table>
+
         <!-- 分页 - 当不使用无限滚动时显示 -->
-        <div class="pagination" v-if="showPagination && !options.infiniteScroll">
+        <div class="pagination-container" v-if="showPagination && !options.infiniteScroll">
             <el-pagination v-if="dataSource.totalCount" background :total="dataSource.totalCount"
                 :page-sizes="[10, 20, 30, 40]" :page-size="dataSource.pageSize" :current-page-sync="dataSource.pageNo"
                 :layout="layout" @size-change="handelPageSizeChange" @current-change="handelPageNoChange">
@@ -92,12 +95,6 @@ const layout = computed(() => {
     return `total, ${props.showPageSize ? 'sizes, ' : ''
         }, prev, pager, next, jumper`
 })
-
-const topHeight = 60 + 20 + 30 + 46
-
-const tableHeight = ref(
-    props.options.tableHeight ? props.options.tableHeight : window.innerHeight - topHeight - props.options.extHeight
-)
 
 // 无限滚动相关状态
 const loading = ref(false)
@@ -199,107 +196,130 @@ const handelPageNoChange = (pageNo) => {
 </script>
 
 <style lang="scss" scoped>
-.pagination {
-    padding-top: 15px;
-    padding-bottom: 15px;
-    display: flex;
-    justify-content: flex-end;
+/* 整个表格容器 */
+.apple-table-container {
+    @apply relative flex flex-col h-full bg-transparent overflow-hidden;
 }
 
-.el-pagination {
-    justify-content: flex-end;
-}
-
-.loading-more,
-.no-more-data {
-    text-align: center;
-    padding: 10px 0;
-    color: #12121359;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    .el-icon {
-        margin-right: 5px;
-    }
-}
-
-:deep(.el-table__cell) {
-    padding: 4px 0px;
-}
-
-// 添加圆角样式
+/* 核心变量覆盖与透视化处理 */
 :deep(.el-table) {
-    border-radius: 8px;
-    overflow: hidden;
+    /* 强制透明底层 */
+    --el-table-bg-color: transparent !important;
+    --el-table-tr-bg-color: transparent !important;
+    --el-table-header-bg-color: transparent !important;
 
-    // 表格外边框圆角
-    &::before {
-        display: none;
+    /* 彻底消除生硬外边缘与底部多余的双线 */
+    --el-table-border-color: transparent !important;
+    --el-table-border: none !important;
+    background-color: transparent !important;
+    border: none !important;
+
+    /* 悬浮体验：亮色模式下使用略带苹果蓝的隐忍灰色，清晰但不刺眼 */
+    --el-table-row-hover-bg-color: rgba(0, 122, 255, 0.05) !important;
+
+    /* 禁用原生表格自带的极其顽固的伪元素下划线 */
+    &::before,
+    &::after {
+        display: none !important;
     }
 
     .el-table__inner-wrapper {
-        border-radius: 8px;
-        overflow: hidden;
-    }
 
-    // 表头圆角
-    .el-table__header-wrapper {
-        th:first-child .cell {
-            border-top-left-radius: 8px;
-        }
-
-        th:last-child .cell {
-            border-top-right-radius: 8px;
-        }
-    }
-
-    // 表格底部圆角
-    .el-table__body-wrapper {
-        border-bottom-left-radius: 8px;
-        border-bottom-right-radius: 8px;
-        overflow: hidden;
-    }
-
-    // 最后一行单元格圆角
-    .el-table__body tr:last-child td:first-child {
-        border-bottom-left-radius: 8px;
-    }
-
-    .el-table__body tr:last-child td:last-child {
-        border-bottom-right-radius: 8px;
-    }
-
-
-    :deep(.el-table__empty-block) {
-        min-height: 60px;
-        height: auto !important;
-
-        .el-table__empty-text {
-            line-height: 60px;
-        }
-    }
-
-    // 当没有数据时调整表格高度
-    :deep(.el-table__body-wrapper) {
-        &::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        &::-webkit-scrollbar-thumb {
-            background-color: #dcdfe6;
-            border-radius: 4px;
-        }
-
-        &::-webkit-scrollbar-track {
-            background-color: #f5f7fa;
-        }
-
-        // 当没有数据时隐藏滚动条
-        .el-scrollbar__bar.is-vertical {
+        &::before,
+        &::after {
             display: none !important;
+        }
+    }
+
+    .el-table__border-left-patch {
+        display: none !important;
+    }
+
+    /* 表头极简处理 */
+    th.el-table__cell {
+        @apply text-[12px] font-semibold tracking-wider text-[#86868b] dark:text-gray-400 py-2.5 border-b border-[#e5e5e9]/70 dark:border-[#38383a]/70 !important;
+        background-color: transparent !important;
+    }
+
+    /* 数据行内分割线 */
+    td.el-table__cell {
+        @apply py-[11px] text-[13.5px] border-b border-gray-100 dark:border-[#38383a]/60 transition-colors duration-200 !important;
+        background-color: transparent !important;
+    }
+
+    /* 表格内容的最后一行无底边框，与外部容器底部完美融合，消除空隙悬空感 */
+    .el-table__body tr:last-child td.el-table__cell {
+        border-bottom: none !important;
+    }
+
+    /* 空数据背景透传 */
+    .el-table__empty-block {
+        background-color: transparent !important;
+        border-top: none !important;
+    }
+}
+
+/* 适配暗黑模式的悬浮调优：大幅降低白色的强光刺激度 */
+html.dark :deep(.el-table) {
+    --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* 隐藏原生繁杂的包裹级滚动条，改为无痕毛玻璃细条 */
+:deep(.el-table__body-wrapper) {
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        @apply bg-black/10 dark:bg-white/10 rounded-full;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+}
+
+/* 无限滚动加载底盘美化 */
+.loading-more,
+.no-more-data {
+    @apply flex items-center justify-center py-2.5 pb-3.5 text-[12px] text-[#86868b] font-medium tracking-wide bg-transparent;
+
+    .el-icon {
+        @apply mr-1.5;
+    }
+}
+
+/* 分页器 */
+.pagination-container {
+    @apply flex justify-end items-center pt-3 pb-2 w-full bg-transparent border-t border-transparent;
+
+    :deep(.el-pagination) {
+        @apply bg-transparent;
+
+        button {
+            @apply bg-transparent text-gray-500 dark:text-gray-400 hover:text-[#007AFF] transition-colors border-none;
+
+            &:disabled {
+                @apply opacity-30 cursor-not-allowed hover:text-gray-500 dark:hover:text-gray-400;
+            }
+        }
+
+        .el-pager li {
+            @apply bg-transparent text-gray-500 dark:text-gray-400 text-[13px] rounded-lg transition-colors border-none font-medium mx-0.5;
+
+            &:hover {
+                @apply bg-black/5 dark:bg-white/10 text-[#007AFF];
+            }
+
+            &.is-active {
+                @apply bg-[#007AFF]/10 text-[#007AFF] font-bold;
+            }
+        }
+
+        .el-pagination__total,
+        .el-pagination__jump {
+            @apply text-[#86868b] dark:text-gray-400 text-[12px];
         }
     }
 }

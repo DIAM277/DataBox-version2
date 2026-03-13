@@ -1,5 +1,4 @@
 <template>
-  <!-- 修改点1：外层加上 flex-col，改为上下垂直主轴 -->
   <div
     class="flex flex-col h-screen w-full bg-[#f5f5f7] dark:bg-[#000000] text-[#1d1d1f] dark:text-[#f5f5f7] font-sans overflow-hidden transition-colors duration-500">
 
