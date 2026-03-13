@@ -20,6 +20,7 @@
 
         <!-- 2. 中间：预留给页面标题或未来重加搜索框 (目前留空占据网格中心位置) -->
         <div class="flex items-center justify-center">
+            <Search @search="handleSearch" />
         </div>
 
         <!-- 3. 右侧：功能区 (调色盘 + 传输任务 + 头像) -->
@@ -101,6 +102,13 @@ import { ref, inject, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/store/userStore';
 import Uploader from '@/views/main/Uploader.vue';
+import Search from '@/components/Input/Search.vue';
+
+const emit = defineEmits(['search']);
+
+const handleSearch = (keyword) => {
+    emit('search', keyword);
+};
 
 const router = useRouter();
 const userStore = useUserStore();

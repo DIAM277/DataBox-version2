@@ -1,132 +1,59 @@
 <template>
-    <label class="label77">
-        <input class="inp77" size="16" type="search" placeholder="请输入文件名搜索" required v-model="searchText"
-            @keyup.enter="handleSearch" @input="handleInput" @compositionstart="onCompositionStart"
-            @compositionend="onCompositionEnd">
-        <span class="search-btn77" @click="handleSearch"></span>
-    </label>
+    <div class="relative group flex items-center">
+        <!-- 左侧：搜索放大镜图标 (随聚焦状态泛蓝) -->
+        <svg class="absolute left-3 w-4 h-4 text-gray-400 group-focus-within:text-[#007AFF] transition-colors duration-300 pointer-events-none"
+            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+
+        <input ref="inputRef" type="text" v-model="keyword" @keyup.enter="handleSearch" placeholder="搜索文件..."
+            class="w-64 py-1.5 pl-9 pr-9 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-[#2c2c2e] border border-transparent rounded-full outline-none placeholder-gray-400/80 transition-all duration-300 ease-in-out focus:w-80 focus:bg-white dark:focus:bg-[#1c1c1e] focus:shadow-md focus:border-blue-500/30 focus:ring-2 focus:ring-blue-500/10" />
+
+        <button v-if="keyword" @mousedown.prevent="clearSearch"
+            class="absolute right-8 w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer transition-colors duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
+                <path fill-rule="evenodd"
+                    d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                    clip-rule="evenodd" />
+            </svg>
+        </button>
+
+        <!-- 右侧：设置图标（位置自动避让） -->
+        <svg class="absolute right-3 w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer transition-colors duration-200"
+            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+    </div>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
-const searchText = ref('');
-const isComposing = ref(false); // 标记是否正在输入中文
-const emit = defineEmits(['search', 'update:modelValue']);
+const keyword = ref('');
+const inputRef = ref(null);
+const emit = defineEmits(['search']);
 
-// 处理搜索按钮点击或回车事件
-const handleSearch = () => {
-    emit('search', searchText.value);
-};
+const route = useRoute();
 
-// 中文输入法开始输入
-const onCompositionStart = () => {
-    isComposing.value = true;
-};
-
-// 中文输入法结束输入
-const onCompositionEnd = () => {
-    isComposing.value = false;
-    // 中文输入完成后，如果输入框为空，触发搜索
-    if (searchText.value === '') {
-        handleSearch();
-    }
-};
-
-// 处理输入事件，实现双向绑定
-const handleInput = () => {
-    emit('update:modelValue', searchText.value);
-
-    // 只有在非中文输入状态下，且输入框为空时，才触发搜索
-    if (!isComposing.value && searchText.value === '') {
-        handleSearch();
-    }
-};
-
-// 接收外部传入的值
-const props = defineProps({
-    modelValue: {
-        type: String,
-        default: ''
-    }
+// 监听路由变化，自动清空搜索框
+watch(() => route.path, () => {
+    keyword.value = '';
 });
 
-// 监听外部传入的值变化
-watch(() => props.modelValue, (newVal) => {
-    searchText.value = newVal;
-}, { immediate: true });
+// 搜索
+const handleSearch = () => {
+    emit('search', keyword.value);
+};
+
+const clearSearch = () => {
+    keyword.value = '';
+    emit('search', ''); // 清空后自动触发搜索
+    // 显式锁定焦点，避免收缩
+    if (inputRef.value) {
+        inputRef.value.focus();
+    }
+};
 </script>
-
-<style lang="scss" scoped>
-.label77 {
-    width: 400px;
-    height: 42px;
-    position: relative;
-    overflow: hidden;
-}
-
-.inp77 {
-    width: 400px;
-    height: 42px;
-    line-height: 42px;
-    padding: 0 16px;
-    padding-right: 42px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    background-color: #ffffff;
-    box-sizing: border-box;
-    transition: all 0.3s;
-    font-size: 14px;
-    border-radius: 21px;
-    color: #333;
-    position: absolute;
-    list-style: none;
-    outline-style: none;
-}
-
-.search-btn77 {
-    position: absolute;
-    top: 23px;
-    right: 35px;
-}
-
-.search-btn77:before {
-    content: '';
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(0, 0, 0, 0.6);
-    border-radius: 50%;
-    display: block;
-    position: absolute;
-    top: -14px;
-    transition: border 0.32s linear;
-    cursor: pointer;
-}
-
-.search-btn77:after {
-    content: '';
-    width: 2px;
-    height: 8px;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: block;
-    position: absolute;
-    top: 3px;
-    right: -19px;
-    transform: rotate(-45deg);
-    transition: background-color 0.32s linear;
-}
-
-.label77:hover.inp77,
-.inp77:focus,
-.inp77:valid {
-    color: #000000;
-    border: 1px solid rgba(29, 52, 202, 0.4);
-}
-
-.inp77:valid+.search-btn77:before {
-    border: 2px solid rgba(29, 52, 202, 1);
-}
-
-.inp77:valid+.search-btn77:after {
-    background-color: rgba(29, 52, 202, 1);
-}
-</style>
