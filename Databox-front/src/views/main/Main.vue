@@ -64,31 +64,25 @@
           <template #fileName="{ index, row }">
             <div class="file-name flex items-center pr-10 relative group w-full" @mouseenter="showOp(row)"
               @mouseleave="cancelShowOp(row)">
-              <!-- 增加 shrink-0，防止图标由于空间不足被压扁 -->
               <template v-if="(row.fileType == 3 || row.fileType == 1) && row.status == 2">
-                <Icon :cover="row.fileCover" :width="32" class="shrink-0"></Icon>
+                <Icon :cover="row.fileCover" :width="32"></Icon>
               </template>
               <template v-else>
-                <Icon v-if="row.folderType == 0" :fileType="row.fileType" class="shrink-0"></Icon>
-                <Icon v-if="row.folderType == 1" :fileType="0" class="shrink-0"></Icon>
+                <Icon v-if="row.folderType == 0" :fileType="row.fileType"></Icon>
+                <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
               </template>
 
-              <!-- 增加 min-w-0 (告诉 Flex 子项允许缩小内容) 和 flex 布局 -->
-              <span class="file-text ml-3 flex-1 min-w-0 flex items-center overflow-hidden" :title="row.fileName"
-                v-if="!row.showEdit">
-
+              <span class="file-text ml-3 flex-1 overflow-hidden" :title="row.fileName" v-if="!row.showEdit">
                 <span
-                  class="file-name-1 text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF] truncate !whitespace-nowrap block"
+                  class="file-name-1 text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF]"
                   @click="preview(row)">{{ row.fileName }}</span>
-
-                <!-- 状态标签同理需要加上 shrink-0 防止文字太长时把它们也挤扁 -->
                 <span v-if="row.status == 0"
-                  class="text-xs text-blue-500 ml-2 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded shrink-0">转码中</span>
+                  class="text-xs text-blue-500 ml-2 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded">转码中</span>
                 <span v-if="row.status == 1"
-                  class="text-xs text-red-500 ml-2 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded shrink-0">转码失败</span>
+                  class="text-xs text-red-500 ml-2 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">转码失败</span>
               </span>
 
-              <div class="edit-panel flex-1 min-w-0 flex items-center ml-2" v-if="row.showEdit">
+              <div class="edit-panel flex-1 flex items-center ml-2" v-if="row.showEdit">
                 <el-input v-model.trim="row.fileNameReal" ref="editNameRef" :maxLength="190"
                   @keyup.enter.stop="saveNameEdit(index)">
                   <template #suffix>{{ row.fileSuffix }}</template>
@@ -209,8 +203,7 @@ const columns = computed(() => [
     prop: 'fileName',
     scopedSlots: 'fileName',
     align: 'left',
-    sortable: true,
-    minWidth: 250 // 【新增】加入该列的最小宽度，防止在极小窗口下被挤压变形
+    sortable: true
   },
   {
     label: '大小',
@@ -783,7 +776,7 @@ const share = (row) => {
 /* 适配暗黑模式的高亮与边界线反调 */
 html.dark :deep(.el-table) {
   --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.12) !important;
-  --el-table-border-color: rgba(255, 255, 255, 0.12) !important;
+  --el-table-border-color: rgba(255, 255, 255, 0.) !important;
 
   .el-table__body {
 

@@ -45,7 +45,7 @@
             <!-- 全局上传任务指示器模块 -->
             <div class="relative z-50 flex items-center">
                 <el-popover placement="bottom-end" :width="440" trigger="click" v-model:visible="showUploader"
-                    :hide-after="0" popper-class="!p-0 !border-none !rounded-xl !bg-transparent shadow-2xl">
+                    :hide-after="0" :show-arrow="false" popper-class="custom-uploader-popover">
                     <template #reference>
                         <!-- 【修复正圆问题】：强制宽高度和 flex 剧中对齐 -->
                         <div class="w-[36px] h-[36px] flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 rounded-full cursor-pointer transition-colors"
@@ -159,5 +159,17 @@ defineExpose({ triggerAddFile });
     margin: 2px 6px;
     display: flex;
     align-items: center;
+}
+</style>
+
+<style>
+/* 覆盖全局 el-popper 惹出的双层卡片冲突 */
+.custom-uploader-popover.el-popper {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 </style>
