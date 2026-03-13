@@ -10,8 +10,29 @@
         <span class="text-[14px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-wider">传输列表</span>
         <span class="text-[11px] text-[#86868b] dark:text-gray-400 mt-0.5">仅展示本次任务</span>
       </div>
-      <div class="flex items-center gap-2">
-        <!-- 预留给可能的全局操作图标 -->
+
+      <!-- 右侧：全局操作按钮组 -->
+      <div class="flex items-center gap-1.5" v-if="fileList.length > 0">
+
+        <!-- 批量全部开始/暂停 (整合按钮) -->
+        <div @click="toggleAllUploads"
+          class="text-xs font-medium text-[#86868b] dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 group"
+          :title="allPaused ? '全部开始' : '全部暂停'">
+          <!-- 动态切换图标及悬浮色 -->
+          <span class="iconfont text-[13px] transition-colors"
+            :class="allPaused ? 'icon-upload group-hover:text-[#007AFF]' : 'icon-pause'"></span>
+          <span class="transition-colors" :class="allPaused ? 'group-hover:text-[#007AFF]' : ''">
+            {{ allPaused ? '开始' : '暂停' }}
+          </span>
+        </div>
+
+        <!-- 批量清除记录 -->
+        <div @click="clearCompletedUploads"
+          class="text-xs font-medium text-[#86868b] dark:text-gray-400 hover:text-[#FF3B30] hover:bg-[#FF3B30]/10 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+          title="清除已完成与失败记录">
+          <span class="iconfont icon-del text-[13px]"></span><span>清除</span>
+        </div>
+
       </div>
     </div>
 
@@ -120,7 +141,8 @@
 
 <script setup>
 import SparkMD5 from "spark-md5";
-import { ref, reactive, getCurrentInstance, nextTick } from "vue"
+// 【新增引用】：添加 computed
+import { ref, reactive, getCurrentInstance, nextTick, computed } from "vue"
 const { proxy } = getCurrentInstance();
 
 const api = {
@@ -391,6 +413,55 @@ const startUpload = (uid) => {
     uploadFile(uid, currentFile.chunkIndex)
   }
 }
+
+// ======================= 新增的批量操作逻辑 =======================
+
+// 判断整体暂停状态：如果没有正在上传的任务（即都不处于 active 状态），则判定为“全部暂停”
+const allPaused = computed(() => {
+  return !fileList.value.some(item => item.status === STATUS.uploading.value && !item.pause);
+});
+
+// 整合按钮点击：根据计算状态分发执行"开始"或"暂停"
+const toggleAllUploads = () => {
+  if (allPaused.value) {
+    startAllUploads();
+  } else {
+    pauseAllUploads();
+  }
+};
+
+// 批量暂停所有正在上传的任务
+const pauseAllUploads = () => {
+  fileList.value.forEach(item => {
+    // 只有状态为上传中且未处于暂停状态的任务才需要暂停
+    if (item.status === STATUS.uploading.value && !item.pause) {
+      pauseUpload(item.uid);
+    }
+  });
+};
+
+// 批量开始所有被暂停的任务
+const startAllUploads = () => {
+  fileList.value.forEach(item => {
+    // 只有状态为上传中且处于暂停状态的任务才需要重新开始
+    if (item.status === STATUS.uploading.value && item.pause) {
+      startUpload(item.uid);
+    }
+  });
+};
+
+// 清除所有已完成、秒传完成、失败和空文件的记录
+const clearCompletedUploads = () => {
+  fileList.value = fileList.value.filter(item => {
+    return item.status !== STATUS.upload_finish.value &&
+      item.status !== STATUS.upload_seconds.value &&
+      item.status !== STATUS.fail.value &&
+      item.status !== STATUS.emptyfile.value;
+  });
+};
+
+// =================================================================
+
 </script>
 
 <style lang="scss" scoped>
