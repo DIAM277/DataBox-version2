@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col h-full space-y-4 pt-4 pb-1">
+  <div class="flex flex-col h-full pt-4 pb-1">
 
     <!-- 顶栏：导航区与全局操作按钮 -->
-    <div class="flex justify-between items-center w-full px-2 mb-2">
+    <div class="flex justify-between items-center w-full px-2 mb-4">
 
       <!-- 左：面包屑导航 -->
       <div class="flex-1 overflow-hidden mr-4">
@@ -17,15 +17,15 @@
           <el-upload :show-file-list="false" :with-credentials="true" :multiple="true" :http-request="addFile"
             :accept="fileAccept">
             <div
-              class="flex items-center justify-center gap-1 bg-[#007AFF] text-white px-4 py-2 rounded-xl shadow-[0_2px_10px_rgba(0,122,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,122,255,0.4)] transition-all font-semibold text-[13px] cursor-pointer">
-              <span class="iconfont icon-upload font-bold"></span> 上传
+              class="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#007AFF] text-white rounded-xl shadow-[0_2px_10px_rgba(0,122,255,0.3)] hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,122,255,0.4)] transition-all font-medium text-[13px] cursor-pointer">
+              <span class="iconfont icon-upload"></span> 上传
             </div>
           </el-upload>
         </div>
 
         <!-- 【原生灰】：新建文件夹 -->
         <div v-if="category == 'all'" @click="newFolder"
-          class="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer group shadow-sm">
+          class="flex items-center justify-center gap-1.5 px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer group shadow-sm">
           <span
             class="iconfont icon-folder-add text-gray-400 group-hover:text-[#007AFF] transition-colors leading-none"></span>新建
         </div>
@@ -52,9 +52,8 @@
       </div>
     </div>
 
-    <!-- 主体：包裹底层 Table 与缺省插图的现代化容器 -->
-    <div
-      class="flex-1 bg-white dark:bg-[#1c1c1e]/50 rounded-2xl shadow-sm border border-[#e5e5e9] dark:border-[#38383a]/60 overflow-hidden relative flex flex-col">
+    <!-- 主体：底层 Table 容器 (去除内层生硬嵌套的卡片边框与背景，完美融于外层全局结构) -->
+    <div class="flex-1 overflow-hidden relative flex flex-col">
 
       <!-- 有数据：原生表格 -->
       <div class="flex-1 overflow-hidden file-list" v-if="tableData.list && tableData.list.length > 0">
@@ -65,25 +64,31 @@
           <template #fileName="{ index, row }">
             <div class="file-name flex items-center pr-10 relative group w-full" @mouseenter="showOp(row)"
               @mouseleave="cancelShowOp(row)">
+              <!-- 增加 shrink-0，防止图标由于空间不足被压扁 -->
               <template v-if="(row.fileType == 3 || row.fileType == 1) && row.status == 2">
-                <Icon :cover="row.fileCover" :width="32"></Icon>
+                <Icon :cover="row.fileCover" :width="32" class="shrink-0"></Icon>
               </template>
               <template v-else>
-                <Icon v-if="row.folderType == 0" :fileType="row.fileType"></Icon>
-                <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
+                <Icon v-if="row.folderType == 0" :fileType="row.fileType" class="shrink-0"></Icon>
+                <Icon v-if="row.folderType == 1" :fileType="0" class="shrink-0"></Icon>
               </template>
 
-              <span class="file-text ml-3 flex-1 overflow-hidden" :title="row.fileName" v-if="!row.showEdit">
+              <!-- 增加 min-w-0 (告诉 Flex 子项允许缩小内容) 和 flex 布局 -->
+              <span class="file-text ml-3 flex-1 min-w-0 flex items-center overflow-hidden" :title="row.fileName"
+                v-if="!row.showEdit">
+
                 <span
-                  class="file-name-1 text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF]"
+                  class="file-name-1 text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF] truncate !whitespace-nowrap block"
                   @click="preview(row)">{{ row.fileName }}</span>
+
+                <!-- 状态标签同理需要加上 shrink-0 防止文字太长时把它们也挤扁 -->
                 <span v-if="row.status == 0"
-                  class="text-xs text-blue-500 ml-2 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded">转码中</span>
+                  class="text-xs text-blue-500 ml-2 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded shrink-0">转码中</span>
                 <span v-if="row.status == 1"
-                  class="text-xs text-red-500 ml-2 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">转码失败</span>
+                  class="text-xs text-red-500 ml-2 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded shrink-0">转码失败</span>
               </span>
 
-              <div class="edit-panel flex-1 flex items-center ml-2" v-if="row.showEdit">
+              <div class="edit-panel flex-1 min-w-0 flex items-center ml-2" v-if="row.showEdit">
                 <el-input v-model.trim="row.fileNameReal" ref="editNameRef" :maxLength="190"
                   @keyup.enter.stop="saveNameEdit(index)">
                   <template #suffix>{{ row.fileSuffix }}</template>
@@ -156,21 +161,23 @@
     </div>
 
     <!-- 弹窗合集 (保持不变) -->
-    <Dialog :show="deleteDialogConfig.show" :title="deleteDialogConfig.title" :buttons="deleteDialogConfig.buttons"
-      width="500px" :showCancel="true" @close="handleDialogClose" :showCustomTitle="true">
-      <div class="flex flex-col items-center py-6">
-        <div class="w-16 h-16 rounded-full bg-[#fff2f0] dark:bg-red-900/30 flex items-center justify-center mb-5">
-          <img src="@/assets/icon-image/warning.png" class="w-10 h-10 rounded-full bg-white object-cover">
+    <div>
+      <Dialog :show="deleteDialogConfig.show" :title="deleteDialogConfig.title" :buttons="deleteDialogConfig.buttons"
+        width="500px" :showCancel="true" @close="handleDialogClose" :showCustomTitle="true">
+        <div class="flex flex-col items-center py-6">
+          <div class="w-16 h-16 rounded-full bg-[#fff2f0] dark:bg-red-900/30 flex items-center justify-center mb-5">
+            <img src="@/assets/icon-image/warning.png" class="w-10 h-10 rounded-full bg-white object-cover">
+          </div>
+          <div class="text-[17px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] mb-2 tracking-wide">确定删除所选的文件吗？</div>
+          <div class="text-[13px] text-[#86868b] dark:text-[#a1a1a6]">删除的文件可在10天内通过回收站还原</div>
         </div>
-        <div class="text-[17px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] mb-2 tracking-wide">确定删除所选的文件吗？</div>
-        <div class="text-[13px] text-[#86868b] dark:text-[#a1a1a6]">删除的文件可在10天内通过回收站还原</div>
-      </div>
-    </Dialog>
-    <FolderSelect ref="folderSelectRef" @folderSelect="moveFolderDone"></FolderSelect>
-    <!-- 文件预览 -->
-    <Preview ref="PreviewRef"></Preview>
-    <!-- 文件分享 -->
-    <ShareFile ref="shareRef"></ShareFile>
+      </Dialog>
+      <FolderSelect ref="folderSelectRef" @folderSelect="moveFolderDone"></FolderSelect>
+      <!-- 文件预览 -->
+      <Preview ref="PreviewRef"></Preview>
+      <!-- 文件分享 -->
+      <ShareFile ref="shareRef"></ShareFile>
+    </div>
   </div>
 </template>
 
@@ -202,7 +209,8 @@ const columns = computed(() => [
     prop: 'fileName',
     scopedSlots: 'fileName',
     align: 'left',
-    sortable: true
+    sortable: true,
+    minWidth: 250 // 【新增】加入该列的最小宽度，防止在极小窗口下被挤压变形
   },
   {
     label: '大小',
@@ -231,6 +239,7 @@ const columns = computed(() => [
 
 const tableData = ref({})
 const tableOptions = ref({
+  tableHeight: '100%',
   extHeight: 50,
   selectType: 'checkbox',
   infiniteScroll: true
@@ -583,7 +592,7 @@ const handleDrop = (e) => {
   // 遍历多个文件并利用现有的 addFile 口子分发上传
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    // 修复：原生文件对象没有 ElUpload 提供的 uid，必须手动生成一个唯一 id 供 Uploader 追踪进度
+    // 修复：原生文件对象没有 ElUpload 提供的uid，必须手动生成一个唯一 id 供 Uploader 追踪进度
     if (!file.uid) {
       file.uid = new Date().getTime() + i + Math.random().toString(36).substr(2, 5);
     }
@@ -689,5 +698,167 @@ const share = (row) => {
 </script>
 
 <style lang="scss" scoped>
-@use "../../assets/main.scss" as *;
+/* 整个表格容器 */
+.apple-table-container {
+  @apply relative overflow-hidden bg-transparent;
+}
+
+/* 核心变量覆盖与透视化处理 */
+:deep(.el-table) {
+  /* 强制透明底层 */
+  --el-table-bg-color: transparent !important;
+  --el-table-tr-bg-color: transparent !important;
+  --el-table-header-bg-color: transparent !important;
+
+  /* 消除生硬边缘 */
+  --el-table-border-color: rgba(134, 134, 139, 0.15) !important;
+  background-color: transparent !important;
+  border: none !important;
+
+  /* 默认悬浮体验：极简浅灰色覆盖 */
+  --el-table-row-hover-bg-color: rgba(0, 0, 0, 0.04) !important;
+
+  &::before,
+  &::after {
+    display: none !important;
+  }
+
+  .el-table__inner-wrapper {
+    &::before {
+      display: none !important;
+    }
+  }
+
+  /* 表头极简处理 */
+  th.el-table__cell {
+    @apply text-[12px] font-semibold tracking-wider text-[#86868b] dark:text-gray-400 py-2.5 border-b border-[#e5e5e9]/70 dark:border-[#38383a]/70 !important;
+    background-color: transparent !important;
+  }
+
+  /* 数据行内分割线与丝滑颜色过渡 */
+  td.el-table__cell {
+    @apply py-[11px] text-[13.5px] border-b border-gray-100 dark:border-[#38383a]/60 !important;
+    background-color: transparent !important;
+    /* 增加 CSS 过渡，让悬浮和选中色块更加平滑柔和 */
+    transition: background-color 0.25s ease-in-out, border-color 0.25s ease-in-out !important;
+  }
+
+  /* 最后一行无底边框，与外部容器融合 */
+  tr:last-child td.el-table__cell {
+    border-bottom: none !important;
+  }
+
+  /* 空数据背景透传 */
+  .el-table__empty-block {
+    background-color: transparent !important;
+  }
+
+  /* ========================================================= */
+  /* 苹果级悬浮 (Hover) 和选中 (Active/Selected) 视觉重构 */
+  /* ========================================================= */
+  .el-table__body {
+
+    /* 普通情况的悬浮色 (覆盖自带 hover) */
+    tr:hover>td.el-table__cell,
+    tr.hover-row>td.el-table__cell {
+      background-color: var(--el-table-row-hover-bg-color) !important;
+    }
+
+    /* 选中态：利用 CSS 截获 Element Plus 多选框状态或单选行，渲染纯正苹果蓝微透明背板 */
+    tr.current-row>td.el-table__cell,
+    tr:has(.el-checkbox__input.is-checked)>td.el-table__cell {
+      background-color: rgba(0, 122, 255, 0.08) !important;
+      /* 选中时淡化下划线，让整行色块更通透聚合 */
+      border-bottom-color: rgba(0, 122, 255, 0.1) !important;
+    }
+
+    /* 选中态进一步触发的悬浮效果 (加深颜色反馈) */
+    tr.current-row:hover>td.el-table__cell,
+    tr:has(.el-checkbox__input.is-checked):hover>td.el-table__cell {
+      background-color: rgba(0, 122, 255, 0.12) !important;
+    }
+  }
+}
+
+/* 适配暗黑模式的高亮与边界线反调 */
+html.dark :deep(.el-table) {
+  --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.12) !important;
+  --el-table-border-color: rgba(255, 255, 255, 0.12) !important;
+
+  .el-table__body {
+
+    /* 暗黑模式下：选中的苹果蓝需要相对明亮一点以保障可视度 */
+    tr.current-row>td.el-table__cell,
+    tr:has(.el-checkbox__input.is-checked)>td.el-table__cell {
+      background-color: rgba(10, 132, 255, 0.15) !important;
+      border-bottom-color: transparent !important;
+    }
+
+    /* 暗色下选中后悬浮的微强化 */
+    tr.current-row:hover>td.el-table__cell,
+    tr:has(.el-checkbox__input.is-checked):hover>td.el-table__cell {
+      background-color: rgba(10, 132, 255, 0.22) !important;
+    }
+  }
+}
+
+/* 隐藏原生繁杂的包裹级滚动条，改为无痕毛玻璃细条 */
+:deep(.el-table__body-wrapper) {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @apply bg-black/10 dark:bg-white/10 rounded-full;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+}
+
+/* 无限滚动加载底盘美化 */
+.loading-more,
+.no-more-data {
+  @apply flex items-center justify-center py-4 text-[12px] text-[#86868b] font-medium tracking-wide bg-transparent;
+
+  .el-icon {
+    @apply mr-1.5;
+  }
+}
+
+/* 传统分页器隐藏背板，转化为文本质感 */
+.pagination-container {
+  @apply flex justify-end items-center pt-3 pb-2 w-full bg-transparent;
+
+  :deep(.el-pagination) {
+    @apply bg-transparent;
+
+    button {
+      @apply bg-transparent text-gray-500 dark:text-gray-400 hover:text-[#007AFF] transition-colors border-none;
+
+      &:disabled {
+        @apply opacity-30 cursor-not-allowed hover:text-gray-500 dark:hover:text-gray-400;
+      }
+    }
+
+    .el-pager li {
+      @apply bg-transparent text-gray-500 dark:text-gray-400 text-[13px] rounded-lg transition-colors border-none font-medium mx-0.5;
+
+      &:hover {
+        @apply bg-black/5 dark:bg-white/10 text-[#007AFF];
+      }
+
+      &.is-active {
+        @apply bg-[#007AFF]/10 text-[#007AFF] font-bold;
+      }
+    }
+
+    .el-pagination__total,
+    .el-pagination__jump {
+      @apply text-[#86868b] dark:text-gray-500 text-[13px];
+    }
+  }
+}
 </style>

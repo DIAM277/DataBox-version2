@@ -24,8 +24,6 @@
 
         <!-- 3. 右侧：功能区 (调色盘 + 传输任务 + 头像) -->
         <div class="flex items-center justify-end space-x-4">
-
-            <!-- 【修改点】：一键切换外观模式 -->
             <div @click="toggleTheme"
                 class="w-[36px] h-[36px] flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full cursor-pointer transition-colors group"
                 title="切换外观">
@@ -126,7 +124,6 @@ const handleCommand = (command) => {
     }
 };
 
-// --- 【修改点】：主题模式一键切换逻辑 ---
 const isDark = ref(false);
 
 const toggleTheme = () => {
