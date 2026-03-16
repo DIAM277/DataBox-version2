@@ -188,7 +188,7 @@
             </el-input>
             <div class="h-[40px] w-[110px] rounded-lg overflow-hidden cursor-pointer shadow-sm"
               @click="changeCheckCode(1)">
-              <img class="w-full h-full object-cover" :src="checkCodeUrl4SendMailCode" alt="点我换一张" />
+              <img class="w-full h-full object-fit" :src="checkCodeUrl4SendMailCode" alt="点我换一张" />
             </div>
           </div>
         </el-form-item>

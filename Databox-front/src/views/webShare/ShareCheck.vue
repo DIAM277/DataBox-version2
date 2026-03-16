@@ -48,10 +48,9 @@
 
                 <el-form :model="formData" :rules="rules" ref="formDataRef" @submit.prevent class="m-0">
                     <el-form-item prop="code" class="mb-0 !border-none">
-                        <!-- 极简的大号字间距原生级输入框 -->
                         <input v-model.trim="formData.code" @keyup.enter="checkShare" type="text" maxlength="5"
                             placeholder="•••••"
-                            class="w-full h-[56px] bg-gray-100/80 dark:bg-[#2c2c2e] border-2 border-transparent focus:border-[#007AFF]/40 text-[#1d1d1f] dark:text-white rounded-2xl text-center text-[22px] tracking-[0.5em] font-bold outline-none transition-all duration-300 focus:bg-white dark:focus:bg-[#1c1c1e] focus:shadow-sm placeholder:text-gray-400/50 placeholder:tracking-normal placeholder:font-normal placeholder:text-lg" />
+                            class="extraction-input w-full h-[56px] border-2 border-transparent focus:border-[#007AFF]/40 rounded-2xl text-center text-[22px] tracking-[0.5em] font-bold outline-none transition-all duration-300 focus:shadow-sm placeholder:tracking-normal placeholder:font-normal placeholder:text-lg" />
                     </el-form-item>
 
                     <button type="button" @click="checkShare"
@@ -153,3 +152,34 @@ onMounted(() => {
     }
 });
 </script>
+
+<style scoped>
+/* 强制保障原生提取码输入框在暗黑模式下的文字可视度与背景高反差对比，防止被 ElementPlus 断层样式污染 */
+.extraction-input {
+    color: #1d1d1f !important;
+    background-color: rgba(243, 244, 246, 0.8) !important;
+    /* 接近灰100 */
+}
+
+.extraction-input:focus {
+    background-color: #ffffff !important;
+}
+
+.extraction-input::placeholder {
+    color: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 暗色模式强制接管 */
+html.dark .extraction-input {
+    color: #ffffff !important;
+    background-color: #2c2c2e !important;
+}
+
+html.dark .extraction-input:focus {
+    background-color: #1c1c1e !important;
+}
+
+html.dark .extraction-input::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+</style>

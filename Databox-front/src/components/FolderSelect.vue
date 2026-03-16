@@ -169,7 +169,6 @@ const navChange = (data) => {
         display: flex;
         align-items: center;
         padding: 12px 16px;
-        border-bottom: 1px solid #ebeef5;
         cursor: pointer;
         transition: all 0.2s ease;
 
@@ -181,7 +180,7 @@ const navChange = (data) => {
             display: inline-block;
             margin-left: 12px;
             font-size: 14px;
-            color: #303133;
+            color: #656570;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -194,6 +193,16 @@ const navChange = (data) => {
         &:active {
             background: #e6f1fc;
         }
+
+        html.dark & {
+            &:hover {
+                background: rgba(255, 255, 255, 0.08);
+            }
+
+            &:active {
+                background: rgba(255, 255, 255, 0.12);
+            }
+        }
     }
 }
 
@@ -205,10 +214,13 @@ const navChange = (data) => {
     height: 250px;
     color: #909399;
 
+        html.dark & { color: #86868b; }
+
     i {
         font-size: 48px;
         margin-bottom: 16px;
         color: #c0c4cc;
+         html.dark & { color: #424245; }
     }
 
     p {

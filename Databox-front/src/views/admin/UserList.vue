@@ -1,106 +1,171 @@
 <template>
-  <div>
-    <div class="top" style="margin-top: 20px;">
-      <div class="top-op">
-        <div class="search-form">
-          <el-form :model="formData" ref="formDataRef" @submit.prevent inline class="form-inline">
-            <div class="form-item-group">
-              <span class="label">状态</span>
-              <el-select clearable placeholder="请选择状态" v-model="formData.status" class="status-select">
-                <el-option :value="1" label="正常"></el-option>
-                <el-option :value="0" label="禁用"></el-option>
-              </el-select>
-              <el-button type="primary" class="custom-btn search-btn" @click="loadDataList(false)">
-                <span class="iconfont icon-search"></span>
-                查询
-              </el-button>
-              <el-button type="info" class="custom-btn refresh-btn" @click="loadDataList(false)">
-                <span class="iconfont icon-refresh"></span>
-                刷新
-              </el-button>
-            </div>
-          </el-form>
+  <div class="flex flex-col h-full pt-4 pb-1">
+
+    <!-- 顶栏：标题与局部操作按钮区 (与 Share 和 Recycle 完全拉齐对标) -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center px-6 mb-5 gap-4">
+
+      <!-- 左：标题与说明 -->
+      <div class="flex flex-col">
+        <h1 class="text-[22px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight leading-snug">用户管理</h1>
+        <span class="text-[13px] text-[#86868b] dark:text-[#98989d] mt-0.5 font-medium">查看并管理系统用户的状态与存储配额</span>
+      </div>
+
+      <!-- 右：操作与筛选区 -->
+      <div class="flex items-center gap-2.5 shrink-0 select-none">
+
+        <el-select clearable placeholder="请选择状态" v-model="formData.status" class="mac-select w-[130px]">
+          <el-option :value="1" label="正常模式"></el-option>
+          <el-option :value="0" label="已被禁用"></el-option>
+        </el-select>
+
+        <button type="button" @click="loadDataList(false)"
+          class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-5 py-2.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95">
+          <span class="iconfont icon-search text-[14px]"></span>查询
+        </button>
+
+        <!-- 极简刷新按钮 -->
+        <div @click="loadDataList(false)"
+          class="flex items-center justify-center w-[36px] h-[36px] text-gray-500 hover:text-[#007AFF] bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] shadow-sm rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer group">
+          <span class="iconfont icon-refresh text-[14px]"></span>
         </div>
       </div>
+
     </div>
-    <div class="file-list" v-if="tableData.list && tableData.list.length > 0">
-      <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList" :initFetch="false"
-        :options="tableOptions" @rowSelected="rowSelected" @sortChange="handleSortChange"
-        :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
-        <!-- 头像 -->
-        <template #avatar="{ row }">
-          <div class="avatar">
-            <Avatar :userId="row.userId" :interactive="false"></Avatar>
-          </div>
-        </template>
-        <!-- 用户名 -->
-        <template #userName="{ row }">
-          <span class="file-text" :title="row.userName">
-            <span class="file-name-1">{{ row.userName }}</span>
-          </span>
-        </template>
-        <!-- 空间使用 -->
-        <template #space="{ row }">
-          <div>
-            <div>{{ proxy.Utils.size2Str(row.userSpace) }} / {{ proxy.Utils.size2Str(row.totalSpace) }}</div>
-            <el-progress :percentage="calculateSpacePercentage(row)" :stroke-width="10" :show-text="false"
-              :striped="true"></el-progress>
-          </div>
-        </template>
-        <!-- 状态 -->
-        <template #status="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : 'danger'">
-            {{ row.status === 1 ? '正常' : '禁用' }}
-          </el-tag>
-        </template>
-        <!-- 操作 -->
-        <template #op="{ row }">
-          <div class="op-buttons">
-            <el-button type="primary" size="small" @click="showUpdateSpaceDialog(row)">修改空间</el-button>
-            <el-button :type="row.status === 1 ? 'danger' : 'success'" size="small" @click="updateUserStatus(row)">
-              {{ row.status === 1 ? '禁用' : '启用' }}
-            </el-button>
-          </div>
-        </template>
-      </Table>
-    </div>
-    <!-- 骨架屏 -->
-    <SkeletonLoader v-else-if="isLoading" :rowCount="14" />
-    <!-- 无数据显示 -->
-    <div class="no-data" v-else>
-      <div class="no-data-inner">
-        <Icon iconName="no_data" :width="150" fit="fill"></Icon>
-        <div class="tips">当前没有用户数据</div>
+
+    <!-- 主体：底层 Table 容器 (彻底去除了生硬的卡片包裹并融于原生结构) -->
+    <div class="flex-1 overflow-hidden relative flex flex-col">
+
+      <div class="flex-1 overflow-hidden" v-if="tableData.list && tableData.list.length > 0">
+        <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList" :initFetch="false"
+          :options="tableOptions" @rowSelected="rowSelected" @sortChange="handleSortChange"
+          :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
+
+          <!-- 头像 -->
+          <template #avatar="{ row }">
+            <div class="flex justify-center items-center py-1">
+              <div
+                class="w-10 h-10 rounded-full border border-gray-200/60 dark:border-gray-700 shadow-sm overflow-hidden flex-shrink-0 transition-transform hover:scale-105 bg-gray-50 dark:bg-black/20">
+                <Avatar :userId="row.userId" :interactive="false" :width="40"></Avatar>
+              </div>
+            </div>
+          </template>
+
+          <!-- 用户名 -->
+          <template #userName="{ row }">
+            <span class="text-[14px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-wide"
+              :title="row.userName">
+              {{ row.userName }}
+            </span>
+          </template>
+
+          <!-- 空间使用 -->
+          <template #space="{ row }">
+            <div class="flex flex-col gap-1.5 w-full pt-1 px-4">
+              <div class="flex justify-between items-center text-[12px] font-medium text-[#86868b] dark:text-gray-400">
+                <span>{{ proxy.Utils.size2Str(row.userSpace) }}</span>
+                <span>{{ proxy.Utils.size2Str(row.totalSpace) }}</span>
+              </div>
+              <el-progress :percentage="calculateSpacePercentage(row)" :stroke-width="6" :show-text="false"
+                color="#007AFF" class="mac-progress"></el-progress>
+            </div>
+          </template>
+
+          <!-- 状态 -->
+          <template #status="{ row }">
+            <span
+              :class="row.status === 1 ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-900/40 dark:text-emerald-400' : 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:border-red-900/40 dark:text-red-400'"
+              class="px-2.5 py-1 text-[12px] font-bold border rounded-lg tracking-wider transition-colors">
+              {{ row.status === 1 ? '正常' : '禁用' }}
+            </span>
+          </template>
+
+          <!-- 操作 -->
+          <template #op="{ row }">
+            <div class="flex items-center justify-center gap-1.5 w-full">
+              <!-- 修改空间 -->
+              <el-tooltip content="修改空间配额" placement="top" effect="dark" :show-after="300">
+                <div
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-[#007AFF] hover:shadow-sm cursor-pointer transition-all active:scale-90"
+                  @click="showUpdateSpaceDialog(row)">
+                  <span class="iconfont icon-settings text-[16px]"></span>
+                </div>
+              </el-tooltip>
+
+              <!-- 切换状态 -->
+              <el-tooltip :content="row.status === 1 ? '禁用该用户' : '启用该用户'" placement="top" effect="dark"
+                :show-after="300">
+                <div
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm cursor-pointer transition-all active:scale-90"
+                  :class="row.status === 1 ? 'hover:text-red-500' : 'hover:text-emerald-500'"
+                  @click="updateUserStatus(row)">
+                  <!-- 🔴 修复点：启用的对应 class 为 icon-ok -->
+                  <span class="iconfont text-[16px]" :class="row.status === 1 ? 'icon-cancel' : 'icon-ok'"></span>
+                </div>
+              </el-tooltip>
+            </div>
+          </template>
+
+        </Table>
       </div>
+
+      <!-- 骨架屏 -->
+      <SkeletonLoader v-else-if="isLoading" :rowCount="14" class="px-6 py-4" />
+
+      <!-- 无数据显示 -->
+      <div class="flex-1 flex flex-col justify-center items-center h-full inset-0 pb-16" v-else>
+        <Icon iconName="no_data" :width="140" fit="fill" class="opacity-80 grayscale"></Icon>
+        <div class="mt-5 text-[#86868b] text-[14px] tracking-wide font-medium">当前没有任何用户数据</div>
+      </div>
+
     </div>
+
     <!-- 修改空间对话框 -->
     <Dialog :show="spaceDialogConfig.show" :title="spaceDialogConfig.title" :buttons="spaceDialogConfig.buttons"
-      width="500px" :showCancel="true" @close="spaceDialogConfig.show = false" :showCustomTitle="true">
-      <div class="space-dialog-content">
-        <el-form :model="spaceForm" label-width="100px">
-          <el-form-item label="当前空间">
-            {{ proxy.Utils.size2Str(currentUser.userSpace || 0) }} / {{ proxy.Utils.size2Str(currentUser.totalSpace ||
+      width="450px" :showCancel="true" @close="spaceDialogConfig.show = false" :showCustomTitle="true">
+      <div class="px-5 py-2">
+        <el-form :model="spaceForm" label-position="top" @submit.prevent>
+          <el-form-item class="mb-4">
+            <template #label><span
+                class="text-[13px] font-semibold text-gray-500 dark:text-gray-400">当前被占用空间</span></template>
+            <div class="font-mono text-[16px] text-gray-800 dark:text-gray-200 mt-1 pl-1">
+              {{ proxy.Utils.size2Str(currentUser.userSpace || 0) }} / {{ proxy.Utils.size2Str(currentUser.totalSpace ||
               0)
-            }}
+              }}
+            </div>
           </el-form-item>
-          <el-form-item label="新空间大小">
-            <el-input-number v-model="spaceForm.spaceSize" :min="1" :max="1024" :step="1"></el-input-number>
-            <span style="margin-left: 10px;">GB</span>
+
+          <el-form-item>
+            <template #label><span class="text-[13px] font-semibold text-gray-500 dark:text-gray-400">设定新总配额
+                (GB)</span></template>
+            <div class="flex items-center gap-3 w-full mt-1">
+              <el-input-number v-model="spaceForm.spaceSize" :min="1" :max="1024" :step="1"
+                class="mac-input-number w-[160px]"></el-input-number>
+            </div>
+            <div class="text-[12px] text-gray-400 mt-2 hover:text-[#007AFF] transition-colors">
+              修改后的总配额必须大于当前该用户已储内容的所占总空间
+            </div>
           </el-form-item>
         </el-form>
       </div>
     </Dialog>
+
     <!-- 状态修改确认对话框 -->
     <Dialog :show="statusDialogConfig.show" :title="statusDialogConfig.title" :buttons="statusDialogConfig.buttons"
-      width="500px" :showCancel="true" @close="statusDialogConfig.show = false" :showCustomTitle="true">
-      <div class="delete-confirm-content">
-        <div class="icon-container">
-          <img src="@/assets/icon-image/warning.png" style="background-color:white">
+      width="480px" :showCancel="true" @close="statusDialogConfig.show = false" :showCustomTitle="true">
+      <div class="flex flex-col items-center py-6">
+        <div
+          class="w-16 h-16 rounded-full bg-[#fff2f0] dark:bg-red-900/30 flex items-center justify-center mb-5 shadow-sm">
+          <img src="@/assets/icon-image/warning.png" class="w-9 h-9 object-cover opacity-90">
         </div>
-        <div class="message">{{ statusDialogConfig.message }}</div>
-        <div class="sub-message">{{ statusDialogConfig.subMessage }}</div>
+        <div class="text-[17px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-2 tracking-wide text-center">
+          {{ statusDialogConfig.message }}
+        </div>
+        <div class="text-[13px] text-[#86868b] dark:text-[#a1a1a6] text-center w-[80%] leading-relaxed">
+          {{ statusDialogConfig.subMessage }}
+        </div>
       </div>
     </Dialog>
+
   </div>
 </template>
 
@@ -390,140 +455,88 @@ onMounted(() => {
 })
 </script>
 
-<style lang="scss" scoped>
-@use "../../assets/main.scss" as *;
-
-.top-op {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
+<style scoped>
+/* Apple macOS Select 框样式覆写 */
+:deep(.mac-select .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset !important;
+  background-color: white !important;
+  border-radius: 12px;
+  height: 38px;
+  padding: 0 12px;
+  transition: all 0.25s ease;
 }
 
-.search-form {
-  flex: 1;
-
-  :deep(.el-form) {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-  }
+html.dark :deep(.mac-select .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+  background-color: #1c1c1e !important;
 }
 
-.btn-group {
-  margin-left: 10px;
+:deep(.mac-select .el-input__wrapper.is-focus),
+:deep(.mac-select .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.4) inset !important;
 }
 
-.top-panel {
-  margin-top: 10px;
+:deep(.mac-select .el-input__inner) {
+  font-weight: 500;
+  color: #1d1d1f;
 }
 
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 25px;
-  overflow: hidden;
-  margin: 0 auto;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+html.dark :deep(.mac-select .el-input__inner) {
+  color: #f5f5f7;
 }
 
-.op-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+/* Apple macOS 进度条覆写 */
+:deep(.mac-progress .el-progress-bar__outer) {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  border-radius: 99px;
 }
 
-.space-dialog-content {
-  padding: 20px;
+html.dark :deep(.mac-progress .el-progress-bar__outer) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.delete-confirm-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-
-  .icon-container {
-    margin-bottom: 15px;
-
-    img {
-      width: 60px;
-      height: 60px;
-    }
-  }
-
-  .message {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: #303133;
-  }
-
-  .sub-message {
-    font-size: 14px;
-    color: #909399;
-  }
+/* 步进数字输入器重写 */
+:deep(.mac-input-number.el-input-number) {
+  line-height: 36px;
 }
 
-.form-inline {
-  display: flex;
-  align-items: center;
+:deep(.mac-input-number .el-input__wrapper) {
+  height: 38px;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  box-shadow: none !important;
 }
 
-.form-item-group {
-  display: flex;
-  align-items: center;
-  height: 40px;
+html.dark :deep(.mac-input-number .el-input__wrapper) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
-.label {
-  margin-right: 10px;
-  font-size: 14px;
-  color: #606266;
+:deep(.mac-input-number .el-input-number__decrease),
+:deep(.mac-input-number .el-input-number__increase) {
+  background-color: transparent !important;
+  border: none !important;
+  color: #86868b;
+  width: 36px;
 }
 
-.status-select {
-  width: 120px;
-  margin-right: 10px;
+:deep(.mac-input-number .el-input-number__decrease:hover),
+:deep(.mac-input-number .el-input-number__increase:hover) {
+  color: #007AFF;
 }
 
-.search-btn,
-.refresh-btn {
-  margin-right: 10px;
-  height: 32px;
+:deep(.mac-input-number .el-input__inner) {
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: bold;
+  color: #1d1d1f;
 }
 
-.file-text {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+html.dark :deep(.mac-input-number .el-input__inner) {
+  color: #f5f5f7;
+}
 
-  .file-name-1 {
-    font-weight: 600;
-    color: #409EFF;
-    transition: all 0.3s ease;
-    position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 0;
-      height: 1px;
-      background-color: #409EFF;
-      transition: width 0.3s ease;
-    }
-
-    &:hover::after {
-      width: 100%;
-    }
-  }
+/* 清理不需要的 margin */
+:deep(.el-form-item) {
+  margin-bottom: 12px;
 }
 </style>
