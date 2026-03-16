@@ -393,8 +393,13 @@ public class AccountController extends ABaseController {
 	 * 获取用户登录日志列表
 	 */
 	@RequestMapping("/loadLoginLogList")
-	@GlobalInterceptor(checkParams = true, checkAdmin = true)
-	public ResponseVO loadLoginLogList(Integer pageNo, Integer pageSize, String userIdFuzzy, String loginIpFuzzy) {
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO loadLoginLogList(HttpSession session, Integer pageNo, Integer pageSize, String userIdFuzzy, String loginIpFuzzy) {
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		if(!webUserDto.getIsAdmin()){
+			// 普通用户只能查自己的登录日志
+			userIdFuzzy = webUserDto.getUserId();
+		}
 		UserLoginLogQuery query = new UserLoginLogQuery();
 		query.setOrderBy("login_time desc");
 		query.setPageNo(pageNo);

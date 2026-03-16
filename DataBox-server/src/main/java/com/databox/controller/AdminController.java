@@ -3,6 +3,7 @@ package com.databox.controller;
 import com.databox.annotation.GlobalInterceptor;
 import com.databox.annotation.VerifyParam;
 import com.databox.component.RedisComponent;
+import com.databox.entity.dto.SessionWebUserDto;
 import com.databox.entity.dto.SysSettingDto;
 import com.databox.entity.po.SysOpLog;
 import com.databox.entity.query.FileInfoQuery;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 
 @RestController("adminController")
@@ -245,8 +247,12 @@ public class AdminController extends CommonFileController{
      * @return
      */
     @RequestMapping("/loadOperationLog")
-    @GlobalInterceptor(checkAdmin = true)
-    public ResponseVO loadOperationLog(SysOpLogQuery query) {
+    public ResponseVO loadOperationLog(HttpSession session, SysOpLogQuery query) {
+        SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+        if(!webUserDto.getIsAdmin()){
+            // 普通用户只能查自己的日志
+            query.setUserId(webUserDto.getUserId());
+        }
         query.setOrderBy("create_time desc");
         PaginationResultVO<SysOpLog> result = sysOpLogService.findListByPage(query);
         return getSuccessResponseVO(result);

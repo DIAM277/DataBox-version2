@@ -14,8 +14,9 @@
 
             <!-- 右：极简搜索过滤器 -->
             <div class="flex items-center gap-2.5 shrink-0 select-none flex-wrap">
-                <el-input clearable placeholder="搜用户ID" v-model.trim="searchForm.userIdFuzzy" @keyup.enter="searchData"
-                    class="mac-input w-[130px]" />
+                <!-- 仅管理员可看的搜用户输入框 -->
+                <el-input v-if="isAdmin" clearable placeholder="搜用户ID" v-model.trim="searchForm.userIdFuzzy"
+                    @keyup.enter="searchData" class="mac-input w-[130px]" />
                 <el-input clearable placeholder="搜登录IP" v-model.trim="searchForm.loginIpFuzzy" @keyup.enter="searchData"
                     class="mac-input w-[130px]" />
 
@@ -50,12 +51,12 @@
                                 row.loginIp }}</span>
                     </template>
 
+                    <!-- 🔴 修改登录地点的外层标签，使用 inline-flex 自然居中 -->
                     <template #loginLocation="{ row }">
-                        <div
-                            class="flex items-center gap-1.5 justify-center w-full max-w-[200px] text-[#86868b] dark:text-[#98989d]">
+                        <div class="inline-flex items-center justify-center gap-1.5 text-[#86868b] dark:text-[#98989d]">
                             <span class="iconfont icon-import text-[12px]"></span>
-                            <span class="truncate text-[13.5px]" :title="row.loginLocation">{{ row.loginLocation ||
-                                '未解析归属地' }}</span>
+                            <span class="truncate text-[13.5px] max-w-[400px]" :title="row.loginLocation">{{
+                                row.loginLocation || '未解析归属地' }}</span>
                         </div>
                     </template>
 
@@ -82,8 +83,11 @@
 <script setup>
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import { ref, reactive, getCurrentInstance, computed, onMounted } from 'vue';
+import { useUserStore } from '@/store/userStore';
 
 const { proxy } = getCurrentInstance();
+const userStore = useUserStore();
+const isAdmin = computed(() => userStore.userInfo?.isAdmin);
 
 const api = {
     loadLoginLog: "/loadLoginLogList",
@@ -114,39 +118,47 @@ const handleSortChange = ({ prop, order }) => {
     searchData();
 };
 
-const columns = computed(() => [
-    {
-        label: "用户ID",
-        prop: "userId",
-        width: 200,
-        align: 'center',
-        scopedSlots: 'userId',
-        sortable: true
-    },
-    {
-        label: "登录IP",
-        prop: "loginIp",
-        width: 180,
-        align: 'center',
-        scopedSlots: 'loginIp',
-        sortable: true
-    },
-    {
-        label: "登录地点",
-        prop: "loginLocation",
-        align: 'center',
-        scopedSlots: 'loginLocation',
-        sortable: false
-    },
-    {
-        label: "登录时间",
-        prop: "loginTime",
-        width: 200,
-        align: 'center',
-        scopedSlots: "loginTime",
-        sortable: true
-    },
-]);
+const columns = computed(() => {
+    let baseColumns = [
+        {
+            label: "登录IP",
+            prop: "loginIp",
+            width: 280,
+            align: 'center',
+            scopedSlots: 'loginIp',
+            sortable: true
+        },
+        {
+            label: "登录地点",
+            prop: "loginLocation",
+            align: 'center',
+            scopedSlots: 'loginLocation',
+            sortable: false
+        },
+        {
+            label: "登录时间",
+            prop: "loginTime",
+            width: 250, 
+            align: 'center',
+            scopedSlots: "loginTime",
+            sortable: true
+        },
+    ];
+
+    // 如果是管理员，在第一列之前插入"用户ID"
+    if (isAdmin.value) {
+        baseColumns.unshift({
+            label: "用户ID",
+            prop: "userId",
+            width: 200,
+            align: 'center',
+            scopedSlots: 'userId',
+            sortable: true
+        });
+    }
+
+    return baseColumns;
+});
 
 // 初始化表格数据
 const initTableData = () => {

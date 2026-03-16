@@ -11,8 +11,10 @@
 
       <!-- 右侧：重构为纯浮动折行网格，抛弃 el-form 捆绑 -->
       <div class="flex flex-wrap items-center gap-2.5 justify-start lg:justify-end select-none w-full lg:w-auto">
-        <el-input v-model.trim="searchForm.userId" placeholder="用户ID" clearable class="mac-input w-[110px]" />
-        <el-input v-model.trim="searchForm.userName" placeholder="用户名" clearable class="mac-input w-[110px]" />
+        <el-input v-if="isAdmin" v-model.trim="searchForm.userId" placeholder="用户ID" clearable
+          class="mac-input w-[110px]" />
+        <el-input v-if="isAdmin" v-model.trim="searchForm.userName" placeholder="用户名" clearable
+          class="mac-input w-[110px]" />
 
         <el-select v-model="searchForm.module" placeholder="全部模块" clearable class="mac-input w-[110px]">
           <el-option label="文件管理" value="文件管理" />
@@ -99,11 +101,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, getCurrentInstance, nextTick } from 'vue';
+import { ref, reactive, getCurrentInstance, nextTick, computed } from 'vue';
 import Icon from '@/components/Icon.vue';
 import Table from '@/components/Table.vue';
+import { useUserStore } from '@/store/userStore';
 
 const { proxy } = getCurrentInstance();
+const userStore = useUserStore();
+const isAdmin = computed(() => userStore.userInfo?.isAdmin);
 
 const api = {
   loadDataList: '/admin/loadOperationLog',
@@ -118,55 +123,60 @@ const searchForm = reactive({
   dateRange: null,
 });
 
-const columns = [
-  //   {
-  //     label: '日志ID',
-  //     prop: 'opId',
-  //     width: 80,
-  //   },
-  {
-    label: '用户ID',
-    prop: 'userId',
-    width: 120,
-  },
-  {
-    label: '用户名',
-    prop: 'userName',
-    width: 120,
-  },
-  {
-    label: '操作模块',
-    prop: 'module',
-    width: 120,
-  },
-  {
-    label: '操作动作',
-    prop: 'action',
-    width: 150,
-  },
-  {
-    label: '操作详情',
-    prop: 'detail',
-    scopedSlots: 'detail',
-  },
-  {
-    label: '操作状态',
-    prop: 'status',
-    width: 100,
-    scopedSlots: 'status',
-  },
-  {
-    label: '结果信息',
-    prop: 'resultMsg',
-    width: 150,
-    scopedSlots: 'resultMsg',
-  },
-  {
-    label: '操作时间',
-    prop: 'createTime',
-    width: 160,
-  },
-];
+const columns = computed(() => {
+  let baseColumns = [
+    {
+      label: '操作模块',
+      prop: 'module',
+      width: 120,
+    },
+    {
+      label: '操作动作',
+      prop: 'action',
+      width: 150,
+    },
+    {
+      label: '操作详情',
+      prop: 'detail',
+      scopedSlots: 'detail',
+    },
+    {
+      label: '操作状态',
+      prop: 'status',
+      width: 100,
+      scopedSlots: 'status',
+    },
+    {
+      label: '结果信息',
+      prop: 'resultMsg',
+      width: 150,
+      scopedSlots: 'resultMsg',
+    },
+    {
+      label: '操作时间',
+      prop: 'createTime',
+      width: 160,
+    },
+  ];
+
+  // 仅在管理员权限时压入用户信息
+  if (isAdmin.value) {
+    baseColumns.unshift(
+      {
+        label: '用户ID',
+        prop: 'userId',
+        width: 120,
+      },
+      {
+        label: '用户名',
+        prop: 'userName',
+        width: 120,
+      }
+    );
+  }
+
+  return baseColumns;
+});
 
 const tableData = reactive({});
 const tableOptions = {

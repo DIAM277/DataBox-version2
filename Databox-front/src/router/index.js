@@ -50,7 +50,6 @@ const router = createRouter({
           meta: {
             needLogin: true,
             menuCode: "settings",
-            requireAdmin: true,
           },
           component: () => import("@/views/admin/SysSettings.vue"),
         },

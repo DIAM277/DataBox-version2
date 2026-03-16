@@ -161,16 +161,26 @@ const mainMenuGroups = [
 ];
 
 const bottomAdminMenus = computed(() => {
+  // 从 Store 中获取当前用户信息里的管理员标记
   const isAdmin = userStore.userInfo?.isAdmin;
-  if (!isAdmin) return [];
 
-  return [
-    { name: "系统设置", path: "/settings/sysSetting", icon: "icon-settings" },
-    { name: "用户管理", path: "/settings/userList", icon: "icon-account" },
-    { name: "用户文件", path: "/settings/fileList", icon: "icon-doc" },
-    { name: "登录日志", path: "/settings/loginLog", icon: "icon-import" },
-    { name: "操作日志", path: "/settings/operationLog", icon: "icon-edit" },
+  // 统一定义完整的管理设置类菜单，并打上对应需要的权限标签
+  const allMenus = [
+    { name: "系统设置", path: "/settings/sysSetting", icon: "icon-settings", requireAdmin: false },
+    { name: "用户管理", path: "/settings/userList", icon: "icon-account", requireAdmin: true },
+    { name: "用户文件", path: "/settings/fileList", icon: "icon-doc", requireAdmin: true },
+    { name: "登录日志", path: "/settings/loginLog", icon: "icon-import", requireAdmin: false }, // 普通用户可看自己的
+    { name: "操作日志", path: "/settings/operationLog", icon: "icon-edit", requireAdmin: false },
   ];
+
+  // 进行权限映射与过滤过滤
+  return allMenus.filter(menu => {
+    // 如果该菜单项需要 admin 权限，则返回当前用户的 admin 状态
+    if (menu.requireAdmin) {
+      return isAdmin;
+    }
+    return true;
+  });
 });
 
 const handleNav = (path) => {

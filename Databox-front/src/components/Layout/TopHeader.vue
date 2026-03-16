@@ -98,7 +98,8 @@
 </template>
 
 <script setup>
-import { ref, inject, onMounted } from 'vue';
+// 🔴 引入 onUnmounted
+import { ref, inject, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/store/userStore';
 import Uploader from '@/views/main/Uploader.vue';
@@ -145,12 +146,32 @@ const toggleTheme = () => {
     }
 };
 
-// 初始化时检查本地缓存恢复主题
+// 🔴 修改：增强初始加载并添加全局监听
+let observer = null;
 onMounted(() => {
+    // 初始状态读取
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         isDark.value = true;
         document.documentElement.classList.add('dark');
+    } else {
+        isDark.value = document.documentElement.classList.contains('dark');
+    }
+
+    // 利用 MutationObserver 监听 html 元素的 class 变化
+    // 使其能同步响应 SysSettings.vue 中开关的切换
+    observer = new MutationObserver(() => {
+        isDark.value = document.documentElement.classList.contains('dark');
+    });
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
+    });
+});
+
+onUnmounted(() => {
+    if (observer) {
+        observer.disconnect();
     }
 });
 
