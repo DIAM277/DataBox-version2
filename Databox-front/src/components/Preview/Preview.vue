@@ -1,25 +1,65 @@
 <template>
-    <!-- 图片预览 -->
+    <!-- 图片预览 (它自身已包含完美的 el-image-viewer 遮罩，保持独立控制) -->
     <PreviewImage ref="imageViewRef" :imageList="imageUrls" v-if="fileInfo.fileCategory == 3"></PreviewImage>
-    <!-- 其他文件类型预览框 -->
-    <Window :show="windowShow" @close="closeWindow" :width="fileInfo.fileCategory == 1 ? 1500 : 900"
-        :title="fileInfo.fileName" :align="fileInfo.fileCategory == 1 ? 'center' : 'top'" v-else>
-        <!-- 视频预览 -->
-        <PreviewVideo ref="videoPlayerRef" :url="url" v-if="fileInfo.fileCategory == 1"></PreviewVideo>
-        <!-- PDF文档预览 -->
-        <PreviewPdf :url="url" v-else-if="fileInfo.fileType == 4"></PreviewPdf>
-        <!-- docx文档预览 -->
-        <PreviewDoc :url="url" v-else-if="fileInfo.fileType == 5"></PreviewDoc>
-        <!-- excel文档预览 -->
-        <PreviewExcel :url="url" v-else-if="fileInfo.fileType == 6"></PreviewExcel>
-        <!-- 文本文件预览 -->
-        <PreviewText :url="url" v-else-if="fileInfo.fileType == 7 || fileInfo.fileType == 8"></PreviewText>
-        <!-- 音乐文件预览 -->
-        <PreviewMusic :url="url" v-else-if="fileInfo.fileCategory == 2" :fileName="fileInfo.fileName"></PreviewMusic>
-        <!-- 无法在线预览文件 -->
-        <PreviewDownload :createDownloadUrl="createDownloadUrl" :downloadUrl="downloadUrl" :fileInfo="fileInfo"
-            v-if="fileInfo.fileCategory == 5 && fileInfo.fileType != 8"></PreviewDownload>
-    </Window>
+
+    <!-- macOS Quick Look 级别沉浸式全屏预览外壳 (针对所有非图片的类型文件) -->
+    <Transition name="fade">
+        <div v-if="windowShow && fileInfo.fileCategory != 3"
+            class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md transition-all duration-300">
+
+            <!-- 极简流线型：顶部文件名指示器 -->
+            <div
+                class="absolute top-6 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 z-50 shadow-2xl pointer-events-none select-none">
+                <span class="text-white/90 text-[14.5px] font-medium tracking-wide">{{ fileInfo.fileName }}</span>
+            </div>
+
+            <!-- 右上角：全局控制栏 -->
+            <div class="absolute top-6 right-6 flex items-center gap-4 z-50">
+                <!-- 醒目的高反差阻尼感关闭按钮 -->
+                <div @click="closeWindow"
+                    class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer backdrop-blur-md transition-all ease-out duration-200 hover:scale-110 shadow-lg border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 核心预览内容容器 (交给组件自己决定背板与表现) -->
+            <div class="w-full h-full max-w-[90vw] max-h-[90vh] flex items-center justify-center p-4 md:p-8 relative">
+
+                <!-- 视频预览 (需要释放全部宽度) -->
+                <PreviewVideo ref="videoPlayerRef" :url="url" v-if="fileInfo.fileCategory == 1" class="w-full">
+                </PreviewVideo>
+
+                <!-- PDF文档预览 -->
+                <PreviewPdf :url="url" v-else-if="fileInfo.fileType == 4"
+                    class="w-full h-full overflow-auto rounded-xl shadow-2xl"></PreviewPdf>
+
+                <!-- docx文档预览 -->
+                <PreviewDoc :url="url" v-else-if="fileInfo.fileType == 5"
+                    class="w-full h-full overflow-auto rounded-xl shadow-2xl max-w-6xl"></PreviewDoc>
+
+                <!-- excel文档预览 -->
+                <PreviewExcel :url="url" v-else-if="fileInfo.fileType == 6"
+                    class="w-full h-full overflow-hidden rounded-xl shadow-2xl max-w-7xl"></PreviewExcel>
+
+                <!-- 文本文件与代码预览 -->
+                <PreviewText :url="url" v-else-if="fileInfo.fileType == 7 || fileInfo.fileType == 8"
+                    class="w-full h-full overflow-hidden rounded-xl shadow-2xl max-w-6xl"></PreviewText>
+
+                <!-- 音乐文件预览 (组件本身是自带背板效果的控制盘) -->
+                <PreviewMusic :url="url" v-else-if="fileInfo.fileCategory == 2" :fileName="fileInfo.fileName">
+                </PreviewMusic>
+
+                <!-- 无法在线预览的其他文件 (引导下载面板) -->
+                <PreviewDownload :createDownloadUrl="createDownloadUrl" :downloadUrl="downloadUrl" :fileInfo="fileInfo"
+                    v-if="fileInfo.fileCategory == 5 && fileInfo.fileType != 8" class="rounded-3xl overflow-hidden">
+                </PreviewDownload>
+
+            </div>
+        </div>
+    </Transition>
 </template>
 
 <script setup>
@@ -162,4 +202,17 @@ defineExpose({
 })
 </script>
 
-<style lang="scss" scoped></style>
+<style scoped>
+/* 原生 macOS 级别的平滑淡入淡出过场动画 */
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+    transform: scale(0.98);
+    /* 加入超级轻微的缩放回弹，带来物理阻尼感 */
+}
+</style>

@@ -1,5 +1,10 @@
 <template>
-  <div ref="docRef" class="doc-content"></div>
+  <!-- Apple Quick Look 沉浸式外层纸张容器 -->
+  <div
+    class="w-full h-full bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl overflow-hidden flex flex-col relative transition-colors duration-300">
+    <!-- 核心渲染区：内部自动撑满并接管安全滚动 -->
+    <div ref="docRef" class="flex-1 w-full h-full overflow-auto"></div>
+  </div>
 </template>
 
 <script setup>
@@ -30,17 +35,3 @@ onMounted(() => {
 });
 </script>
 
-<style lang="scss" scoped>
-.doc-content {
-  margin: 0px auto;
-
-  :deep(.docx-wrapper) {
-    background: #fff;
-    padding: 10px 0px;
-  }
-
-  :deep(.docx-wrapper > section.docx) {
-    margin-bottom: 0px;
-  }
-}
-</style>

@@ -1,31 +1,55 @@
 <template>
-  <div class="code">
-    <div class="top-op">
-      <div class="left-controls">
-        <div class="encode-select">
-          <!-- 编码选择下拉框 -->
-          <el-select v-model="encode" placeholder="请选择编码" @change="changeEncode">
+  <!-- Apple Quick Look 沉浸式文本容器 -->
+  <div
+    class="w-full h-full bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-colors duration-300">
+
+    <!-- 顶部操作栏 (融合 Tailwind) -->
+    <div
+      class="flex flex-wrap items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-[#2e2e2e] bg-gray-50/70 dark:bg-black/20 shrink-0 gap-4 select-none">
+      <div class="flex items-center gap-4 md:gap-6 flex-wrap">
+
+        <!-- 编码选择区：加入 popper-class 突破遮罩层级 -->
+        <div class="flex items-center gap-2">
+          <el-select v-model="encode" placeholder="请选择编码" @change="changeEncode" class="w-[105px] mac-select"
+            popper-class="preview-dropdown">
             <el-option :value="utf8" label="UTF-8" />
             <el-option :value="gbk" label="GBK" />
           </el-select>
-          <div class="tips">乱码了？切换编码试试😊</div>
+          <span class="text-[12px] text-gray-400 dark:text-gray-500 font-medium hidden sm:block">切换编码修复乱码</span>
         </div>
-        <!-- 主题选择器 -->
-        <div class="theme-select">
-          <el-select v-model="currentTheme" placeholder="选择主题" @change="changeTheme">
+
+        <!-- 主题切换：加入 popper-class 突破遮罩层级 -->
+        <div class="flex items-center gap-2">
+          <el-select v-model="currentTheme" placeholder="选择主题" @change="changeTheme" class="w-[145px] mac-select"
+            popper-class="preview-dropdown">
             <el-option v-for="theme in themes" :key="theme.value" :label="theme.label" :value="theme.value" />
           </el-select>
         </div>
-        <!-- 换行模式切换 -->
-        <div class="wrap-mode">
-          <el-switch v-model="wordWrap" active-text="自动换行" inactive-text="原始格式" @change="toggleWordWrap" />
+
+        <!-- 换行与否 -->
+        <div class="flex items-center mt-0.5">
+          <el-switch v-model="wordWrap" active-text="自动换行" inactive-text="原定格式" @change="toggleWordWrap"
+            style="--el-switch-on-color: #34C759;" />
         </div>
+
       </div>
-      <div class="copy-btn">
-        <el-button @click="copy" type="primary">复制</el-button>
+
+      <!-- 复制动作 -->
+      <div class="flex items-center shrink-0">
+        <button @click="copy"
+          class="px-4 py-1.5 rounded-lg bg-[#007AFF] hover:bg-[#0066cc] text-white text-[13px] font-medium transition-all shadow-sm active:scale-95 flex items-center gap-1.5 focus:outline-none">
+          <span class="iconfont icon-copy text-[13px]"></span>立即复制
+        </button>
       </div>
     </div>
-    <highlightjs language="" :code="txtContent" class="code-block" :class="{ 'word-wrap': wordWrap }"></highlightjs>
+
+    <!-- 文本主体展示区：外层动态绑定换行模式 -->
+    <div class="flex-1 w-full h-full overflow-auto p-5 md:p-8 bg-transparent transition-all"
+      :class="wordWrap ? 'wrap-mode' : 'nowrap-mode'">
+      <highlightjs language="" :code="txtContent"
+        class="font-mono text-[13.5px] leading-[1.65] text-gray-800 dark:text-[#d4d4d4]"></highlightjs>
+    </div>
+
   </div>
 </template>
 
@@ -63,7 +87,7 @@ const blobResult = ref()
 const encode = ref("utf8")
 const utf8 = "utf8" // 定义utf8变量
 const gbk = "gbk"   // 定义gbk变量
-const wordWrap = ref(false) // 默认不自动换行
+const wordWrap = ref(true) // 默认不自动换行
 
 // 主题列表
 const themes = [
@@ -133,70 +157,67 @@ onMounted(() => {
 })
 </script>
 
-<style lang="scss" scoped>
-.code {
-  width: 100%;
-  height: 100%;
-  background-color: #fff;
+<style scoped>
+:deep(.hljs) {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: inherit;
+  color: inherit !important;
+}
+
+.wrap-mode :deep(pre),
+.wrap-mode :deep(code) {
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  overflow-wrap: anywhere !important;
+}
+
+.nowrap-mode :deep(pre),
+.nowrap-mode :deep(code) {
+  white-space: pre !important;
+  word-break: normal !important;
+}
+
+/* 覆写下沉式控制栏表单组件 */
+:deep(.mac-select .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset !important;
+  background-color: rgba(255, 255, 255, 0.5) !important;
   border-radius: 8px;
-  overflow: auto;
-  padding: 15px;
+  height: 32px;
+}
 
-  .top-op {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
+html.dark :deep(.mac-select .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+  background-color: rgba(0, 0, 0, 0.2) !important;
+}
 
-    .left-controls {
-      display: flex;
-      align-items: center;
-      gap: 15px;
+:deep(.mac-select .el-input__inner) {
+  font-size: 13px;
+  font-weight: 500;
+}
+</style>
 
-      .encode-select {
-        display: flex;
-        align-items: center;
+<style>
+/* 突破外层 Preview.vue 的 z-[9999] 遮罩层级 */
+.preview-dropdown.el-popper {
+  z-index: 10000 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+}
 
-        .tips {
-          margin-left: 10px;
-          font-size: 12px;
-          color: #909399;
-        }
-      }
+/* 适配暗黑模式下拉面板颜色 */
+html.dark .preview-dropdown.el-popper {
+  background-color: #1c1c1e !important;
+  border-color: #38383a !important;
+}
 
-      .theme-select {
-        display: flex;
-        min-width: 120px;
-      }
+html.dark .preview-dropdown .el-select-dropdown__item {
+  color: #f5f5f7 !important;
+}
 
-      .wrap-mode {
-        margin-left: 10px;
-      }
-    }
-  }
-
-  .code-block {
-    width: 100%;
-    overflow-x: auto; // 添加水平滚动
-  }
-
-  :deep(.hljs) {
-    padding: 15px;
-    border-radius: 8px;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    overflow-x: auto; // 确保代码块可以水平滚动
-    white-space: pre; // 保持原始格式，不换行
-    background-color: #f5f7fa;
-  }
-
-  // 自动换行样式
-  .code-block.word-wrap {
-    :deep(.hljs) {
-      white-space: pre-wrap; // 自动换行
-      word-wrap: break-word; // 确保长单词也能换行
-    }
-  }
+html.dark .preview-dropdown .el-select-dropdown__item.hover,
+html.dark .preview-dropdown .el-select-dropdown__item:hover {
+  background-color: #2c2c2e !important;
 }
 </style>

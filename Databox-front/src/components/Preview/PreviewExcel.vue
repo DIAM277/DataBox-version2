@@ -1,5 +1,11 @@
 <template>
-  <div ref="excelRef" class="excel-content"></div>
+  <!-- Apple Quick Look 沉浸式外层纸张容器 -->
+  <div
+    class="w-full h-full bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl overflow-hidden flex flex-col relative transition-colors duration-300">
+    <!-- 核心渲染区：增加基础 padding 防止表格贴死圆角边框 -->
+    <div ref="excelRef"
+      class="flex-1 w-full h-full overflow-auto p-4 md:p-6 text-sm text-[#1d1d1f] dark:text-[#f5f5f7]"></div>
+  </div>
 </template>
 
 <script setup>
@@ -75,27 +81,3 @@ onMounted(() => {
   initExcel();
 });
 </script>
-
-<style lang="scss" scoped>
-.excel-content {
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  padding: 15px;
-  background-color: #fff;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #c0c4cc;
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f5f7fa;
-  }
-}
-</style>

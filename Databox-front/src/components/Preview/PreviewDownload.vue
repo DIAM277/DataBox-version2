@@ -1,18 +1,29 @@
 <template>
-    <div class="others">
-        <div class="body-content">
-            <div class="icon-container">
-                <Icon :iconName="fileInfo.fileType == 9 ? 'zip' : 'others'" :width="100"></Icon>
-            </div>
-            <div class="file-name">{{ fileInfo.fileName }}</div>
-            <div class="tips">该类型文件暂不支持在线预览，请下载后查看。</div>
-            <div class="download-btn">
-                <el-button type="primary" @click="download">
-                    <i class="iconfont icon-download"></i>
-                    点击下载 {{ proxy.Utils.size2Str(fileInfo.fileSize) }}
-                </el-button>
-            </div>
+    <!-- Apple Quick Look 沉浸式下载提示屏 -->
+    <div class="w-full h-full flex flex-col items-center justify-center bg-transparent select-none font-sans">
+        
+        <!-- 悬浮大图标 -->
+        <div class="w-32 h-32 opacity-90 drop-shadow-2xl mb-6 flex items-center justify-center transition-transform hover:scale-105 duration-500">
+            <Icon :iconName="fileInfo.fileType == 9 ? 'zip' : 'others'" :width="128"></Icon>
         </div>
+        
+        <!-- 核心文件名称 -->
+        <h2 class="text-2xl md:text-3xl font-bold text-white tracking-wide text-center px-4 line-clamp-2 max-w-3xl">
+            {{ fileInfo.fileName || '未知文件' }}
+        </h2>
+        
+        <!-- 辅助提示副标题 -->
+        <p class="text-gray-400 mt-3.5 text-sm md:text-[15px] font-medium">
+            该文件类型暂不支持在线预览，请下载后查看
+        </p>
+
+        <!-- 饱满呼吸感下载大按钮 -->
+        <button @click="download" type="button"
+            class="mt-10 px-10 py-3.5 bg-[#007AFF] hover:bg-[#0066cc] text-white font-semibold rounded-full shadow-[0_8px_20px_rgba(0,122,255,0.4)] transition-all ease-out duration-200 active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer focus:outline-none">
+            <span class="iconfont icon-download text-[18px]"></span>
+            <span class="tracking-wide">下载文件 ({{ proxy.Utils.size2Str(fileInfo.fileSize) }})</span>
+        </button>
+        
     </div>
 </template>
 
@@ -44,53 +55,3 @@ const download = async () => {
 }
 </script>
 
-<style lang="scss" scoped>
-.others {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: 300px;
-    padding: 20px;
-
-    .body-content {
-        text-align: center;
-        background-color: #ffffff;
-        border-radius: 8px;
-        padding: 30px;
-        max-width: 500px;
-        width: 100%;
-
-        .icon-container {
-            margin-bottom: 15px;
-        }
-
-        .file-name {
-            font-weight: bold;
-            font-size: 18px;
-            margin-bottom: 10px;
-            word-break: break-all;
-            color: #303133;
-        }
-
-        .tips {
-            color: #909399;
-            margin: 15px 0;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .download-btn {
-            margin-top: 20px;
-
-            .el-button {
-                padding: 12px 20px;
-
-                i {
-                    margin-right: 5px;
-                }
-            }
-        }
-    }
-}
-</style>
