@@ -30,10 +30,15 @@
                             class="code-input">
                         </el-input>
                     </el-form-item>
+                    <el-form-item label="免填提取码">
+                        <el-switch v-model="autoFillCode" active-text="开启后打开链接自动填充" />
+                    </el-form-item>
+
                 </template>
                 <template v-else>
                     <el-form-item label="分享链接" class="share-result-item">
-                        <div class="share-link">{{ shareUrl }}{{ resultInfo.shareId }}</div>
+                        <div class="share-link">{{ shareUrl }}{{ resultInfo.shareId }}{{ autoFillCode ?
+                            `?code=${resultInfo.code}` : '' }}</div>
                     </el-form-item>
                     <el-form-item label="提取码" class="share-result-item">
                         <div class="extraction-code">{{ resultInfo.code }}</div>
@@ -63,6 +68,8 @@ const api = {
 const shareUrl = ref(document.location.origin + '/share/')
 // 展示状态(0分享前:显示分享信息表单 1分享后:显示分享链接)
 const showType = ref(0)
+
+const autoFillCode = ref(true)
 
 const formData = ref({});
 const formDataRef = ref();
@@ -153,8 +160,13 @@ const share = async () => {
 
 // 复制分享信息
 const copy = async () => {
-    await toClipboard(`${shareUrl.value}${resultInfo.value.shareId}?code=${resultInfo.value.code}`);
-    proxy.Message.success("复制分享成功");
+    // 🔴 修改：根据配置决定剪贴板中的 URL 格式
+    const finalUrl = autoFillCode.value
+        ? `${shareUrl.value}${resultInfo.value.shareId}?code=${resultInfo.value.code}`
+        : `${shareUrl.value}${resultInfo.value.shareId}`;
+
+    await toClipboard(finalUrl);
+    proxy.Message.success("复制分享链接成功");
 }
 defineExpose({ show });
 </script>
@@ -165,6 +177,9 @@ defineExpose({ show });
     font-weight: bold;
     color: #303133;
     word-break: break-all;
+    html.dark & {
+        color: #f5f5f7;
+    }
 }
 
 .code-input {
@@ -176,19 +191,27 @@ defineExpose({ show });
 
     .share-link,
     .extraction-code {
-        padding: 8px 12px;
+        padding: 10px 14px;
         background-color: #f5f7fa;
-        border-radius: 4px;
+        border-radius: 8px;
+        /* 增加圆角反馈 */
         word-break: break-all;
-        font-family: monospace;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         color: #606266;
         border: 1px solid #e4e7ed;
+
+        html.dark & {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #d1d1d6;
+        }
     }
 
     .extraction-code {
         display: inline-block;
         font-weight: bold;
-        color: #409EFF;
+        color: #007AFF;
+        font-size: 16px;
         letter-spacing: 1px;
     }
 }

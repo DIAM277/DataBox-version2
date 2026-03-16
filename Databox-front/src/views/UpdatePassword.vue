@@ -92,7 +92,7 @@
                     </el-input>
                     <div class="h-[40px] w-[110px] cursor-pointer shadow-sm hover:opacity-80 transition-opacity border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
                         @click="changeCheckCode">
-                        <img class="w-full h-full object-cover" :src="checkCodeUrl4SendMailCode" alt="点我换一张" />
+                        <img class="w-full h-full object-fit" :src="checkCodeUrl4SendMailCode" alt="点我换一张" />
                     </div>
                 </div>
             </el-form-item>

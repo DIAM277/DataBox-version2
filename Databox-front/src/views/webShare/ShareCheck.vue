@@ -104,7 +104,7 @@ const getShareInfo = async () => {
 }
 getShareInfo()
 
-const formData = ref({});
+const formData = ref({ code: '' });
 const formDataRef = ref();
 const rules = {
     code: [
@@ -113,7 +113,6 @@ const rules = {
     ]
 };
 
-// 检验文件提取码 (原有逻辑完全保留)
 const checkShare = () => {
     formDataRef.value.validate(async (valid) => {
         if (!valid) {
@@ -141,12 +140,16 @@ const jumpToHome = () => {
 }
 
 onMounted(() => {
-    if (route.query.code) {
-        // 将连接中携带的code 自动填入表单并验证
-        formData.value.code = route.query.code;
-        nextTick(() => {
-            checkShare();
-        });
+    // 优先读取路由自带的 code，如果没有则去抢救从 Share.vue 重定向时遗留下来的 code
+    const autoCode = route.query.code || sessionStorage.getItem('auto_fill_code_' + shareId);
+
+    if (autoCode) {
+        // 使用 setTimeout 稍微延迟，确保视图和 Element Plus 表单完全挂载后再设值
+        setTimeout(() => {
+            formData.value.code = autoCode;
+            // 用完即焚，防止日后同一标签页打开该分享时发生错误干扰
+            sessionStorage.removeItem('auto_fill_code_' + shareId);
+        }, 100);
     }
 });
 </script>

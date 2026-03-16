@@ -206,6 +206,11 @@ const currentUserInfo = proxy.VueCookies.get("userInfo")
 
 const shareId = route.params.shareId;
 const shareInfo = ref({})
+
+if (route.query.code) {
+  sessionStorage.setItem('auto_fill_code_' + shareId, route.query.code);
+}
+
 // 获取分享信息
 const getShareInfo = async () => {
   let result = await proxy.Request({
