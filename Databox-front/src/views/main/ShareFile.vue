@@ -153,7 +153,7 @@ const share = async () => {
 
 // 复制分享信息
 const copy = async () => {
-    await toClipboard(`链接:${shareUrl.value}${resultInfo.value.shareId} 提取码:${resultInfo.value.code}`);
+    await toClipboard(`${shareUrl.value}${resultInfo.value.shareId}?code=${resultInfo.value.code}`);
     proxy.Message.success("复制分享成功");
 }
 defineExpose({ show });

@@ -263,7 +263,7 @@ const cancelShowOp = (row) => {
 const shareUrl = ref(document.location.origin + '/share/')
 // 复制分享信息
 const copy = async (data) => {
-  await toClipboard(`链接:${shareUrl.value}${data.shareId} 提取码:${data.code}`);
+  await toClipboard(`${shareUrl.value}${data.shareId}?code=${data.code}`);
   proxy.Message.success("复制分享成功");
 }
 

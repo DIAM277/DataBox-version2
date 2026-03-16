@@ -1,118 +1,182 @@
 <template>
-  <div class="share-page">
-    <div class="share">
-      <div class="header">
-        <div class="header-content">
-          <AppTitle2 title="DataBox" @click.stop="jumpToHome" />
-          <div class="user-info" v-if="currentUserInfo">
-            <div class="avatar">
-              <Avatar :userId="currentUserInfo.userId" :userName="currentUserInfo.userName"
-                :userEmail="currentUserInfo.email" :showActions="false">
-              </Avatar>
+  <div
+    class="h-screen w-screen flex flex-col bg-[#f5f5f7] dark:bg-[#000000] text-[#1d1d1f] dark:text-[#f5f5f7] font-sans overflow-hidden transition-colors duration-500">
+
+    <!-- 独立顶部导航栏 (Header) -->
+    <header
+      class="h-16 flex-shrink-0 bg-white/70 dark:bg-[#1c1c1e]/70 backdrop-blur-xl border-b border-[#e5e5e9] dark:border-[#38383a] z-20 px-6 flex items-center justify-between transition-all duration-300">
+
+      <!-- 左：Logo -->
+      <div class="flex items-center gap-2.5 cursor-pointer group transition-opacity hover:opacity-80"
+        @click.stop="jumpToHome">
+        <svg class="w-8 h-8 text-[#007AFF] drop-shadow-sm transition-transform group-hover:scale-105"
+          viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M17.5 19H6.5C3.46243 19 1 16.5376 1 13.5C1 10.6693 3.14081 8.34327 5.90802 8.03333C6.44299 4.60655 9.42168 2 12 2C15.1118 2 17.7554 4.08182 18.6655 6.94276C21.0963 7.29177 23 9.40059 23 12C23 15.866 19.866 19 17.5 19Z" />
+        </svg>
+        <span class="font-semibold text-xl text-[#1d1d1f] dark:text-[#f5f5f7] tracking-wider relative top-0.5">
+          DataBox <span class="text-sm text-gray-400 dark:text-gray-500 font-normal ml-1">分享</span>
+        </span>
+      </div>
+
+      <!-- 右：当前访客信息 -->
+      <div v-if="currentUserInfo"
+        class="flex items-center hover:scale-105 transition-transform duration-300 shadow-sm rounded-full">
+        <Avatar :userId="currentUserInfo.userId" :userName="currentUserInfo.userName" :userEmail="currentUserInfo.email"
+          :interactive="false" :showActions="false" :width="36"
+          class="border flex-shrink-0 border-gray-100 dark:border-gray-700 rounded-full">
+        </Avatar>
+      </div>
+
+    </header>
+
+    <!-- 主体区域 -->
+    <div class="flex-1 flex flex-col overflow-hidden relative">
+
+      <!-- 加载期占位 -->
+      <div v-if="Object.keys(shareInfo).length == 0"
+        class="absolute inset-0 flex justify-center items-center h-full w-full z-10 bg-[#f5f5f7] dark:bg-[#000000]"
+        v-loading="true"></div>
+
+      <template v-else>
+        <!-- 核心控制区 (分享者信息与主操作) -->
+        <div
+          class="px-4 sm:px-6 pt-6 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 transition-all">
+
+          <!-- 分享者信息 -->
+          <div class="flex items-center gap-3.5">
+            <Avatar :userId="shareInfo.userId" :interactive="false" :width="52"
+              class="shadow-sm border border-black/5 dark:border-white/5 rounded-full hover:scale-105 transition-transform" />
+            <div class="flex flex-col">
+              <div class="flex items-baseline gap-2">
+                <span class="text-[17px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-wide">{{
+                  shareInfo.userName }}</span>
+                <span class="text-[12px] font-medium text-[#86868b] dark:text-gray-500">分享于 {{ shareInfo.shareTime
+                }}</span>
+              </div>
+              <span class="text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-1 line-clamp-1 max-w-[400px]">
+                <span
+                  class="font-normal mr-1 border-gray-300 dark:border-gray-600 px-1 py-0.5 rounded text-[11px] bg-black/5 dark:bg-white/10 uppercase">文件</span>
+                {{ shareInfo.fileName }}
+              </span>
             </div>
+          </div>
+
+          <!-- 右侧：环境逻辑控制按钮 -->
+          <div class="flex items-center gap-2.5 w-full sm:w-auto mt-2 sm:mt-0 select-none">
+            <!-- 场景 A：创建者视角 -->
+            <button v-if="shareInfo.currentUser" @click="cancelShare"
+              class="w-full sm:w-auto px-4 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 shadow-sm border text-red-600 border-red-200 bg-red-50 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/20 dark:hover:bg-red-900/40 flex items-center justify-center gap-1.5 focus:outline-none">
+              <span class="iconfont icon-cancel leading-none text-[14px]"></span>取消公开分享
+            </button>
+
+            <!-- 场景 B：访客视角 -->
+            <button v-else @click="save2MyPan" :disabled="selectFileList.length == 0"
+              class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all duration-300 shadow-md flex items-center justify-center gap-1.5 focus:outline-none"
+              :class="selectFileList.length === 0 ? 'opacity-50 cursor-not-allowed border-transparent text-white bg-blue-400' : 'text-white bg-[#007AFF] hover:bg-[#0066cc] border-transparent hover:shadow-lg hover:shadow-blue-500/20 active:scale-95'">
+              <span class="iconfont icon-import leading-none text-[16px]"></span>保存到我的网盘
+            </button>
           </div>
         </div>
-      </div>
-    </div>
-    <div class="share-body">
-      <template v-if="Object.keys(shareInfo).length == 0">
-        <div class="loading" v-loading="Object.keys(shareInfo).length == 0"></div>
-      </template>
-      <template v-else>
-        <div class="share-panel">
-          <div class="share-user-info">
-            <div class="avatar">
-              <Avatar :userId="shareInfo.userId" :interactive="false" :width="60"></Avatar>
-            </div>
-            <div class="share-info">
-              <div class="user-info">
-                <span class="user-name">{{ shareInfo.userName }}</span>
-                <span class="share-time">分享于：{{ shareInfo.shareTime }}</span>
-              </div>
-              <div class="file-name">分享文件：{{ shareInfo.fileName }}</div>
-            </div>
-            <div class="share-op-btn">
-              <el-button v-if="shareInfo.currentUser" type="primary" @click="cancelShare">
-                <span class="iconfont icon-cancel"></span>
-                取消分享
-              </el-button>
-              <el-button v-else type="primary" @click="save2MyPan" :disabled="selectFileList.length == 0">
-                <span class="iconfont icon-import"></span>
-                保存到我的网盘
-              </el-button>
-            </div>
-          </div>
-          <!-- 导航组件 -->
-          <div class="navigation-container">
+
+        <!-- 苹果风底层卡片 (包含 面包屑导航 与 Table) -->
+        <div
+          class="flex-1 mx-4 sm:mx-6 mb-4 sm:mb-6 bg-white dark:bg-[#1c1c1e] rounded-2xl shadow-sm border border-gray-200/60 dark:border-gray-800 overflow-hidden relative flex flex-col transition-all">
+
+          <!-- 面包屑内嵌工具栏 -->
+          <div
+            class="px-4 py-2 border-b border-gray-100 dark:border-gray-800/80 bg-gray-50/50 dark:bg-black/20 flex items-center overflow-x-auto no-scrollbar">
             <Navigation ref="navigationRef" @navChange="navChange" :shareId="shareId"></Navigation>
           </div>
-          <!-- 文件列表 -->
-          <div class="file-container">
-            <div class="file-list" v-if="tableData.list && tableData.list.length > 0">
-              <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList"
-                :initFetch="false" :options="tableOptions" @rowSelected="rowSelected" @sortChange="handleSortChange"
-                :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
-                <template #fileName="{ index, row }">
-                  <div class="file-name" @mouseenter="showOp(row)" @mouseleave="cancelShowOp(row)">
-                    <!-- fileType：1视频 3：图片 -->
-                    <template v-if="(row.fileType == 3 || row.fileType == 1)">
-                      <Icon :cover="row.fileCover" :width="32"></Icon>
-                    </template>
-                    <template v-else>
-                      <!-- folderType:0: 文件 1:目录 -->
-                      <Icon v-if="row.folderType == 0" :fileType="row.fileType"></Icon>
-                      <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
-                    </template>
-                    <span class="file-text" :title="row.fileName">
-                      <span class="file-name-1" @click="preview(row)">{{ row.fileName }}</span>
-                    </span>
-                    <span class="op">
-                      <template v-if="row.showOp">
-                        <span class="iconfont icon-download" @click.stop="handleDownloadClick(row)">下载</span>
-                        <span class="iconfont icon-import" @click.stop="sava2MyPanSingle(index)"
-                          v-if="row.showOp && !shareInfo.currentUser">保存到我的网盘</span>
-                      </template>
-                    </span>
-                  </div>
-                </template>
-                <template #fileSize="{ index, row }">
-                  <span v-if="row.fileSize">{{ proxy.Utils.size2Str(row.fileSize) }}</span>
-                  <!-- 目录无大小 显示"-" -->
-                  <span v-else style="font-size: 20px;">-</span>
-                </template>
-                <!-- 文件类型插槽 -->
-                <template #fileType="{ index, row }">
-                  <span v-if="row.folderType === 1">文件夹</span>
-                  <span v-else>
-                    {{ getFileExtension(row.fileName) }}文件
+
+          <!-- 原生表格展示区 -->
+          <div class="flex-1 overflow-hidden" v-if="tableData.list && tableData.list.length > 0">
+            <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList"
+              :initFetch="false" :options="tableOptions" @rowSelected="rowSelected" @sortChange="handleSortChange"
+              :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
+
+              <!-- Core 重构：文件名与右侧悬浮悬浮操作 -->
+              <template #fileName="{ index, row }">
+                <div class="flex items-center pr-10 relative group w-full" @mouseenter="showOp(row)"
+                  @mouseleave="cancelShowOp(row)">
+
+                  <!-- 图标判断逻辑保持不变 -->
+                  <template v-if="(row.fileType == 3 || row.fileType == 1)">
+                    <Icon :cover="row.fileCover" :width="32"></Icon>
+                  </template>
+                  <template v-else>
+                    <Icon v-if="row.folderType == 0" :fileType="row.fileType"></Icon>
+                    <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
+                  </template>
+
+                  <span
+                    class="ml-3 flex-1 overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:text-[#007AFF] transition-colors"
+                    :title="row.fileName" @click="preview(row)">
+                    <span class="text-[#1d1d1f] dark:text-[#f5f5f7] font-medium">{{ row.fileName }}</span>
                   </span>
-                </template>
-              </Table>
-            </div>
-            <!-- 骨架屏 -->
-            <SkeletonLoader v-else-if="isLoading" :rowCount="14" />
-            <!-- 无数据显示 -->
-            <div class="no-data" v-else>
-              <div class="no-data-inner">
-                <Icon iconName="no_data" :width="150" fit="fill"></Icon>
-                <div class="tips">当前列表为空</div>
-              </div>
-            </div>
+
+                  <!-- iOS 化：行内右侧绝对定位极简悬浮组 -->
+                  <div v-if="row.showOp"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+
+                    <el-tooltip content="下载该文件" placement="top" effect="dark" :show-after="300">
+                      <span
+                        class="iconfont icon-download w-7 h-7 flex items-center justify-center rounded-md text-[14px] text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-[#007AFF] hover:shadow-sm transition-all cursor-pointer"
+                        @click.stop="handleDownloadClick(row)"></span>
+                    </el-tooltip>
+
+                    <el-tooltip content="转存至我的网盘" placement="top" effect="dark" :show-after="300"
+                      v-if="!shareInfo.currentUser">
+                      <span
+                        class="iconfont icon-import w-7 h-7 flex items-center justify-center rounded-md text-[14px] text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-emerald-500 hover:shadow-sm transition-all cursor-pointer"
+                        @click.stop="sava2MyPanSingle(index)"></span>
+                    </el-tooltip>
+
+                  </div>
+
+                </div>
+              </template>
+
+              <!-- 其他简单插槽 -->
+              <template #fileSize="{ index, row }">
+                <span class="font-medium text-[#86868b] dark:text-[#a1a1a6] text-[13px]" v-if="row.fileSize">{{
+                  proxy.Utils.size2Str(row.fileSize) }}</span>
+                <span v-else class="text-gray-300 dark:text-[#424245] text-lg">-</span>
+              </template>
+
+              <template #fileType="{ index, row }">
+                <span v-if="row.folderType === 1" class="text-[#86868b] dark:text-[#a1a1a6] text-[13px]">文件夹</span>
+                <span v-else class="text-[#86868b] dark:text-[#a1a1a6] text-[13px]">{{ getFileExtension(row.fileName)
+                }}文件</span>
+              </template>
+
+            </Table>
           </div>
+
+          <!-- 骨架屏 -->
+          <SkeletonLoader v-else-if="isLoading" :rowCount="14" class="p-4" />
+
+          <!-- 无数据显示 -->
+          <div v-else class="flex-1 flex flex-col justify-center items-center h-full inset-0 pb-16">
+            <Icon iconName="no_data" :width="130" fit="fill" class="opacity-80"></Icon>
+            <div class="mt-5 text-[#86868b] text-[14px] tracking-wide font-medium">该目录下暂无文件</div>
+          </div>
+
         </div>
       </template>
-      <!-- 保存目录选择 -->
+
+      <!-- 弹出层合集容器 (逻辑层控制保持不变) -->
       <FolderSelect ref="folderSelectRef" @folderSelect="save2MyPanDone"></FolderSelect>
       <Preview ref="PreviewRef"></Preview>
-      <!-- 取消分享确认对话框 -->
+
       <Dialog :show="cancelDialogConfig.show" :title="cancelDialogConfig.title" :buttons="cancelDialogConfig.buttons"
         width="500px" :showCancel="true" @close="handleDialogClose" :showCustomTitle="true">
-        <div class="delete-confirm-content">
-          <div class="icon-container">
-            <img src="@/assets/icon-image/warning.png" style="background-color:white">
+        <div class="flex flex-col items-center py-6">
+          <div class="w-16 h-16 rounded-full bg-[#fff2f0] dark:bg-red-900/30 flex items-center justify-center mb-5">
+            <img src="@/assets/icon-image/warning.png" class="w-10 h-10 rounded-full bg-white object-cover">
           </div>
-          <div class="message">确定取消分享吗？</div>
-          <div class="sub-message">取消后，分享链接将立即失效</div>
+          <div class="text-[17px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] mb-2 tracking-wide">确定立即取消对外分享吗？</div>
+          <div class="text-[13px] text-[#86868b] dark:text-[#a1a1a6]">取消后，所有拥有此链接的用户将无法再访问该页面</div>
         </div>
       </Dialog>
     </div>
