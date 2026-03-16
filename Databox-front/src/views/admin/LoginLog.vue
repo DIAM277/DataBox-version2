@@ -1,65 +1,79 @@
 <template>
-    <div>
-        <div class="top" style="margin-top: 20px;">
-            <div class="top-op">
-                <div class="search-form">
-                    <el-form :model="searchForm" ref="formDataRef" @submit.prevent inline class="form-inline">
-                        <div class="form-item-group">
-                            <span class="label">用户ID</span>
-                            <el-input clearable placeholder="请输入用户ID" v-model.trim="searchForm.userIdFuzzy"
-                                @keyup.enter="searchData" class="input-field" style="width: 200px;" />
-                            <span class="label" style="margin-left: 15px;">登录IP</span>
-                            <el-input clearable placeholder="请输入登录IP" v-model.trim="searchForm.loginIpFuzzy"
-                                @keyup.enter="searchData" class="input-field" style="width: 200px;" />
-                            <el-button type="primary" class="custom-btn search-btn" @click="searchData">
-                                <span class="iconfont icon-search"></span>
-                                查询
-                            </el-button>
-                            <el-button type="info" class="custom-btn refresh-btn" @click="searchData">
-                                <span class="iconfont icon-refresh"></span>
-                                刷新
-                            </el-button>
-                        </div>
-                    </el-form>
+    <div class="flex flex-col h-full pt-4 pb-1 overflow-hidden">
+
+        <!-- 顶栏：标题与聚合操作区 -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center px-6 mb-5 gap-4 shrink-0">
+
+            <!-- 左：标题与说明 -->
+            <div class="flex flex-col shrink-0">
+                <h1 class="text-[22px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight leading-snug">
+                    登录日志</h1>
+                <span
+                    class="text-[13px] text-[#86868b] dark:text-[#98989d] mt-0.5 font-medium">查看并审计系统用户的登录节点与归属地记录</span>
+            </div>
+
+            <!-- 右：极简搜索过滤器 -->
+            <div class="flex items-center gap-2.5 shrink-0 select-none flex-wrap">
+                <el-input clearable placeholder="搜用户ID" v-model.trim="searchForm.userIdFuzzy" @keyup.enter="searchData"
+                    class="mac-input w-[130px]" />
+                <el-input clearable placeholder="搜登录IP" v-model.trim="searchForm.loginIpFuzzy" @keyup.enter="searchData"
+                    class="mac-input w-[130px]" />
+
+                <button type="button" @click="searchData"
+                    class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 ml-1">
+                    <span class="iconfont icon-search text-[14px]"></span>查询
+                </button>
+
+                <div @click="searchData"
+                    class="flex items-center justify-center w-[36px] h-[36px] text-gray-500 hover:text-[#007AFF] bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] shadow-sm rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer group">
+                    <span class="iconfont icon-refresh text-[14px]"></span>
                 </div>
             </div>
+
         </div>
 
-        <div class="file-list" v-if="tableData.list && tableData.list.length > 0">
-            <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList"
-                :initFetch="false" :options="tableOptions" @sortChange="handleSortChange"
-                :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
-                <!-- 用户ID -->
-                <template #userId="{ row }">
-                    <span class="user-id-text" :title="row.userId">
-                        {{ row.userId }}
-                    </span>
-                </template>
-                <!-- 登录IP -->
-                <template #loginIp="{ row }">
-                    <span class="ip-text">{{ row.loginIp }}</span>
-                </template>
-                <!-- 登录地点 -->
-                <template #loginLocation="{ row }">
-                    <span class="location-text" :title="row.loginLocation">
-                        {{ row.loginLocation || '未知' }}
-                    </span>
-                </template>
-                <!-- 登录时间 -->
-                <template #loginTime="{ row }">
-                    <span class="time-text">{{ formatDate(row.loginTime) }}</span>
-                </template>
-            </Table>
-        </div>
+        <!-- 主体：底层 Table 容器 -->
+        <div class="flex-1 overflow-hidden relative flex flex-col">
+            <div class="flex-1 overflow-hidden" v-if="tableData.list && tableData.list.length > 0">
+                <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList"
+                    :initFetch="false" :options="tableOptions" @sortChange="handleSortChange"
+                    :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
 
-        <!-- 骨架屏 -->
-        <SkeletonLoader v-else-if="isLoading" :rowCount="14" />
+                    <template #userId="{ row }">
+                        <span class="text-[14px] font-semibold text-[#007AFF] cursor-pointer hover:underline"
+                            :title="row.userId">{{ row.userId }}</span>
+                    </template>
 
-        <!-- 无数据显示 -->
-        <div class="no-data" v-else>
-            <div class="no-data-inner">
-                <Icon iconName="no_data" :width="150" fit="fill"></Icon>
-                <div class="tips">当前没有登录日志数据</div>
+                    <template #loginIp="{ row }">
+                        <span
+                            class="font-mono text-[13.5px] text-[#1d1d1f] dark:text-[#f5f5f7] bg-black/5 dark:bg-white/10 px-2 py-0.5 rounded-md border border-gray-200 dark:border-gray-700 tracking-wider">{{
+                                row.loginIp }}</span>
+                    </template>
+
+                    <template #loginLocation="{ row }">
+                        <div
+                            class="flex items-center gap-1.5 justify-center w-full max-w-[200px] text-[#86868b] dark:text-[#98989d]">
+                            <span class="iconfont icon-import text-[12px]"></span>
+                            <span class="truncate text-[13.5px]" :title="row.loginLocation">{{ row.loginLocation ||
+                                '未解析归属地' }}</span>
+                        </div>
+                    </template>
+
+                    <template #loginTime="{ row }">
+                        <span class="text-[13.5px] text-[#86868b] dark:text-[#98989d] tracking-wide">{{
+                            formatDate(row.loginTime) }}</span>
+                    </template>
+
+                </Table>
+            </div>
+
+            <!-- 骨架屏占位 -->
+            <SkeletonLoader v-else-if="isLoading" :rowCount="14" class="px-6 py-4" />
+
+            <!-- 无数据显示 -->
+            <div class="flex-1 flex flex-col justify-center items-center h-full inset-0 pb-16" v-else>
+                <Icon iconName="no_data" :width="140" fit="fill" class="opacity-80 grayscale"></Icon>
+                <div class="mt-5 text-[#86868b] text-[14px] tracking-wide font-medium">当前没有任何网络登录记录</div>
             </div>
         </div>
     </div>
@@ -217,95 +231,34 @@ onMounted(() => {
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../../assets/main.scss" as *;
-
-.top-op {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
+<style scoped>
+/* 表单组件高度一致性覆写 */
+:deep(.mac-input .el-input__wrapper) {
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset !important;
+    background-color: white !important;
+    border-radius: 10px;
+    height: 38px;
+    padding: 0 12px;
+    transition: all 0.25s ease;
 }
 
-.search-form {
-    flex: 1;
-
-    :deep(.el-form) {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-    }
+html.dark :deep(.mac-input .el-input__wrapper) {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+    background-color: #1c1c1e !important;
 }
 
-.form-inline {
-    display: flex;
-    align-items: center;
+:deep(.mac-input .el-input__wrapper.is-focus),
+:deep(.mac-input .el-input__wrapper:hover) {
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.4) inset !important;
 }
 
-.form-item-group {
-    display: flex;
-    align-items: center;
-    height: 40px;
-}
-
-.label {
-    margin-right: 10px;
-    font-size: 14px;
-    color: #606266;
-}
-
-.input-field {
-    margin-right: 10px;
-}
-
-.search-btn,
-.refresh-btn {
-    margin-right: 10px;
-    height: 32px;
-}
-
-.user-id-text {
-    display: inline-block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #409EFF;
+:deep(.mac-input .el-input__inner) {
     font-weight: 500;
+    font-size: 13.5px;
+    color: #1d1d1f;
 }
 
-.ip-text {
-    color: #303133;
-    font-family: 'Courier New', monospace;
-}
-
-.location-text {
-    display: inline-block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #606266;
-}
-
-.time-text {
-    color: #909399;
-    font-size: 13px;
-}
-
-.no-data {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 500px;
-
-    .no-data-inner {
-        text-align: center;
-
-        .tips {
-            margin-top: 20px;
-            font-size: 16px;
-            color: #909399;
-        }
-    }
+html.dark :deep(.mac-input .el-input__inner) {
+    color: #f5f5f7;
 }
 </style>

@@ -11,7 +11,16 @@
       </div>
 
       <!-- 右：操作按钮 -->
-      <div class="flex items-center gap-2.5 shrink-0 select-none">
+      <div class="flex items-center gap-2.5 shrink-0 select-none flex-wrap">
+
+        <!-- 🔴 新增：搜索文件名输入框与常规蓝色查询按键 -->
+        <el-input clearable placeholder="搜索文件名称" v-model.trim="fileNameFuzzy" @keyup.enter="loadDataList(false)"
+          class="mac-input w-[180px]" />
+
+        <button type="button" @click="loadDataList(false)"
+          class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 mr-2">
+          <span class="iconfont icon-search text-[14px]"></span>查询
+        </button>
 
         <!-- 【警告红】：批量删除 -->
         <div @click="selectFileList.length > 0 ? delFileBatch() : null"
@@ -207,6 +216,8 @@ const tableOptions = ref({
 })
 // 添加加载状态变量
 const isLoading = ref(false);
+// 挂载绑定模糊搜索的变量
+const fileNameFuzzy = ref("");
 // 排序相关状态
 const sortConfig = ref({
   prop: '', // 排序的属性
@@ -244,12 +255,17 @@ const loadDataList = async (append = false) => {
   let params = {
     pageNo: tableData.value.pageNo,
     pageSize: tableData.value.pageSize,
-    filePid: currentFolder.value.fileId
+    filePid: currentFolder.value.fileId,
+    fileNameFuzzy: fileNameFuzzy.value
   }
   // 添加排序参数
   if (sortConfig.value.prop && sortConfig.value.order) {
     params.sortField = sortConfig.value.prop;
     params.sortOrder = sortConfig.value.order === 'ascending' ? 'asc' : 'desc';
+  }
+  // 文件名模糊搜索
+  if (fileNameFuzzy.value) {
+    params.fileNameFuzzy = fileNameFuzzy.value;
   }
   // 发送axios请求
   let result = await proxy.Request({
@@ -428,3 +444,35 @@ onMounted(() => {
   loadDataList();
 })
 </script>
+
+<style scoped>
+/* 🔴 新增：Mac 输入框样式覆写 */
+:deep(.mac-input .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset !important;
+  background-color: white !important;
+  border-radius: 12px;
+  height: 38px;
+  padding: 0 12px;
+  transition: all 0.25s ease;
+}
+
+html.dark :deep(.mac-input .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+  background-color: #1c1c1e !important;
+}
+
+:deep(.mac-input .el-input__wrapper.is-focus),
+:deep(.mac-input .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.4) inset !important;
+}
+
+:deep(.mac-input .el-input__inner) {
+  font-weight: 500;
+  font-size: 13.5px;
+  color: #1d1d1f;
+}
+
+html.dark :deep(.mac-input .el-input__inner) {
+  color: #f5f5f7;
+}
+</style>

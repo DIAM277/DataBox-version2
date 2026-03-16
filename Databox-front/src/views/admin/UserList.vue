@@ -11,7 +11,11 @@
       </div>
 
       <!-- 右：操作与筛选区 -->
-      <div class="flex items-center gap-2.5 shrink-0 select-none">
+      <div class="flex items-center gap-2.5 shrink-0 select-none flex-wrap">
+
+        <!-- 🔴 新增：搜索用户名输入框 -->
+        <el-input clearable placeholder="搜索用户名" v-model.trim="formData.userNameFuzzy" @keyup.enter="loadDataList(false)"
+          class="mac-input w-[150px]" />
 
         <el-select clearable placeholder="请选择状态" v-model="formData.status" class="mac-select w-[130px]">
           <el-option :value="1" label="正常模式"></el-option>
@@ -129,7 +133,7 @@
                 class="text-[13px] font-semibold text-gray-500 dark:text-gray-400">当前被占用空间</span></template>
             <div class="font-mono text-[16px] text-gray-800 dark:text-gray-200 mt-1 pl-1">
               {{ proxy.Utils.size2Str(currentUser.userSpace || 0) }} / {{ proxy.Utils.size2Str(currentUser.totalSpace ||
-              0)
+                0)
               }}
             </div>
           </el-form-item>
@@ -290,7 +294,8 @@ const loadDataList = async (append = false) => {
   let params = {
     pageNo: tableData.value.pageNo,
     pageSize: tableData.value.pageSize,
-    status: formData.value.status
+    status: formData.value.status,
+    userNameFuzzy: formData.value.userNameFuzzy
   }
   // 添加排序参数
   if (sortConfig.value.prop && sortConfig.value.order) {
@@ -456,6 +461,35 @@ onMounted(() => {
 </script>
 
 <style scoped>
+:deep(.mac-input .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset !important;
+  background-color: white !important;
+  border-radius: 12px;
+  height: 38px;
+  padding: 0 12px;
+  transition: all 0.25s ease;
+}
+
+html.dark :deep(.mac-input .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+  background-color: #1c1c1e !important;
+}
+
+:deep(.mac-input .el-input__wrapper.is-focus),
+:deep(.mac-input .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.4) inset !important;
+}
+
+:deep(.mac-input .el-input__inner) {
+  font-weight: 500;
+  font-size: 13.5px;
+  color: #1d1d1f;
+}
+
+html.dark :deep(.mac-input .el-input__inner) {
+  color: #f5f5f7;
+}
+
 /* Apple macOS Select 框样式覆写 */
 :deep(.mac-select .el-input__wrapper) {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset !important;

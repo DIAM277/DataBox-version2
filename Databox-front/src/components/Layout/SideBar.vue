@@ -169,6 +169,7 @@ const bottomAdminMenus = computed(() => {
     { name: "用户管理", path: "/settings/userList", icon: "icon-account" },
     { name: "用户文件", path: "/settings/fileList", icon: "icon-doc" },
     { name: "登录日志", path: "/settings/loginLog", icon: "icon-import" },
+    { name: "操作日志", path: "/settings/operationLog", icon: "icon-edit" },
   ];
 });
 
