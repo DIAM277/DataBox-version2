@@ -561,16 +561,37 @@ public class FileInfoServiceImpl implements FileInfoService {
 	@Override
 	public void changeFileFolder(String fileIds, String filePid, String userId) {
 		// 源文件不能移动到目标文件下
-		if(fileIds.equals(filePid)){
-			throw new BusinessException(ResponseCodeEnum.CODE_600);
+		if (fileIds.equals(filePid)) {
+			throw new BusinessException("无法移动，目标文件夹是自身的子目录");
 		}
-		if(!Constants.ZERO_STR.equals(filePid)){
-			FileInfo fileInfo = this.getFileInfoByFileIdAndUserId(filePid, userId);
-			if(fileInfo == null || !FileDelFlagEnum.USING.getFlag().equals(fileInfo.getDelFlag())){
+		if (Constants.ZERO_STR.equals(filePid)) {
+			// 移动到根目录，合法
+		} else {
+			FileInfo fileInfo = this.fileInfoMapper.selectByFileIdAndUserId(filePid, userId);
+			if (fileInfo == null || !FileDelFlagEnum.USING.getFlag().equals(fileInfo.getDelFlag())) {
 				throw new BusinessException(ResponseCodeEnum.CODE_600);
 			}
 		}
+
 		String[] fileIdArray = fileIds.split(",");
+		List<String> fileIdList = Arrays.asList(fileIdArray);
+
+		// =====  Bug 修复 (环形引用安全校验) =====
+		// 防止将目录移动到自身，或自身所在的任何层级的子目录中
+		String currentPid = filePid;
+		while (!Constants.ZERO_STR.equals(currentPid)) {
+			// 如果目标目录（或其上级目录）在被移动的列表中，直接报错拦截
+			if (fileIdList.contains(currentPid)) {
+				throw new BusinessException("不能将目录移动到自身或其子目录中");
+			}
+			// 继续往上找它的父目录
+			FileInfo currentFolder = this.fileInfoMapper.selectByFileIdAndUserId(currentPid, userId);
+			if (currentFolder == null) {
+				break;
+			}
+			currentPid = currentFolder.getFilePid();
+		}
+
 		FileInfoQuery query = new FileInfoQuery();
 		query.setFileId(filePid);
 		query.setUserId(userId);

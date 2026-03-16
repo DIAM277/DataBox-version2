@@ -72,10 +72,6 @@ const close = () => {
 </script>
 
 <style lang="scss" scoped>
-/* ==============================================
-   Apple/macOS Style Dialog (原生视觉级覆写)
-============================================== */
-
 .apple-dialog {
 
     /* 强核心接管 el-dialog 面板 */
@@ -284,5 +280,14 @@ const close = () => {
             }
         }
     }
+}
+</style>
+
+<style lang="scss">
+/* 强核心接管挂载在 body 下的 el-dialog 面板 */
+.el-dialog {
+    border-radius: 32px !important;
+
+    overflow: hidden !important;
 }
 </style>

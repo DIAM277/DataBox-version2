@@ -13,6 +13,16 @@
       <!-- 右：操作按钮 -->
       <div class="flex gap-3 items-center shrink-0 select-none">
 
+        <!-- 新增：搜索域 -->
+        <el-input clearable placeholder="搜索删除文件" v-model.trim="fileNameFuzzy" @keyup.enter="loadDataList(false)"
+          class="mac-input w-[160px]" />
+
+        <!-- 新增：查询按钮 -->
+        <button type="button" @click="loadDataList(false)"
+          class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 mr-1">
+          <span class="iconfont icon-search text-[14px]"></span>查询
+        </button>
+
         <!-- 【新生绿】：批量还原 -->
         <div @click="selectFileList.length > 0 ? revertBatch() : null"
           class="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border rounded-xl transition-all shadow-sm"
@@ -80,6 +90,26 @@
 
               </div>
             </div>
+          </template>
+
+          <!-- 🔴 新增：剩余保留时间状态插槽 -->
+          <template #timeLeft="{ row }">
+            <template v-if="calculateTimeLeft(row.recoveryTime) > 7">
+              <span
+                class="px-2.5 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[12px] font-medium rounded-full tracking-wide border border-blue-100 dark:border-transparent">
+                剩 {{ calculateTimeLeft(row.recoveryTime) }} 天
+              </span>
+            </template>
+            <template v-else>
+              <span v-if="calculateTimeLeft(row.recoveryTime) <= 0"
+                class="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[12px] font-medium rounded-full tracking-wide border border-gray-200 dark:border-transparent">
+                即将删除
+              </span>
+              <span v-else
+                class="px-2.5 py-1 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 text-[12px] font-medium rounded-full tracking-wide border border-red-100 dark:border-transparent">
+                仅剩 {{ calculateTimeLeft(row.recoveryTime) }} 天
+              </span>
+            </template>
           </template>
 
           <template #fileSize="{ index, row }">
@@ -151,6 +181,19 @@ const handleSortChange = ({ prop, order }) => {
   loadDataList();
 };
 
+// 系统回收文件的保留期限(天)
+const RETENTION_DAYS = 30;
+
+// 计算剩余保留时间
+const calculateTimeLeft = (recoveryTime) => {
+  if (!recoveryTime) return 0;
+  // 兼容不同设备上的日期解析，将 '-' 替换为 '/'
+  const deleteDate = new Date(recoveryTime.replace(/-/g, '/')).getTime();
+  const expireDate = deleteDate + RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  const daysLeft = Math.ceil((expireDate - Date.now()) / (1000 * 60 * 60 * 24));
+  return daysLeft <= 0 ? 0 : daysLeft;
+};
+
 const columns = [
   {
     label: '文件名',
@@ -162,9 +205,17 @@ const columns = [
   {
     label: '删除时间',
     prop: 'recoveryTime',
-    width: 300,
+    width: 250,
     align: 'center',
     sortable: true
+  },
+    {
+    label: '状态',
+    prop: 'timeLeft',
+    width: 120,
+    align: 'center',
+    scopedSlots: 'timeLeft',
+    sortable: false
   },
   {
     label: '大小',
@@ -176,6 +227,7 @@ const columns = [
   }
 ]
 
+const fileNameFuzzy = ref("");
 const tableData = ref({})
 const tableOptions = ref({
   extHeight: 50,
@@ -210,6 +262,7 @@ const loadDataList = async (append = false) => {
   let params = {
     pageNo: tableData.value.pageNo,
     pageSize: tableData.value.pageSize,
+    fileNameFuzzy: fileNameFuzzy.value,
   }
   // // 添加排序参数
   if (sortConfig.value.prop && sortConfig.value.order) {
@@ -407,7 +460,35 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-/* 苹果级悬浮 (Hover) 和选中 (Active/Selected) 视觉重构 */
+:deep(.mac-input .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset !important;
+  background-color: white !important;
+  border-radius: 10px;
+  height: 38px;
+  padding: 0 12px;
+  transition: all 0.25s ease;
+}
+
+html.dark :deep(.mac-input .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+  background-color: #1c1c1e !important;
+}
+
+:deep(.mac-input .el-input__wrapper.is-focus),
+:deep(.mac-input .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.4) inset !important;
+}
+
+:deep(.mac-input .el-input__inner) {
+  font-weight: 500;
+  font-size: 13.5px;
+  color: #1d1d1f;
+}
+
+html.dark :deep(.mac-input .el-input__inner) {
+  color: #f5f5f7;
+}
+
 :deep(.el-table) {
 
   /* 1. 给所有单元格注入颜色变化的平滑过渡 (解决生硬突变问题) */

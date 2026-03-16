@@ -10,8 +10,18 @@
         <span class="text-[13px] text-[#86868b] dark:text-[#98989d] mt-0.5 font-medium">管理与查看你生成的所有对外分享链接</span>
       </div>
 
-      <!-- 右：操作按钮 -->
-      <div class="flex gap-3 items-center shrink-0 select-none">
+      <!-- 右：操作按钮与搜索区 -->
+      <div class="flex gap-2.5 items-center shrink-0 select-none flex-wrap">
+
+        <!-- 搜索域 -->
+        <el-input clearable placeholder="搜索分享文件" v-model.trim="fileNameFuzzy" @keyup.enter="loadDataList(false)"
+          class="mac-input w-[160px]" />
+
+        <!-- 查询按钮 -->
+        <button type="button" @click="loadDataList(false)"
+          class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 mr-1">
+          <span class="iconfont icon-search text-[14px]"></span>查询
+        </button>
 
         <!-- 【警示红】：批量取消分享 -->
         <div @click="selectFileList.length > 0 ? cancelShareBatch() : null"
@@ -22,7 +32,7 @@
 
         <!-- 极简刷新按钮 -->
         <div @click="loadDataList(false)"
-          class="flex items-center justify-center w-[34px] h-[34px] text-gray-500 hover:text-[#007AFF] bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] shadow-sm rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer">
+          class="flex items-center justify-center w-[36px] h-[36px] text-gray-500 hover:text-[#007AFF] bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] shadow-sm rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer group">
           <span class="iconfont icon-refresh text-[14px]"></span>
         </div>
 
@@ -85,6 +95,18 @@
             <span class="text-gray-500 dark:text-gray-400">{{ row.expireTime ? row.expireTime : '永久有效' }}</span>
           </template>
 
+          <!-- 新增：状态插槽 -->
+          <template #status="{ row }">
+            <span v-if="checkShareStatus(row) === 'valid'"
+              class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[12px] font-medium rounded-full tracking-wide border border-emerald-100 dark:border-transparent">
+              生效中
+            </span>
+            <span v-else
+              class="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[12px] font-medium rounded-full tracking-wide border border-gray-200 dark:border-transparent">
+              已失效
+            </span>
+          </template>
+
         </Table>
       </div>
 
@@ -139,6 +161,22 @@ const handleSortChange = ({ prop, order }) => {
   loadDataList();
 };
 
+// 判断分享状态：3 为永久有效，或者判断当前时间是否过期
+const checkShareStatus = (row) => {
+  if (row.validType === 3) {
+    return 'valid';
+  }
+  if (!row.expireTime) {
+    return 'valid';
+  }
+  // 将后端的 YYYY-MM-DD HH:mm:ss 替换以兼容不同浏览器的时间解析
+  const expireDate = new Date(row.expireTime.replace(/-/g, '/'));
+  if (expireDate.getTime() > Date.now()) {
+    return 'valid';
+  }
+  return 'expired';
+};
+
 const columns = [
   {
     label: '文件名',
@@ -163,6 +201,14 @@ const columns = [
     sortable: true
   },
   {
+    label: '状态',
+    prop: 'status',
+    width: 100,
+    align: 'center',
+    scopedSlots: 'status',
+    sortable: false
+  },
+  {
     label: '浏览次数',
     prop: 'showCount',
     width: 200,
@@ -170,6 +216,8 @@ const columns = [
     sortable: true
   }
 ]
+
+const fileNameFuzzy = ref("");
 
 const tableData = ref({})
 const tableOptions = ref({
@@ -205,6 +253,7 @@ const loadDataList = async (append = false) => {
   let params = {
     pageNo: tableData.value.pageNo,
     pageSize: tableData.value.pageSize,
+    fileNameFuzzy: fileNameFuzzy.value,
   }
   // 添加排序参数
   if (sortConfig.value.prop && sortConfig.value.order) {
@@ -286,7 +335,7 @@ const cancelDialogConfig = ref({
 const previousSelectedFiles = ref([]);
 // 取消单个分享
 const cancelShare = (row) => {
-  // 保存当前选中的文件列表
+  // 保存当前选中的文件
   previousSelectedFiles.value = [...selectFileList.value];
   // 清空之前的选择，设置当前文件为要取消分享的文件
   selectFileList.value = [];
@@ -338,7 +387,35 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-/* 苹果级悬浮 (Hover) 和选中 (Active/Selected) 视觉重构 */
+:deep(.mac-input .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset !important;
+  background-color: white !important;
+  border-radius: 10px;
+  height: 38px;
+  padding: 0 12px;
+  transition: all 0.25s ease;
+}
+
+html.dark :deep(.mac-input .el-input__wrapper) {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+  background-color: #1c1c1e !important;
+}
+
+:deep(.mac-input .el-input__wrapper.is-focus),
+:deep(.mac-input .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.4) inset !important;
+}
+
+:deep(.mac-input .el-input__inner) {
+  font-weight: 500;
+  font-size: 13.5px;
+  color: #1d1d1f;
+}
+
+html.dark :deep(.mac-input .el-input__inner) {
+  color: #f5f5f7;
+}
+
 :deep(.el-table) {
 
   /* 1. 给所有单元格注入颜色变化的平滑过渡 (解决生硬突变问题) */

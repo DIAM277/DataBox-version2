@@ -1,20 +1,25 @@
 <template>
-    <div class="avatar-upload">
-        <div class="avatar-show">
-            <el-upload name="file" :show-file-list="false" accept=".png,.PNG,.jpg,.JPG,.jpeg,.JPEG,.gif,.GIF,.bmp,.BMP"
-                :multiple="false" :http-request="uploadImage" class="avatar-upload-area">
-                <template v-if="localFile">
-                    <img :src="localFile" />
-                </template>
-                <template v-else>
-                    <img :src="`/api/getAvatar/${modelValue.userId}`" />
-                </template>
-                <div class="hover-mask">
-                    <span class="iconfont icon-picture"></span>
-                    <span class="upload-text">点击上传</span>
-                </div>
-            </el-upload>
-        </div>
+    <!-- 完美的 100% 撑满容器，形状与阴影已由父组件 UpdateAvatar.vue 的 rounded-full 接管 -->
+    <div class="w-full h-full relative cursor-pointer bg-gray-100 dark:bg-[#1c1c1e] text-gray-400 group">
+        <el-upload name="file" :show-file-list="false" accept=".png,.PNG,.jpg,.JPG,.jpeg,.JPEG,.gif,.GIF,.bmp,.BMP"
+            :multiple="false" :http-request="uploadImage"
+            class="mac-avatar-uploader w-full h-full absolute inset-0 z-0">
+
+            <!-- 头像图片本身层：自适应父组件正圆与撑满 -->
+            <img v-if="localFile" :src="localFile"
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <img v-else :src="`/api/getAvatar/${modelValue?.userId}`"
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+
+            <!-- Apple 沉浸式高斯模糊悬浮遮罩 (Hover 玻璃态反馈) -->
+            <div
+                class="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[3px] flex flex-col items-center justify-center opacity-0 hover:opacity-100 transition-all duration-300 ease-out z-10">
+                <span
+                    class="iconfont icon-picture text-white text-[28px] drop-shadow-md mb-1.5 transition-transform duration-300 hover:scale-110"></span>
+                <span class="text-white text-[12.5px] font-semibold tracking-wider drop-shadow-md">点击更换</span>
+            </div>
+
+        </el-upload>
     </div>
 </template>
 
@@ -53,74 +58,16 @@ watch(() => props.modelValue, (newVal) => {
 })
 </script>
 
-<style lang="scss" scoped>
-.avatar-upload {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-
-    .avatar-show {
-        background: rgb(245, 245, 245);
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        position: relative;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-
-        .avatar-upload-area {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-
-            img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-
-            .hover-mask {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-                color: white;
-
-                .iconfont {
-                    font-size: 30px;
-                    margin-bottom: 8px;
-                }
-
-                .upload-text {
-                    font-size: 14px;
-                }
-            }
-
-            &:hover .hover-mask {
-                opacity: 1;
-            }
-        }
-
-        &:hover {
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-    }
+<style scoped>
+/* 
+  利用深层穿透彻底接管 Element Plus 上传组件的生硬外壳 
+  强制让上传热区百分百贴合外部圆形，不留任何可点击死角
+*/
+:deep(.mac-avatar-uploader .el-upload) {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    position: absolute;
+    inset: 0;
 }
 </style>

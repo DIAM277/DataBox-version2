@@ -1,24 +1,50 @@
 <template>
     <div>
-        <Dialog :show="dialogConfig.show" :title="dialogConfig.title" :buttons="dialogConfig.buttons" width="800px"
+        <Dialog :show="dialogConfig.show" :title="dialogConfig.title" :buttons="dialogConfig.buttons" width="600px"
             :showCancel="false" @close="dialogConfig.show = false" :showCustomTitle="true">
-            <div>
+
+            <!-- 顶部导航区 (面包屑底板) -->
+            <div
+                class="bg-gray-50 dark:bg-[#1c1c1e] px-4 py-3 rounded-xl mb-4 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <Navigation ref="navigationRef" @navChange="navChange" :watchPath="false"></Navigation>
             </div>
-            <div class="folder-list" v-if="folderList.length > 0">
-                <div class="folder-item" v-for="item in folderList" @click="selectFolder(item)">
-                    <Icon :fileType="0"></Icon>
-                    <span class="file-name">{{ item.fileName }}</span>
+
+            <!-- 目录列表展示区 -->
+            <div class="max-h-[45vh] min-h-[250px] overflow-y-auto space-y-1 pr-2" v-if="folderList.length > 0">
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 group"
+                    v-for="item in folderList" :key="item.fileId" @click="selectFolder(item)">
+
+                    <!-- 借用已经封装好的通用目录 Icon，悬浮时有微小放大反馈 -->
+                    <div class="transition-transform group-hover:scale-105">
+                        <Icon :fileType="0" :width="30"></Icon>
+                    </div>
+
+                    <!-- 文件夹名称 -->
+                    <span
+                        class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[14.5px] font-medium tracking-wide">
+                        {{ item.fileName }}
+                    </span>
+
+                    <!-- 引导右侧右侧箭头，仅鼠标悬浮时显现 -->
+                    <span
+                        class="iconfont icon-right text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity text-[12px]"></span>
                 </div>
             </div>
-            <div class="empty-folder-tip" v-else>
-                <i class="iconfont icon-empty"></i>
-                <p>当前文件夹为空</p>
-                <p class="sub-tip">移动到 <span>{{ currentFolder.fileName || '根目录' }}</span></p>
+
+            <!-- 没有数据时的缺省提示 -->
+            <div class="flex flex-col items-center justify-center min-h-[250px] py-10 text-gray-400 dark:text-gray-500 select-none"
+                v-else>
+                <i class="iconfont icon-empty text-[50px] mb-3 opacity-40 dark:opacity-20"></i>
+                <p class="text-[14.5px] tracking-wide">当前文件夹为空</p>
+                <p class="text-[13px] mt-2 opacity-80">
+                    将移动到 <span class="text-[#007AFF] font-semibold mx-1">{{ currentFolder.fileName || '根目录' }}</span>
+                </p>
             </div>
+
         </Dialog>
     </div>
 </template>
+
 <script setup>
 import { ref, reactive, getCurrentInstance, nextTick } from "vue"
 const { proxy } = getCurrentInstance();
@@ -116,146 +142,3 @@ const navChange = (data) => {
     loadAllFolder()
 }
 </script>
-
-<style lang="scss" scoped>
-.navigation-panel {
-    padding: 12px 16px;
-    background: #f5f7fa;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-
-    .nav-item {
-        display: flex;
-        align-items: center;
-        font-size: 14px;
-        color: #606266;
-        cursor: pointer;
-        transition: all 0.3s;
-
-        &:hover {
-            color: #409EFF;
-        }
-
-        i {
-            margin-right: 6px;
-            font-size: 16px;
-        }
-    }
-}
-
-.folder-list {
-    max-height: calc(100vh - 250px);
-    min-height: 250px;
-    overflow-y: auto;
-    border-radius: 6px;
-    border: 1px solid #ebeef5;
-
-    &::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background-color: #c0c4cc;
-        border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background-color: #f5f7fa;
-    }
-
-    .folder-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-
-        &:last-child {
-            border-bottom: none;
-        }
-
-        .file-name {
-            display: inline-block;
-            margin-left: 12px;
-            font-size: 14px;
-            color: #656570;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        &:hover {
-            background: #f0f7ff;
-        }
-
-        &:active {
-            background: #e6f1fc;
-        }
-
-        html.dark & {
-            &:hover {
-                background: rgba(255, 255, 255, 0.08);
-            }
-
-            &:active {
-                background: rgba(255, 255, 255, 0.12);
-            }
-        }
-    }
-}
-
-.empty-folder-tip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 250px;
-    color: #909399;
-
-        html.dark & { color: #86868b; }
-
-    i {
-        font-size: 48px;
-        margin-bottom: 16px;
-        color: #c0c4cc;
-         html.dark & { color: #424245; }
-    }
-
-    p {
-        margin: 5px 0;
-        font-size: 14px;
-    }
-
-    .sub-tip {
-        font-size: 14px;
-
-        span {
-            color: #409EFF;
-            font-weight: 500;
-            vertical-align: baseline; // 设置基线对齐
-        }
-    }
-}
-
-:deep(.el-dialog__body) {
-    padding: 20px 24px;
-}
-
-:deep(.el-button--primary) {
-    background-color: #409EFF;
-    border-color: #409EFF;
-
-    &:hover,
-    &:focus {
-        background-color: #66b1ff;
-        border-color: #66b1ff;
-    }
-
-    &:active {
-        background-color: #3a8ee6;
-        border-color: #3a8ee6;
-    }
-}
-</style>
