@@ -42,7 +42,7 @@ import { useUserStore } from '@/store/userStore';
 import SideBar from '@/components/Layout/SideBar.vue';
 import TopHeader from '@/components/Layout/TopHeader.vue';
 
-import Logout from '@/components/Logout.vue';
+import Logout from '@/components/Business/Logout.vue';
 import UpdatePassword from './UpdatePassword.vue';
 import UpdateAvatar from './UpdateAvatar.vue';
 

@@ -206,9 +206,9 @@
 <script setup>
 import OpButton from "@/components/Button/OpButton.vue";
 import ShareFile from "./ShareFile.vue";
-import FileFilter from "@/components/FileFilter/FileFilter.vue"; // 🔴 导入高级筛选组件
+import FileFilter from "@/components/Business/FileFilter.vue"; // 🔴 导入高级筛选组件
 import CategoryInfo from "@/js/CategoryInfo";
-import SkeletonLoader from "@/components/SkeletonLoader.vue";
+import SkeletonLoader from "@/components/Common/SkeletonLoader.vue";
 import { ref, reactive, getCurrentInstance, nextTick, computed } from "vue"
 const { proxy } = getCurrentInstance();
 
@@ -824,7 +824,7 @@ const share = (row) => {
 /* 适配暗黑模式的高亮与边界线反调 */
 html.dark :deep(.el-table) {
   --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.12) !important;
-  --el-table-border-color: rgba(255, 255, 255, 0.) !important;
+  --el-table-border-color: rgba(255, 255, 255, 0.12) !important;
 
   .el-table__body {
 

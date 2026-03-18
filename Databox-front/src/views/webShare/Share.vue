@@ -184,9 +184,8 @@
 </template>
 
 <script setup>
-import FolderSelect from "@/components/FolderSelect.vue";
-import AppTitle2 from "@/components/AppTitle/AppTitle2.vue";
-import SkeletonLoader from "@/components/SkeletonLoader.vue";
+import FolderSelect from "@/components/Business/FolderSelect.vue";
+import SkeletonLoader from "@/components/Common/SkeletonLoader.vue";
 import { ref, reactive, getCurrentInstance, nextTick, computed, onMounted } from "vue"
 const { proxy } = getCurrentInstance();
 import { useRoute, useRouter } from 'vue-router';

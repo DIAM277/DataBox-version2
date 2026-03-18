@@ -1,5 +1,4 @@
 <template>
-    <!-- 完美的 100% 撑满容器，形状与阴影已由父组件 UpdateAvatar.vue 的 rounded-full 接管 -->
     <div class="w-full h-full relative cursor-pointer bg-gray-100 dark:bg-[#1c1c1e] text-gray-400 group">
         <el-upload name="file" :show-file-list="false" accept=".png,.PNG,.jpg,.JPG,.jpeg,.JPEG,.gif,.GIF,.bmp,.BMP"
             :multiple="false" :http-request="uploadImage"

@@ -19,7 +19,7 @@
 
 <script setup>
 import request from '@/utils/Request';
-import Dialog from './Dialog.vue';
+import Dialog from '../Common/Dialog.vue';
 import { ref, reactive, getCurrentInstance } from "vue";
 const { proxy } = getCurrentInstance();
 import { useRouter } from 'vue-router';

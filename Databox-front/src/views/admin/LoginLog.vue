@@ -81,7 +81,7 @@
 </template>
 
 <script setup>
-import SkeletonLoader from "@/components/SkeletonLoader.vue";
+import SkeletonLoader from "@/components/Common/SkeletonLoader.vue";
 import { ref, reactive, getCurrentInstance, computed, onMounted } from 'vue';
 import { useUserStore } from '@/store/userStore';
 

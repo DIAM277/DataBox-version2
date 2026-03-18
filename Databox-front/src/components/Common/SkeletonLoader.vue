@@ -84,7 +84,7 @@ const props = defineProps({
 
 .skeleton-time {
     height: 16px;
-    width: 30%px;
+    width: 30px;
 }
 
 @keyframes skeleton-loading {

@@ -159,7 +159,7 @@
 </template>
 
 <script setup>
-import SkeletonLoader from "@/components/SkeletonLoader.vue";
+import SkeletonLoader from "@/components/Common/SkeletonLoader.vue";
 import { ref, reactive, getCurrentInstance, nextTick, onMounted } from "vue"
 const { proxy } = getCurrentInstance();
 

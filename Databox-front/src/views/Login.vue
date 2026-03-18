@@ -148,8 +148,10 @@
 
         <!-- 主操作按钮 -->
         <div class="mt-8 flex justify-center w-full">
-          <CustomButton :text="opType === 0 ? '注 册 账 号' : (opType === 1 ? '登 录 空 间' : '确 认 重 置')" :width="360"
-            @click="doSubmit" />
+          <button type="button" @click="doSubmit"
+            class="w-full max-w-[360px] h-[48px] bg-[#007AFF] hover:bg-[#0066d6] text-white font-semibold text-[16px] tracking-widest rounded-xl shadow-[0_8px_20px_rgba(0,122,255,0.3)] hover:shadow-[0_12px_24px_rgba(0,122,255,0.4)] transition-all duration-300 ease-out active:scale-[0.97] focus:outline-none">
+            {{ opType === 0 ? '注 册 账 号' : (opType === 1 ? '登 录 空 间' : '确 认 重 置') }}
+          </button>
         </div>
 
         <!-- 底部模式切换辅助文字 -->
@@ -200,8 +202,7 @@
 </template>
 
 <script setup>
-import RandomQuote from "@/components/RandomQuote.vue";
-import CustomButton from "@/components/Button/LoginButton.vue";
+import RandomQuote from "@/components/Common/RandomQuote.vue";
 import { ref, reactive, getCurrentInstance, nextTick, onMounted, computed } from "vue"
 import { useRouter, useRoute } from "vue-router";
 import md5 from "js-md5";

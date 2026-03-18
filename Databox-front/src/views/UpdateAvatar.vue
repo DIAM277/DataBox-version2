@@ -35,7 +35,7 @@
 </template>
 
 <script setup>
-import AvatarUpload from "@/components/AvatarUpload.vue";
+import AvatarUpload from "@/components/Business/AvatarUpload.vue";
 import { ref, reactive, getCurrentInstance, nextTick } from "vue"
 import { useRoute, useRouter } from 'vue-router';
 // ★ 1. 引入并使用刚刚梳理好的 userStore

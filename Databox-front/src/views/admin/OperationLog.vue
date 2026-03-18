@@ -102,7 +102,7 @@
 
 <script setup>
 import { ref, reactive, getCurrentInstance, nextTick, computed } from 'vue';
-import Icon from '@/components/Icon.vue';
+import Icon from '@/components/Common/Icon.vue';
 import Table from '@/components/Table.vue';
 import { useUserStore } from '@/store/userStore';
 

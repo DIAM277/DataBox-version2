@@ -12,15 +12,15 @@ import "@/assets/base.scss";
 import VueCookies from "vue-cookies";
 import hljsVuePlugin from "@highlightjs/vue-plugin";
 
-import Dialog from "@/components/Dialog.vue";
-import Avatar from "@/components/Avatar.vue";
-import Table from "@/components/Table.vue";
-import Icon from "@/components/Icon.vue";
-import NoData from "@/components/NoData.vue";
-import FolderSelect from "@/components/FolderSelect.vue";
-import Navigation from "@/components/Navigation.vue";
+import Dialog from "@/components/Common/Dialog.vue";
+import Avatar from "@/components/Common/Avatar.vue";
+import Table from "@/components/Common/Table.vue";
+import Icon from "@/components/Common/Icon.vue";
+import NoData from "@/components/Common/NoData.vue";
+import FolderSelect from "@/components/Business/FolderSelect.vue";
+import Navigation from "@/components/Layout/Navigation.vue";
 import Preview from "@/components/Preview/Preview.vue";
-import Window from "@/components/Window.vue";
+import Window from "@/components/Common/Window.vue";
 
 import Verify from "@/utils/Verify";
 import Message from "@/utils/Message";

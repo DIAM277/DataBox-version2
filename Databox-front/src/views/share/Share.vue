@@ -138,7 +138,7 @@
 </template>
 
 <script setup>
-import SkeletonLoader from "@/components/SkeletonLoader.vue";
+import SkeletonLoader from "@/components/Common/SkeletonLoader.vue";
 import useClipboard from "vue-clipboard3"
 const { toClipboard } = useClipboard()
 import { ref, reactive, getCurrentInstance, nextTick, onMounted, computed } from "vue"
