@@ -1,9 +1,8 @@
 <template>
-    <!-- 全屏居中透明包裹层 -->
-    <div class="w-full h-full flex items-center justify-center p-4 md:p-10 relative bg-transparent">
+    <div v-if="previewImageIndex !== null"
+        class="w-full h-full flex items-center justify-center p-4 md:p-10 relative bg-transparent">
         <el-image-viewer class="mac-image-viewer" :url-list="imageList" :initial-index="previewImageIndex"
-            v-if="previewImageIndex !== null" @close="closeImgViewer" hide-on-click-modal :show-progress="true"
-            :infinite="true">
+            @close="closeImgViewer" hide-on-click-modal :show-progress="true" :infinite="true">
         </el-image-viewer>
     </div>
 </template>

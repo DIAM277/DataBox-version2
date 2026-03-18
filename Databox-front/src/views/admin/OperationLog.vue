@@ -103,7 +103,7 @@
 <script setup>
 import { ref, reactive, getCurrentInstance, nextTick, computed } from 'vue';
 import Icon from '@/components/Common/Icon.vue';
-import Table from '@/components/Table.vue';
+import Table from '@/components/Common/Table.vue';
 import { useUserStore } from '@/store/userStore';
 
 const { proxy } = getCurrentInstance();
