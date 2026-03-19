@@ -11,4 +11,8 @@ public class SysSettingDto implements Serializable {
     private String registerEmailTitle = "DataBox邮箱验证码";
     private String registerEmailContent = "您的验证码为：%s 。有效期15分钟。";
     private Integer userInitUseSpace = 5;
+    /**
+     * 普通用户每日AI智能摘要次数上限
+     */
+    private Integer userAiSummaryCount = 5;
 }

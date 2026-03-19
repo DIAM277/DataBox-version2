@@ -58,6 +58,10 @@
                 </PreviewDownload>
 
             </div>
+
+            <!-- 挂载 AI 智能摘要组件-->
+            <AiSummary v-if="supportAi" :fileId="fileInfo.fileId" />
+
         </div>
     </Transition>
 </template>
@@ -71,8 +75,16 @@ import PreviewVideo from "./PreviewVideo.vue";
 import PreviewImage from "./PreviewImage.vue";
 import PreviewDoc from "./PreviewDoc.vue";
 import PreviewText from "./PreviewText.vue";
-import { ref, reactive, getCurrentInstance, nextTick } from "vue"
+// 导入AI 组件
+import AiSummary from "./AiSummary.vue";
+import { ref, reactive, getCurrentInstance, nextTick, computed } from "vue"
 const { proxy } = getCurrentInstance();
+
+// 支持判定逻辑: 只有 4(pdf) 5(doc/docx) 7(txt) 允许召唤 AI
+const supportAi = computed(() => {
+    if (!fileInfo.value || !fileInfo.value.fileType) return false;
+    return [4, 5, 7].includes(fileInfo.value.fileType);
+});
 
 const FILE_URL_MAP = {
     0: {
