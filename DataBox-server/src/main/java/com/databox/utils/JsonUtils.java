@@ -8,7 +8,7 @@ import java.util.List;
 @Slf4j
 public class JsonUtils {
 
-    private static String convertObj2Json(Object obj){
+    public static String convertObj2Json(Object obj){
         return JSONObject.toJSONString(obj);
     }
 

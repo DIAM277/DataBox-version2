@@ -138,7 +138,7 @@ const columns = computed(() => {
         {
             label: "登录时间",
             prop: "loginTime",
-            width: 250, 
+            width: 250,
             align: 'center',
             scopedSlots: "loginTime",
             sortable: true

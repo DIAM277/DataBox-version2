@@ -8,6 +8,7 @@ import com.databox.entity.po.SysOpLog;
 import com.databox.entity.query.FileInfoQuery;
 import com.databox.service.FileInfoService;
 import com.databox.service.SysOpLogService;
+import com.databox.utils.JsonUtils;
 import com.databox.utils.StringTools;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -24,7 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.lang.reflect.Method;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -37,6 +40,7 @@ public class OperationLogAspect {
 
     @Resource
     private FileInfoService fileInfoService;
+
 
     // 定义切点
     @Pointcut("@annotation(com.databox.annotation.OpLog)")
@@ -101,36 +105,54 @@ public class OperationLogAspect {
                 log.setResultMsg("操作成功");
             }
 
-            // 尝试获取请求中的文件ID参数
+            // 尝试获取请求中的文件ID参数 (兼容表单提交)
             String fileIds = request.getParameter("fileIds");
             if(StringTools.isEmpty(fileIds)){
                 fileIds = request.getParameter("fileId");
             }
 
+            //如果 request 拿不到（说明前端传的是 JSON @RequestBody），尝试从 AOP 切入点的方法参数中提取
+            if (StringTools.isEmpty(fileIds)) {
+                Object[] args = joinPoint.getArgs();
+                for (Object arg : args) {
+                    if (arg != null && arg.getClass().getName().contains("com.databox")) {
+                        try {
+                            // 尝试通过反射调用 getFileIds 或 getFileId
+                            Method getFileIdsMethod = arg.getClass().getMethod("getFileIds");
+                            fileIds = (String) getFileIdsMethod.invoke(arg);
+                        } catch (Exception ignored1) {
+                            try {
+                                Method getFileIdMethod = arg.getClass().getMethod("getFileId");
+                                fileIds = (String) getFileIdMethod.invoke(arg);
+                            } catch (Exception ignored2) {}
+                        }
+                    }
+                    if (!StringTools.isEmpty(fileIds)) break;
+                }
+            }
+
+            // 升级为 JSON 格式存储
             if(!StringTools.isEmpty(fileIds)) {
-                // 根据逗号拆分
                 String[] fileIdArray = fileIds.split(",");
                 FileInfoQuery query = new FileInfoQuery();
                 query.setFileIdArray(fileIdArray);
 
-                // 预防查出不同人的同ID文件，携带当前用户ID
                 if(webUserDto != null) {
                     query.setUserId(webUserDto.getUserId());
                 }
-                // 调用批量查询文件接口
                 List<FileInfo> fileInfoList = fileInfoService.findListByParam(query);
 
+                // 构建 JSON Map
+                Map<String, Object> detailMap = new HashMap<>();
                 if(fileInfoList != null && !fileInfoList.isEmpty()){
-                    // 提取出所有文件名并用逗号拼接
-                    String fileName = fileInfoList.stream()
-                            .map(FileInfo::getFileName)
-                            .collect(Collectors.joining(", "));
-                    String detailMsg = "操作文件：[" + fileName + "]";
-                    // 防止文件名过长导致插入错误(截取前490个字符)
-                    log.setDetail(detailMsg.length() > 490 ? detailMsg.substring(0, 490) : detailMsg);
+                    List<String> fileNames = fileInfoList.stream().map(FileInfo::getFileName).collect(Collectors.toList());
+                    List<String> fileIdList = fileInfoList.stream().map(FileInfo::getFileId).collect(Collectors.toList());
+                    detailMap.put("fileNames", fileNames);
+                    detailMap.put("fileIds", fileIdList);
                 }else {
-                    log.setDetail("操作对象ID" + fileIds);
+                    detailMap.put("targetIds", fileIds);
                 }
+                log.setDetail(JsonUtils.convertObj2Json(detailMap));
             }
 
             // 异步保存，不阻塞主线程
