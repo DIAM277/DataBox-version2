@@ -1,99 +1,43 @@
 <template>
-    <div class="skeleton-container">
-        <div class="skeleton-list">
-            <div class="skeleton-row" v-for="i in rowCount" :key="i">
-                <div class="skeleton-item skeleton-icon"></div>
-                <div class="skeleton-item skeleton-name"></div>
-                <div class="skeleton-item skeleton-size"></div>
-                <div class="skeleton-item skeleton-type"></div>
-                <div class="skeleton-item skeleton-time"></div>
+    <div class="w-full flex flex-col select-none">
+        <div class="flex flex-col">
+            <!-- 骨架列表行渲染 -->
+            <div v-for="i in rowCount" :key="i"
+                class="flex items-center px-4 py-3.5 border-b border-[#e5e5e9]/50 dark:border-[#38383a]/40 last:border-none">
+
+                <!-- 第一列：文件图标骨架框 (圆角方块) -->
+                <div class="w-[30px] h-[30px] rounded-lg bg-gray-200/80 dark:bg-gray-800 animate-pulse flex-shrink-0">
+                </div>
+
+                <!-- 第一列：文件名占位条 -->
+                <div
+                    class="ml-4 h-[14px] bg-gray-200/80 dark:bg-gray-800 rounded-full animate-pulse flex-1 max-w-[25%] sm:max-w-[35%]">
+                </div>
+
+                <!-- 弹性垫片推开剩余列 -->
+                <div class="flex-1"></div>
+
+                <!-- 后续列：文件大小、类型、时间占位条 (自适应隐藏) -->
+                <div class="hidden md:flex items-center space-x-12 lg:space-x-28 mr-8">
+                    <!-- 大小占位 -->
+                    <div class="h-3 w-16 bg-gray-100 dark:bg-[#2c2c2e] rounded-full animate-pulse"></div>
+                    <!-- 类型占位 -->
+                    <div class="h-3 w-16 bg-gray-100 dark:bg-[#2c2c2e] rounded-full animate-pulse hidden lg:block">
+                    </div>
+                    <!-- 时间占位 -->
+                    <div class="h-3 w-32 bg-gray-100 dark:bg-[#2c2c2e] rounded-full animate-pulse"></div>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-// 定义组件属性
 const props = defineProps({
     // 骨架行数
     rowCount: {
         type: Number,
-        default: 5
+        default: 10
     }
 })
 </script>
-
-<style lang="scss" scoped>
-.skeleton-container {
-    padding-right: 20px;
-    margin-top: 10px;
-}
-
-.skeleton-header {
-    margin-bottom: 15px;
-}
-
-.skeleton-item {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
-    border-radius: 12px;
-}
-
-.skeleton-title {
-    height: 24px;
-    width: 120px;
-}
-
-.skeleton-list {
-    background-color: rgba(255, 255, 255, 0.5);
-    border-radius: 4px;
-}
-
-.skeleton-row {
-    display: flex;
-    align-items: center;
-    padding: 12px 8px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.skeleton-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    margin-right: 12px;
-}
-
-.skeleton-name {
-    height: 16px;
-    width: 50%;
-    margin-right: 20px;
-}
-
-.skeleton-size {
-    height: 16px;
-    width: 10%;
-    margin-right: 20px;
-}
-
-.skeleton-type {
-    height: 16px;
-    width: 10%;
-    margin-right: 20px;
-}
-
-.skeleton-time {
-    height: 16px;
-    width: 30px;
-}
-
-@keyframes skeleton-loading {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
-}
-</style>

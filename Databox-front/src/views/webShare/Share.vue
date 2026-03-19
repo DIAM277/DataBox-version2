@@ -97,10 +97,8 @@
 
               <!-- Core 重构：文件名与右侧悬浮悬浮操作 -->
               <template #fileName="{ index, row }">
-                <div class="flex items-center pr-10 relative group w-full" @mouseenter="showOp(row)"
+                <div class="flex items-center relative group w-full" @mouseenter="showOp(row)"
                   @mouseleave="cancelShowOp(row)">
-
-                  <!-- 图标判断逻辑保持不变 -->
                   <template v-if="(row.fileType == 3 || row.fileType == 1)">
                     <Icon :cover="row.fileCover" :width="32"></Icon>
                   </template>
@@ -109,11 +107,11 @@
                     <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
                   </template>
 
-                  <span
-                    class="ml-3 flex-1 overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:text-[#007AFF] transition-colors"
-                    :title="row.fileName" @click="preview(row)">
-                    <span class="text-[#1d1d1f] dark:text-[#f5f5f7] font-medium">{{ row.fileName }}</span>
-                  </span>
+                  <div class="ml-3 flex-1 min-w-0 flex items-center sm:group-hover:pr-[120px] transition-all duration-300" :title="row.fileName">
+                    <span class="text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF] transition-colors truncate" @click="preview(row)">
+                      {{ row.fileName }}
+                    </span>
+                  </div>
 
                   <!-- iOS 化：行内右侧绝对定位极简悬浮组 -->
                   <div v-if="row.showOp"

@@ -21,7 +21,7 @@
                     class="mac-input w-[130px]" />
 
                 <button type="button" @click="searchData"
-                    class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 ml-1">
+                    class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-3 py-1.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 ml-1">
                     <span class="iconfont icon-search text-[14px]"></span>查询
                 </button>
 

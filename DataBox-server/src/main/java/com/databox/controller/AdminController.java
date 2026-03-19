@@ -58,11 +58,13 @@ public class AdminController extends CommonFileController{
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
     public ResponseVO saveSysSetting(@VerifyParam(required = true) String registerEmailTitle,
                                      @VerifyParam(required = true) String registerEmailContent,
-                                     @VerifyParam(required = true) Integer userInitUseSpace){
+                                     @VerifyParam(required = true) Integer userInitUseSpace,
+                                     @VerifyParam(required = true) Integer userAiSummaryCount){
         SysSettingDto sysSettingDto = new SysSettingDto();
         sysSettingDto.setRegisterEmailTitle(registerEmailTitle);
         sysSettingDto.setRegisterEmailContent(registerEmailContent);
         sysSettingDto.setUserInitUseSpace(userInitUseSpace);
+        sysSettingDto.setUserAiSummaryCount(userAiSummaryCount);
         redisComponent.saveSysSettingDto(sysSettingDto);
         return getSuccessResponseVO(null);
     }

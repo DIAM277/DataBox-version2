@@ -21,13 +21,14 @@
                     <div
                         class="bg-white dark:bg-[#1c1c1e] rounded-2xl shadow-sm border border-gray-200/60 dark:border-gray-800 overflow-hidden mb-8 transition-colors">
 
-                        <div class="flex items-center justify-between p-5 pb-3">
+                        <!-- 第一项：新用户初始空间 -->
+                        <div
+                            class="flex items-center justify-between p-5 pb-3 border-b border-gray-100 dark:border-gray-800/80">
                             <div class="flex flex-col">
                                 <span class="text-[15px] text-gray-800 dark:text-gray-200 font-medium">新用户初始空间</span>
                                 <span
                                     class="text-[12.5px] text-gray-400 dark:text-gray-500 mt-0.5">新注册用户默认分配的基础配额</span>
                             </div>
-
                             <div class="flex-shrink-0 w-[160px]">
                                 <el-form-item prop="userInitUseSpace" class="mb-0 custom-form-item">
                                     <el-input v-model.trim="formData.userInitUseSpace" placeholder="空间数值"
@@ -35,6 +36,27 @@
                                         <template #append>
                                             <span
                                                 class="text-gray-500 dark:text-gray-400 font-medium bg-transparent border-none">MB</span>
+                                        </template>
+                                    </el-input>
+                                </el-form-item>
+                            </div>
+                        </div>
+
+                        <!-- 🔴 第二项：新增每日 AI 智能摘要限额 -->
+                        <div class="flex items-center justify-between p-5 pb-3">
+                            <div class="flex flex-col">
+                                <span class="text-[15px] text-gray-800 dark:text-gray-200 font-medium">每日 AI
+                                    智能摘要限额</span>
+                                <span class="text-[12.5px] text-gray-400 dark:text-gray-500 mt-0.5">普通用户每日可调用 AI
+                                    阅读文稿的最大次数上限</span>
+                            </div>
+                            <div class="flex-shrink-0 w-[160px]">
+                                <el-form-item prop="userAiSummaryCount" class="mb-0 custom-form-item">
+                                    <el-input v-model.trim="formData.userAiSummaryCount" placeholder="单日次数"
+                                        class="mac-input w-full">
+                                        <template #append>
+                                            <span
+                                                class="text-gray-500 dark:text-gray-400 font-medium bg-transparent border-none">次/日</span>
                                         </template>
                                     </el-input>
                                 </el-form-item>
@@ -173,6 +195,10 @@ const rules = {
     userInitUseSpace: [
         { required: true, message: "请输入新用户初始空间大小" },
         { validator: proxy.Verify.number, message: "请输入数字" }
+    ],
+    userAiSummaryCount: [
+        { required: true, message: "请输入每日AI摘要限额" },
+        { validator: proxy.Verify.number, message: "请输入正整数数字" }
     ]
 };
 
@@ -286,7 +312,7 @@ onUnmounted(() => {
 }
 
 html.dark :deep(.mac-input .el-input__wrapper) {
-    background-color: rgb(255, 255, 255) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 :deep(.mac-input .el-input__wrapper.is-focus),
@@ -309,8 +335,9 @@ html.dark :deep(.mac-input .el-input__wrapper:hover) {
     font-family: ui-rounded, 'SF Pro Rounded', -apple-system, sans-serif;
 }
 
+/* 修复暗色模式文字隐身：由原本的深灰色修改为原色亮白 */
 html.dark :deep(.mac-input .el-input__inner) {
-    color: rgb(97, 97, 100)
+    color: #f5f5f7 !important;
 }
 
 /* 附加单位字样插槽 */

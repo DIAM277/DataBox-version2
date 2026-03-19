@@ -68,7 +68,7 @@
           :default-sort="{ prop: sortConfig.prop, order: sortConfig.order }">
 
           <template #fileName="{ index, row }">
-            <div class="file-name flex items-center pr-10 relative group w-full" @mouseenter="showOp(row)"
+            <div class="file-name flex items-center relative group w-full" @mouseenter="showOp(row)"
               @mouseleave="cancelShowOp(row)">
               <template v-if="(row.fileType == 3 || row.fileType == 1) && row.status == 2">
                 <Icon :cover="row.fileCover" :width="32"></Icon>
@@ -78,17 +78,17 @@
                 <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
               </template>
 
-              <span class="file-text ml-3 flex-1 overflow-hidden" :title="row.fileName" v-if="!row.showEdit">
+              <div class="file-text ml-3 flex-1 min-w-0 flex items-center sm:group-hover:pr-[200px] transition-all duration-300" :title="row.fileName" v-if="!row.showEdit">
                 <span
-                  class="file-name-1 text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF]"
+                  class="file-name-1 text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF] truncate"
                   @click="preview(row)">{{ row.fileName }}</span>
                 <span v-if="row.status == 0"
-                  class="text-xs text-blue-500 ml-2 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded">转码中</span>
+                  class="text-xs text-blue-500 ml-2 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded flex-shrink-0 whitespace-nowrap">转码中</span>
                 <span v-if="row.status == 1"
-                  class="text-xs text-red-500 ml-2 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">转码失败</span>
-              </span>
+                  class="text-xs text-red-500 ml-2 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded flex-shrink-0 whitespace-nowrap">转码失败</span>
+              </div>
 
-              <div class="edit-panel flex-1 flex items-center ml-2" v-if="row.showEdit">
+              <div class="edit-panel flex-1 min-w-0 flex items-center ml-2" v-if="row.showEdit">
                 <el-input v-model.trim="row.fileNameReal" ref="editNameRef" :maxLength="190"
                   @keyup.enter.stop="saveNameEdit(index)">
                   <template #suffix>{{ row.fileSuffix }}</template>

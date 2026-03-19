@@ -18,13 +18,13 @@
           class="mac-input w-[180px]" />
 
         <button type="button" @click="loadDataList(false)"
-          class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 mr-2">
+          class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-3 py-1.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 mr-2">
           <span class="iconfont icon-search text-[14px]"></span>查询
         </button>
 
         <!-- 【警告红】：批量删除 -->
         <div @click="selectFileList.length > 0 ? delFileBatch() : null"
-          class="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border rounded-xl transition-all shadow-sm"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium border rounded-xl transition-all shadow-sm"
           :class="selectFileList.length === 0 ? 'opacity-40 cursor-not-allowed border-gray-200 dark:border-[#38383a] text-gray-400 bg-gray-50 dark:bg-black/20' : 'cursor-pointer text-red-600 border-red-200 bg-red-50 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/20 dark:hover:bg-red-900/40'">
           <span class="iconfont icon-del leading-none"></span>删除
         </div>
@@ -54,7 +54,7 @@
 
           <!-- 重构插槽 1：精美化文件名称与隐形式右侧悬浮悬浮操作 -->
           <template #fileName="{ index, row }">
-            <div class="flex items-center pr-10 relative group w-full" @mouseenter="showOp(row)"
+            <div class="flex items-center relative group w-full" @mouseenter="showOp(row)"
               @mouseleave="cancelShowOp(row)">
 
               <!-- 图标判断逻辑保持与全局高度一致 -->
@@ -67,11 +67,12 @@
               </template>
 
               <!-- 文件名文本 -->
-              <span
-                class="ml-3 flex-1 overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:text-[#007AFF] transition-colors"
-                :title="row.fileName" @click="preview(row)">
-                <span class="text-[#1d1d1f] dark:text-[#f5f5f7] font-medium">{{ row.fileName }}</span>
-              </span>
+              <div class="ml-3 flex-1 min-w-0 flex items-center sm:group-hover:pr-[120px] transition-all duration-300" :title="row.fileName">
+                <span
+                  class="text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF] transition-colors truncate" @click="preview(row)">
+                  {{ row.fileName }}
+                </span>
+              </div>
 
               <!-- iOS 化：行内极简悬浮组 -->
               <div v-if="row.showOp"
