@@ -6,9 +6,13 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 public class StringTools {
+
+    private static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     public static void checkParam(Object param) {
         try {
@@ -107,4 +111,13 @@ public class StringTools {
         fileName = fileName.substring(index);
         return fileName;
     }
+
+    public static String formatDateTime(Date date) {
+        if (date == null) {
+            return null;
+        }
+        SimpleDateFormat formatter = new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT);
+        return formatter.format(date);
+    }
+
 }

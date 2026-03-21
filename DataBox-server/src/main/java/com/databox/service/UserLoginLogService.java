@@ -69,4 +69,7 @@ public interface UserLoginLogService {
 	 */
 	Integer deleteUserLoginLogByLogId(Integer logId);
 
+	// 查询用户上一次登录日志
+	UserLoginLog getLastLoginLog(String userId);
+
 }

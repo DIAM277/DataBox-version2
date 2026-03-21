@@ -40,10 +40,7 @@ public class SysMessageController extends ABaseController {
 	@GlobalInterceptor(checkParams = true)
 	public ResponseVO getUnreadCount(HttpSession session) {
 		SessionWebUserDto userDto = getUserInfoFromSession(session);
-		SysMessageQuery query = new SysMessageQuery();
-		query.setUserId(userDto.getUserId());
-		query.setReadStatus(0); // 0表示未读
-		Integer count = sysMessageService.findCountByParam(query);
+		Integer count = sysMessageService.getUnreadCount(userDto.getUserId());
 		return getSuccessResponseVO(count);
 	}
 

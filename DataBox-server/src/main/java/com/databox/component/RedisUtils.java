@@ -57,4 +57,19 @@ public class RedisUtils<V> {
             return false;
         }
     }
+
+    /**
+     * 数值自增方法
+     * @param key
+     * @param delta
+     * @return
+     */
+    public Long increment(String key, long delta) {
+        try {
+            return redisTemplate.opsForValue().increment(key, delta);
+        } catch (Exception e) {
+            log.error("Redis自增失败 key:{}", key, e);
+            return null;
+        }
+    }
 }

@@ -16,6 +16,7 @@ import com.databox.entity.dto.SessionWebUserDto;
 import com.databox.entity.dto.SysSettingDto;
 import com.databox.entity.dto.UserSpaceDto;
 import com.databox.entity.enums.ResponseCodeEnum;
+import com.databox.entity.enums.SysMessageEnum;
 import com.databox.entity.enums.UserStatusEnum;
 import com.databox.entity.po.FileInfo;
 import com.databox.entity.query.FileInfoQuery;
@@ -65,7 +66,6 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Resource
 	private SysMessageService sysMessageService;
-
 	/**
 	 * 根据条件查询列表
 	 */
@@ -277,7 +277,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 		userInfo.setTotalSpace(sysSettingDto.getUserInitUseSpace() * Constants.MB);
 		this.userInfoMapper.insert(userInfo);
 		// 发送系统消息
-		sysMessageService.saveMessage(userId, "欢迎使用DataBox", "欢迎您注册成为DataBox的用户，祝您使用愉快！");
+		sysMessageService.saveMessage(userId, SysMessageEnum.REGISTER_SUCCESS);
 	}
 
 	/**

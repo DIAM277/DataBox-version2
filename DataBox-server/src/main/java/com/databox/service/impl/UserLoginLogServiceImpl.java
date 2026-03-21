@@ -127,4 +127,16 @@ public class UserLoginLogServiceImpl implements UserLoginLogService {
 	public Integer deleteUserLoginLogByLogId(Integer logId) {
 		return this.userLoginLogMapper.deleteByLogId(logId);
 	}
+
+	// 查询用户【上一次】登录记录（按时间倒序，取第一条）
+	@Override
+	public UserLoginLog getLastLoginLog(String userId) {
+		UserLoginLogQuery query = new UserLoginLogQuery();
+		query.setUserId(userId);
+		query.setOrderBy("login_time desc");
+		query.setPageNo(1);
+		query.setPageSize(1);
+		List<UserLoginLog> loginLogList = this.findListByParam(query);
+		return loginLogList.isEmpty() ? null : loginLogList.get(0);
+	}
 }

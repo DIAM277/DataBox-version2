@@ -119,4 +119,25 @@ public class RedisComponent {
    public DownloadFileDto getDownloadCode(String code){
        return (DownloadFileDto) redisUtils.get(Constants.REDIS_KEY_DOWNLOAD + code);
    }
+
+    /**
+     * 获取Redis值
+     */
+    public Object get(String key) {
+        return redisUtils.get(key);
+    }
+
+    /**
+     * 放入Redis并设置过期时间
+     */
+    public boolean setex(String key, Object value, long time) {
+        return redisUtils.setx(key, value, time);
+    }
+
+    /**
+     * Redis数值自增（未读数+1）
+     */
+    public Long increment(String key, long delta) {
+        return redisUtils.increment(key, delta);
+    }
 }

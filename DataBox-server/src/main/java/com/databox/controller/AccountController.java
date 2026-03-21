@@ -8,6 +8,7 @@ import com.databox.entity.config.AppConfig;
 import com.databox.entity.dto.CreateImageCode;
 import com.databox.entity.dto.SessionWebUserDto;
 import com.databox.entity.dto.UserSpaceDto;
+import com.databox.entity.enums.SysMessageEnum;
 import com.databox.entity.enums.VerifyRegexEnum;
 import com.databox.entity.po.UserInfo;
 import com.databox.entity.po.UserLoginLog;
@@ -16,6 +17,7 @@ import com.databox.entity.vo.PaginationResultVO;
 import com.databox.entity.vo.ResponseVO;
 import com.databox.exception.BusinessException;
 import com.databox.service.EmailCodeService;
+import com.databox.service.SysMessageService;
 import com.databox.service.UserInfoService;
 import com.databox.service.UserLoginLogService;
 import com.databox.utils.IpUtils;
@@ -64,6 +66,9 @@ public class AccountController extends ABaseController {
 
 	@Resource
 	private UserLoginLogService userLoginLogService;
+
+	@Resource
+	private SysMessageService sysMessageService;
 
 	// 获取网页验证码
 	@RequestMapping("/checkCode")
@@ -158,13 +163,26 @@ public class AccountController extends ABaseController {
 			// 获取IP和归属地
 			String ip = IpUtils.getIpAddr(request);
 			String location = IpUtils.getIpLocation(ip);
+			String loginTime = StringTools.formatDateTime(new Date());
+
+			// 获取上一次登录记录
+			UserLoginLog lastLoginLog = userLoginLogService.getLastLoginLog(sessionWebUserDto.getUserId());
+			// 比对IP 发送异地登录消息
+			if (lastLoginLog != null && !ip.equals(lastLoginLog.getLoginIp())) {
+				// 发送系统消息（2个参数：时间、地点）
+				sysMessageService.saveMessage(
+						sessionWebUserDto.getUserId(),
+						SysMessageEnum.NEW_DEVICE_LOGIN,
+						loginTime,
+						location
+				);
+			}
 			// 封装日志信息实体
 			UserLoginLog loginLog = new UserLoginLog();
 			loginLog.setUserId(sessionWebUserDto.getUserId());
 			loginLog.setLoginIp(ip);
 			loginLog.setLoginLocation(location);
 			loginLog.setLoginTime(new Date());
-			// 入库
 			userLoginLogService.add(loginLog);
 			return getSuccessResponseVO(sessionWebUserDto);
 		} finally {
@@ -356,6 +374,9 @@ public class AccountController extends ABaseController {
 		// 更新新密码
 		userInfo.setPassword(StringTools.MD5(newPassword));
 		userInfoService.updateUserInfoByUserId(userInfo, sessionWebUserDto.getUserId());
+		// 发送系统消息
+		String editTime = StringTools.formatDateTime(new Date());
+		sysMessageService.saveMessage(sessionWebUserDto.getUserId(), SysMessageEnum.PASSWORD_CHANGE_SUCCESS, editTime);
 		return getSuccessResponseVO(null);
 	}
 

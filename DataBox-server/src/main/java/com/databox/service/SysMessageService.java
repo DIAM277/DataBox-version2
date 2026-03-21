@@ -2,6 +2,7 @@ package com.databox.service;
 
 import java.util.List;
 
+import com.databox.entity.enums.SysMessageEnum;
 import com.databox.entity.query.SysMessageQuery;
 import com.databox.entity.po.SysMessage;
 import com.databox.entity.vo.PaginationResultVO;
@@ -69,10 +70,22 @@ public interface SysMessageService {
 	 */
 	Integer deleteSysMessageByMessageId(Integer messageId);
 
+	Integer getUnreadCount(String userId);
+
 	/**
 	 * 发送系统消息
 	 */
 	void saveMessage(String userId, String title, String content);
+
+	/**
+	 * 枚举快捷发送（无参数）
+	 */
+	void saveMessage(String userId, SysMessageEnum messageEnum);
+
+	/**
+	 * 枚举快捷发送（带动态参数）
+	 */
+	void saveMessage(String userId, SysMessageEnum messageEnum, Object... params);
 
 	/**
 	 * 标记消息为已读

@@ -20,6 +20,7 @@ import com.databox.entity.query.UserInfoQuery;
 import com.databox.exception.BusinessException;
 import com.databox.mappers.FileFavoriteMapper;
 import com.databox.mappers.UserInfoMapper;
+import com.databox.service.SysMessageService;
 import com.databox.service.UserInfoService;
 import com.databox.utils.DateUtil;
 import com.databox.utils.ProcessUtils;
@@ -69,6 +70,9 @@ public class FileInfoServiceImpl implements FileInfoService {
 
 	@Resource
 	private FileFavoriteMapper fileFavoriteMapper;
+
+	@Resource
+	private SysMessageService sysMessageService;
 
 	/**
 	 * 根据条件查询列表
@@ -199,6 +203,7 @@ public class FileInfoServiceImpl implements FileInfoService {
 			Date curDate = new Date();
 			// 获取用户空间使用情况
 			UserSpaceDto spaceDto = this.redisComponent.getUserSpaceUsed(webUserDto.getUserId());
+
 			if(chunkIndex == 0) {
 				FileInfoQuery infoQuery = new FileInfoQuery();
 				infoQuery.setFileMd5(fileMd5);
@@ -226,6 +231,8 @@ public class FileInfoServiceImpl implements FileInfoService {
 					resultDto.setStatus(UploadStatusEnum.UPLOAD_SECONDS.getCode());
 					// 实时更新用户剩余空间
 					updateUserSpace(webUserDto, dbFile.getFileSize());
+					// 【秒传成功】存储空间检查 预警判断
+					checkStorageWarning(webUserDto.getUserId(), spaceDto);
 					return resultDto;
 				}
 			}
@@ -278,6 +285,9 @@ public class FileInfoServiceImpl implements FileInfoService {
 			// 获取文件总空间
 			Long totalSize = redisComponent.getFileTempSize(webUserDto.getUserId(), fileId);
 			updateUserSpace(webUserDto, totalSize);
+			// 【普通上传完成】存储空间检查 预警判断
+			checkStorageWarning(webUserDto.getUserId(), spaceDto);
+
 			resultDto.setStatus(UploadStatusEnum.UPLOAD_FINISH.getCode());
 
 			// 添加事务监听器
@@ -306,6 +316,27 @@ public class FileInfoServiceImpl implements FileInfoService {
 			}
 		}
 		return resultDto;
+	}
+
+	/**
+	 * 公共方法：检测存储空间是否超过90%，发送预警消息
+	 * @param userId
+	 * @param spaceDto
+	 */
+	private void checkStorageWarning(String userId, UserSpaceDto spaceDto) {
+		try {
+			long useSpace = spaceDto.getUseSpace();
+			long totalSpace = spaceDto.getTotalSpace();
+			// 计算使用率（百分比）
+			double useRate = (double) useSpace / totalSpace * 100;
+			// 使用率 > 90% 发送系统消息
+			if (useRate > 90) {
+				sysMessageService.saveMessage(userId, SysMessageEnum.STORAGE_NOT_ENOUGH);
+				log.info("存储空间预警已发送，用户ID：{}，使用率：{}%", userId, useRate);
+			}
+		} catch (Exception e) {
+			log.error("存储空间预警发送失败", e);
+		}
 	}
 
 	//文件重命名方法
