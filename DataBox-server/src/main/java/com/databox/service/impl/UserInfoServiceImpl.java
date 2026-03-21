@@ -22,6 +22,7 @@ import com.databox.entity.query.FileInfoQuery;
 import com.databox.exception.BusinessException;
 import com.databox.mappers.FileInfoMapper;
 import com.databox.service.EmailCodeService;
+import com.databox.service.SysMessageService;
 import com.databox.utils.JsonUtils;
 import com.databox.utils.OKHttpUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Resource
 	private FileInfoMapper<FileInfo, FileInfoQuery> fileInfoMapper;
+
+	@Resource
+	private SysMessageService sysMessageService;
 
 	/**
 	 * 根据条件查询列表
@@ -272,6 +276,8 @@ public class UserInfoServiceImpl implements UserInfoService {
 		userInfo.setUserSpace(0L);
 		userInfo.setTotalSpace(sysSettingDto.getUserInitUseSpace() * Constants.MB);
 		this.userInfoMapper.insert(userInfo);
+		// 发送系统消息
+		sysMessageService.saveMessage(userId, "欢迎使用DataBox", "欢迎您注册成为DataBox的用户，祝您使用愉快！");
 	}
 
 	/**

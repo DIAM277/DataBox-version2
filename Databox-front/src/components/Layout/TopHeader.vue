@@ -59,6 +59,9 @@
                 </el-popover>
             </div>
 
+            <!-- 【新增】：系统消息通知铃铛 -->
+            <MessageBell />
+
             <!-- 用户信息与悬浮快捷菜单 -->
             <el-dropdown trigger="hover" class="cursor-pointer" @command="handleCommand">
                 <div
@@ -98,12 +101,12 @@
 </template>
 
 <script setup>
-// 🔴 引入 onUnmounted
 import { ref, inject, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/store/userStore';
 import Uploader from '@/views/main/Uploader.vue';
 import Search from '@/components/Input/Search.vue';
+import MessageBell from '@/components/Business/MessageBell.vue';
 
 const emit = defineEmits(['search']);
 

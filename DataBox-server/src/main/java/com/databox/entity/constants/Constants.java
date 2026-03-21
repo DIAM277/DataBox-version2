@@ -39,4 +39,6 @@ public class Constants {
     public static final String IMAGE_PNG_SUFFIX = ".png";
     public static final String REDIS_KEY_DOWNLOAD = "databox:download:";
     public static final String REDIS_KEY_AI_SUMMARY_COUNT = "databox:ai_summary:count:";
+    public static final Integer SYS_MESSAGE_UNREAD = 0;
+    public static final Integer SYS_MESSAGE_READ = 1;
 }

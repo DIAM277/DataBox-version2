@@ -103,6 +103,16 @@ public class AccountController extends ABaseController {
 		}
 	}
 
+	/**
+	 * 用户注册
+	 * @param session
+	 * @param email
+	 * @param userName
+	 * @param password
+	 * @param checkCode
+	 * @param emailCode
+	 * @return
+	 */
 	@RequestMapping("/register")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO register(HttpSession session,
