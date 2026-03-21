@@ -157,4 +157,11 @@ public interface FileInfoService {
 	 * @return
 	 */
 	List<FileInfo> getFolderImage(String userId, String filePid);
+
+	/**
+	 * 收藏/取消收藏文件
+	 * @param fileId
+	 * @param userId
+	 */
+	void toggleFavorite(String fileId, String userId);
 }

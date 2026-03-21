@@ -78,7 +78,9 @@
                 <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
               </template>
 
-              <div class="file-text ml-3 flex-1 min-w-0 flex items-center sm:group-hover:pr-[200px] transition-all duration-300" :title="row.fileName" v-if="!row.showEdit">
+              <div
+                class="file-text ml-3 flex-1 min-w-0 flex items-center sm:group-hover:pr-[200px] transition-all duration-300"
+                :title="row.fileName" v-if="!row.showEdit">
                 <span
                   class="file-name-1 text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF] truncate"
                   @click="preview(row)">{{ row.fileName }}</span>
@@ -100,7 +102,8 @@
                   @click="cancelNameEdit(index, $event)"></span>
               </div>
 
-              <OpButton :fileData="row" :index="index" :showOp="row.showOp" @share="share"
+              <!-- 绑定新加入的 @favorite 派发方法 -->
+              <OpButton :fileData="row" :index="index" :showOp="row.showOp" @share="share" @favorite="toggleFavorite"
                 @download="handleDownloadClick" @delete="delFile" @rename="editFileName" @move="moveFolder"
                 class="opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
@@ -223,7 +226,9 @@ const api = {
   delFile: '/file/delFile',
   changeFileFolder: '/file/changeFileFolder',
   createDownloadUrl: '/file/createDownloadUrl',
-  download: '/api/file/download'
+  download: '/api/file/download',
+  // 新增收藏 API 入口
+  favorite: '/file/favorite'
 }
 
 const columns = computed(() => [
@@ -487,6 +492,25 @@ const showOp = (row) => {
 // 取消操作栏
 const cancelShowOp = (row) => {
   row.showOp = false
+}
+
+// 核心收藏执行判定
+const toggleFavorite = async (row) => {
+  if (row.folderType === 1) {
+    proxy.Message.warning('目前系统暂不支持直接收藏文件夹');
+    return;
+  }
+  let result = await proxy.Request({
+    url: api.favorite,
+    params: {
+      fileId: row.fileId
+    }
+  });
+  if (result) {
+    proxy.Message.success("操作成功");
+    // 轻量级刷新当前列表状态
+    loadDataList(false);
+  }
 }
 
 // 处理下载按钮点击事件

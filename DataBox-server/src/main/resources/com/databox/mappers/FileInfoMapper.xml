@@ -169,6 +169,9 @@
 			<if test="query.queryExpire != null and query.queryExpire">
 				<![CDATA[and recovery_time < date_sub(now(),interval 10 day)]]>
 			</if>
+			<if test="query.queryFavorite != null and query.queryFavorite">
+			and file_id in (select file_id from file_favorite where user_id = #{query.userId})
+			</if>
 		</where>
 	</sql>
 

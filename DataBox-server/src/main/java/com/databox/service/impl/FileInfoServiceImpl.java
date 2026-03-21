@@ -14,9 +14,11 @@ import com.databox.entity.dto.SessionWebUserDto;
 import com.databox.entity.dto.UploadResultDto;
 import com.databox.entity.dto.UserSpaceDto;
 import com.databox.entity.enums.*;
+import com.databox.entity.po.FileFavorite;
 import com.databox.entity.po.UserInfo;
 import com.databox.entity.query.UserInfoQuery;
 import com.databox.exception.BusinessException;
+import com.databox.mappers.FileFavoriteMapper;
 import com.databox.mappers.UserInfoMapper;
 import com.databox.service.UserInfoService;
 import com.databox.utils.DateUtil;
@@ -64,6 +66,9 @@ public class FileInfoServiceImpl implements FileInfoService {
 	@Resource
 	@Lazy
 	private FileInfoServiceImpl fileInfoService;
+
+	@Resource
+	private FileFavoriteMapper fileFavoriteMapper;
 
 	/**
 	 * 根据条件查询列表
@@ -992,5 +997,25 @@ public class FileInfoServiceImpl implements FileInfoService {
 		query.setStatus(FileStatusEnum.USING.getStatus());
 		List<FileInfo> imageList = this.fileInfoMapper.selectList(query);
 		return imageList;
+	}
+
+	/**
+	 * 收藏/取消收藏文件
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public void toggleFavorite(String fileId, String userId) {
+		FileFavorite favorite = fileFavoriteMapper.selectByUserIdAndFileId(userId, fileId);
+		if (favorite != null) {
+			// 如果已经收藏过，则执行取消收藏
+			fileFavoriteMapper.deleteByUserIdAndFileId(userId, fileId);
+		} else {
+			// 如果没有收藏过，则新加收藏
+			FileFavorite newFavorite = new FileFavorite();
+			newFavorite.setUserId(userId);
+			newFavorite.setFileId(fileId);
+			newFavorite.setCreateTime(new Date());
+			fileFavoriteMapper.insert(newFavorite);
+		}
 	}
 }

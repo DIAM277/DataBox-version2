@@ -23,10 +23,20 @@
                 ? 'bg-gray-200/60 dark:bg-gray-700/50 text-[#1d1d1f] dark:text-white font-bold shadow-sm'
                 : 'text-[#424245] dark:text-[#a1a1a6] hover:bg-gray-100/80 dark:hover:bg-[#2c2c2e]/80 font-medium'">
 
-              <!-- 【优化4】：带独立颜色的动态图标 -->
-              <span class="iconfont text-[18px] mr-3 transition-transform duration-300 group-hover:scale-110"
-                :class="[menu.icon, isActive(menu.path) ? menu.activeColor || menu.color : menu.color]">
-              </span>
+              <!-- 【优化：SVG 与 IconFont 并存拦截策略】 -->
+              <template v-if="menu.icon === 'icon-star'">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" 
+                  class="w-[18px] h-[18px] mr-3 transition-transform duration-300 group-hover:scale-110"
+                  :class="isActive(menu.path) ? menu.activeColor || menu.color : menu.color">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                </svg>
+              </template>
+              <template v-else>
+                <span class="iconfont text-[18px] mr-3 transition-transform duration-300 group-hover:scale-110"
+                  :class="[menu.icon, isActive(menu.path) ? menu.activeColor || menu.color : menu.color]">
+                </span>
+              </template>
+
               <span class="text-[14px] tracking-wide">{{ menu.name }}</span>
             </div>
           </li>
@@ -154,6 +164,7 @@ const mainMenuGroups = [
   {
     title: '我的',
     items: [
+      { name: "我的收藏", path: "/favorites", icon: "icon-star", color: "text-[#FFCC00]" }, // 明黄色
       { name: "我的分享", path: "/myshare", icon: "icon-share", color: "text-[#5856D6]" }, // 靛蓝色
       { name: "回收站", path: "/recycle", icon: "icon-del", color: "text-[#FF3B30]" },    // 警示红
     ]

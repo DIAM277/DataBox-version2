@@ -27,6 +27,16 @@ const router = createRouter({
           component: () => import("@/views/main/Main.vue"),
         },
         {
+          path: "/favorites",
+          name: "我的收藏",
+          meta: {
+            needLogin: true,
+            menuCode: "favorites",
+            title: "我的收藏"
+          },
+          component: () => import("@/views/favorite/Favorite.vue")
+        },
+        {
           path: "/myshare",
           name: "我的分享",
           meta: {

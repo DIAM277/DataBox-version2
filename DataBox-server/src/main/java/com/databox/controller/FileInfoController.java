@@ -288,5 +288,17 @@ public class FileInfoController extends CommonFileController{
 		return getSuccessResponseVO(CopyTools.copyList(imageList, FileInfoVO.class));
 	}
 
+	/**
+	 * 收藏/取消收藏文件
+	 */
+	@RequestMapping("/favorite")
+	@GlobalInterceptor(checkParams = true)
+	@OpLog(module = "文件管理", action = "收藏/取消收藏文件")
+	public ResponseVO toggleFavorite(HttpSession session, @VerifyParam(required = true) String fileId){
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		fileInfoService.toggleFavorite(fileId, webUserDto.getUserId());
+		return getSuccessResponseVO(null);
+	}
+
 
 }

@@ -136,6 +136,9 @@ public class FileInfoQuery extends BaseParam {
 	private String sortOrder;
 
 	private Integer referenceCount;
-
+	/**
+	 * 结合收藏表进行联合筛选（只查询该用户已收藏的）
+	 */
+	private Boolean queryFavorite;
 
 }
