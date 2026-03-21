@@ -107,8 +107,12 @@
                     <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
                   </template>
 
-                  <div class="ml-3 flex-1 min-w-0 flex items-center sm:group-hover:pr-[120px] transition-all duration-300" :title="row.fileName">
-                    <span class="text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF] transition-colors truncate" @click="preview(row)">
+                  <div
+                    class="ml-3 flex-1 min-w-0 flex items-center sm:group-hover:pr-[120px] transition-all duration-300"
+                    :title="row.fileName">
+                    <span
+                      class="text-[#1d1d1f] dark:text-[#f5f5f7] font-medium cursor-pointer hover:text-[#007AFF] transition-colors truncate"
+                      @click="preview(row)">
                       {{ row.fileName }}
                     </span>
                   </div>
@@ -213,19 +217,25 @@ const getShareInfo = async () => {
   let result = await proxy.Request({
     url: api.getShareLoginInfo,
     showLoading: false,
+    errorCallback: () => {
+      router.push('/shareCheck/' + shareId);
+    },
     params: {
       shareId: shareId
     }
   })
+
+  // 遇到空数据断层抛错（即已经被删除），别再原地 return 留在本页转圈，强行重定向至失效态页面
   if (!result) {
+    router.push('/shareCheck/' + shareId);
     return;
   }
-  if (result.data == null) {
-    router.push(`/shareCheck/${shareId}`)
-    return
+
+  if (result.data != null) {
+    shareInfo.value = result.data
+  } else {
+    router.push('/shareCheck/' + shareId)
   }
-  shareInfo.value = result.data
-  loadDataList()
 }
 
 // 排序相关状态

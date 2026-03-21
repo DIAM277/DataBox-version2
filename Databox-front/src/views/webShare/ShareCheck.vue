@@ -10,8 +10,8 @@
             class="absolute bottom-[10%] right-[15%] w-[35vw] h-[35vw] bg-indigo-400/10 dark:bg-purple-900/20 rounded-full blur-[130px] -z-10 pointer-events-none">
         </div>
 
-        <!-- 核心毛玻璃验证卡片 -->
-        <div
+        <!-- 1. 核心毛玻璃验证卡片 (有效分享呈现) -->
+        <div v-if="shareValid"
             class="w-[400px] sm:w-[440px] p-8 sm:p-10 bg-white/70 dark:bg-[#1c1c1e]/70 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/60 dark:border-gray-700/30 flex flex-col items-center relative z-10 transition-all duration-500">
 
             <!-- Apple 风 Logo 区 -->
@@ -53,9 +53,11 @@
                             class="extraction-input w-full h-[56px] border-2 border-transparent focus:border-[#007AFF]/40 rounded-2xl text-center text-[22px] tracking-[0.5em] font-bold outline-none transition-all duration-300 focus:shadow-sm placeholder:tracking-normal placeholder:font-normal placeholder:text-lg" />
                     </el-form-item>
 
-                    <button type="button" @click="checkShare"
-                        class="w-full h-[52px] bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl text-[16px] font-semibold mt-6 transition-all duration-200 active:scale-[0.98] shadow-md shadow-blue-500/20 flex items-center justify-center tracking-wide">
-                        提取文件
+                    <button type="button" @click="checkShare" :disabled="submitLoading"
+                        class="w-full h-[52px] bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl text-[16px] font-semibold mt-6 transition-all duration-200 active:scale-[0.98] shadow-md shadow-blue-500/20 flex items-center justify-center tracking-wide disabled:opacity-70 disabled:cursor-not-allowed">
+                        <span v-if="submitLoading"
+                            class="w-5 h-5 border-2 border-white/80 border-t-transparent rounded-full animate-spin mr-2"></span>
+                        {{ submitLoading ? '验证中...' : '提取文件' }}
                     </button>
                 </el-form>
             </div>
@@ -66,16 +68,28 @@
                 DataBox - 安全、高效的文件分享平台
             </div>
         </div>
+
+        <!-- 2. 失效拦截占位图 (无效、过期、删除分享展现) -->
+        <div v-else
+            class="flex flex-col items-center justify-center relative z-10 p-6 text-center animate-[fadeIn_0.5s_ease-out]">
+            <img src="@/assets/icon-image/no_data.png" class="w-36 h-36 opacity-60 mb-8 drop-shadow-md" />
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200 tracking-wide mb-3">分享链接已失效</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm md:text-base mb-10 max-w-sm">
+                该文件可能已被原作者取消分享、被系统安全删除，或者已超过有效期限。</p>
+            <div class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-full px-10 py-3 font-semibold transition-all active:scale-95 cursor-pointer shadow-lg shadow-blue-500/30"
+                @click="jumpToHome">
+                返回网盘首页
+            </div>
+        </div>
+
     </div>
 </template>
 
 <script setup>
-// 引入 onMounted 处理路由自动提取
-import { ref, reactive, getCurrentInstance, nextTick, onMounted } from "vue"
-const { proxy } = getCurrentInstance();
+import { ref, getCurrentInstance, onMounted } from "vue"
 import { useRoute, useRouter } from 'vue-router';
 
-// 移除不再需要的独立 AppTitle2 组件引用
+const { proxy } = getCurrentInstance();
 const route = useRoute();
 const router = useRouter();
 
@@ -87,50 +101,104 @@ const api = {
 const shareId = route.params.shareId
 const shareInfo = ref({})
 
-// 获取分享文件信息
-const getShareInfo = async () => {
-    let result = await proxy.Request({
-        url: api.getShareInfo,
-        showLoading: false,
-        params: {
-            shareId
+// --- [修复点1]：新增底层防御相关状态 --- 
+const shareValid = ref(true) // 标识分享是否依然存活，默认允许先尝试拉取
+const submitLoading = ref(false) // 验证框转圈控制
+
+// 重构: 将初始化数据和解析提取码逻辑合并至完整的闭环函数中
+const initShareData = async () => {
+    try {
+        // 【第一道防线】 侦测源文件与分享条目的物理健康状态
+        let result = await proxy.Request({
+            url: api.getShareInfo,
+            showLoading: false,
+            // 关闭报错弹出的通知遮罩，转由我们优雅拦截处理
+            errorCallback: () => {
+                shareValid.value = false;
+            },
+            params: {
+                shareId
+            }
+        });
+
+        // 斩断拦截: 后台拦截/文件删除 会导致返回 result 为空
+        if (!result) {
+            shareValid.value = false;
+            return;
         }
-    })
-    if (!result) {
-        return;
+
+        // 文件与分享链接均健康，绑定基本信息展示卡片
+        shareValid.value = true;
+        shareInfo.value = result.data;
+
+        // 【第二道防线】 只在有效的前提下展开验证接管（解决：文件没得提取系统还强制自动补全和打错误验证的 Bug）
+        checkAutoFillCode();
+
+    } catch (error) {
+        shareValid.value = false;
     }
-    shareInfo.value = result.data
 }
-getShareInfo()
+
+// 自动填充机制安全判定封装
+const checkAutoFillCode = () => {
+    const autoCode = route.query.code || sessionStorage.getItem('auto_fill_code_' + shareId);
+
+    if (autoCode) {
+        // 给足 UI 挂载和 Element Plus 的缓冲周期
+        setTimeout(() => {
+            formData.value.code = autoCode;
+            // 阅后即焚，不为日后的同ID其他行为埋雷
+            sessionStorage.removeItem('auto_fill_code_' + shareId);
+
+            // 自动发车执行校验
+            checkShare();
+        }, 100);
+    }
+}
 
 const formData = ref({ code: '' });
 const formDataRef = ref();
 const rules = {
     code: [
         { required: true, message: "请输入提取码" },
-        { min: 5, max: 5, message: "提取码长度为5位" }
+        { min: 5, max: 5, message: "提取码长度不匹配" }
     ]
 };
 
+// 提取验证操作核心重制
 const checkShare = () => {
+    // 阻击拦截: 请求未完成前绝对不让玩家疯狂点击
+    if (submitLoading.value) return;
+
     formDataRef.value.validate(async (valid) => {
         if (!valid) {
             return;
         }
-        let params = {}
-        Object.assign(params, formData.value)
-        let result = await proxy.Request({
-            url: api.checkShareCode,
-            params: {
-                shareId: shareId,
-                code: formData.value.code
+
+        // 开启锁圈
+        submitLoading.value = true;
+
+        try {
+            let result = await proxy.Request({
+                url: api.checkShareCode,
+                params: {
+                    shareId: shareId,
+                    code: formData.value.code
+                }
+            })
+
+            if (!result) {
+                // 如果提取码输入发生错误 (系统抛错或者 403) , result 将会返回 false / nothing。我们直接拦截但不跳失效界面。
+                return;
             }
-        })
-        if (!result) {
-            return;
+
+            // 下发令牌放行通关
+            proxy.Message.success('文件提取成功');
+            router.push(`/share/${shareId}`);
+        } finally {
+            // [修复点2]：无论成功、失效或接口崩坏，重置按钮状态回归正常！告别无尽旋转！
+            submitLoading.value = false;
         }
-        proxy.Message.success('文件提取成功')
-        router.push(`/share/${shareId}`)
     })
 }
 
@@ -139,17 +207,7 @@ const jumpToHome = () => {
 }
 
 onMounted(() => {
-    // 优先读取路由自带的 code，如果没有则去抢救从 Share.vue 重定向时遗留下来的 code
-    const autoCode = route.query.code || sessionStorage.getItem('auto_fill_code_' + shareId);
-
-    if (autoCode) {
-        // 使用 setTimeout 稍微延迟，确保视图和 Element Plus 表单完全挂载后再设值
-        setTimeout(() => {
-            formData.value.code = autoCode;
-            // 用完即焚，防止日后同一标签页打开该分享时发生错误干扰
-            sessionStorage.removeItem('auto_fill_code_' + shareId);
-        }, 100);
-    }
+    initShareData();
 });
 </script>
 

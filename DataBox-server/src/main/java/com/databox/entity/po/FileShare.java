@@ -67,6 +67,10 @@ public class FileShare implements Serializable {
 	private Integer folderType;
 	private Integer fileCategory;
 	private Integer fileType;
+	/**
+	 * 源文件删除状态 (0:正常 1:回收站 2:彻底删除)
+	 */
+	private Integer fileDelFlag;
 
 	@Override
 	public String toString (){

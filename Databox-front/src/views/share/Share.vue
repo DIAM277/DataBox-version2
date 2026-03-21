@@ -62,7 +62,8 @@
                 <Icon v-if="row.folderType == 1" :fileType="0"></Icon>
               </template>
 
-              <div class="ml-3 flex-1 min-w-0 flex items-center sm:group-hover:pr-[120px] transition-all duration-300" :title="row.fileName || '该分享文件已被删除'">
+              <div class="ml-3 flex-1 min-w-0 flex items-center sm:group-hover:pr-[120px] transition-all duration-300"
+                :title="row.fileName || '该分享文件已被删除'">
                 <span class="text-[#1d1d1f] dark:text-[#f5f5f7] font-medium truncate"
                   :class="{ 'text-gray-400 dark:text-gray-500 italic': !row.fileName }">
                   {{ row.fileName || '该分享文件已被删除' }}
@@ -94,12 +95,19 @@
             <span class="text-gray-500 dark:text-gray-400">{{ row.expireTime ? row.expireTime : '永久有效' }}</span>
           </template>
 
-          <!-- 新增：状态插槽 -->
+          <!-- 新增：多维度状态插槽 -->
           <template #status="{ row }">
+            <!-- 生效中 -->
             <span v-if="checkShareStatus(row) === 'valid'"
               class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[12px] font-medium rounded-full tracking-wide border border-emerald-100 dark:border-transparent">
               生效中
             </span>
+            <!-- 失效 (文件已物理或逻辑删除) -->
+            <span v-else-if="checkShareStatus(row) === 'deleted'"
+              class="px-2.5 py-1 bg-orange-50 dark:bg-orange-500/10 text-orange-500 dark:text-orange-400 text-[12px] font-medium rounded-full tracking-wide border border-orange-200 dark:border-transparent shadow-sm">
+              失效
+            </span>
+            <!-- 正常超时过期 -->
             <span v-else
               class="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[12px] font-medium rounded-full tracking-wide border border-gray-200 dark:border-transparent">
               已失效
@@ -160,19 +168,25 @@ const handleSortChange = ({ prop, order }) => {
   loadDataList();
 };
 
-// 判断分享状态：3 为永久有效，或者判断当前时间是否过期
+// 判断分享状态：支持文件删除失效、永久有效及按期失效验证
 const checkShareStatus = (row) => {
-  if (row.validType === 3) {
+  // 第 1 优先级：源文件被移入回收站(1)、彻底删除(2)或物理不存在
+  if (row.fileDelFlag === 1 || row.fileDelFlag === 0 || !row.fileName) {
+    return 'deleted';
+  }
+
+  // 第 2 优先级：没有设置过期时间或声明为永久有效(3)
+  if (row.validType === 3 || !row.expireTime) {
     return 'valid';
   }
-  if (!row.expireTime) {
-    return 'valid';
-  }
-  // 将后端的 YYYY-MM-DD HH:mm:ss 替换以兼容不同浏览器的时间解析
+
+  // 第 3 优先级：将后端的 YYYY-MM-DD HH:mm:ss 替换以兼容不同浏览器的时间解析
   const expireDate = new Date(row.expireTime.replace(/-/g, '/'));
   if (expireDate.getTime() > Date.now()) {
     return 'valid';
   }
+
+  // 超时
   return 'expired';
 };
 
