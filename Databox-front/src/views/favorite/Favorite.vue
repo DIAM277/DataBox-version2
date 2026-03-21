@@ -83,8 +83,31 @@
 
                                 <el-tooltip content="取消收藏" placement="top" effect="dark" :show-after="300">
                                     <span
-                                        class="w-7 h-7 flex items-center justify-center rounded-md text-[17px] leading-none mb-1 text-orange-400 hover:bg-white dark:hover:bg-gray-700 hover:text-orange-500 hover:shadow-sm transition-all cursor-pointer"
-                                        @click.stop="cancelFavoriteSingle(row)">☆</span>
+                                        class="w-7 h-7 flex items-center justify-center rounded-md transition-all cursor-pointer"
+                                        :class="row.isToggling
+                                            ? 'opacity-40 cursor-not-allowed text-gray-400'
+                                            : 'hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm text-yellow-500 dark:text-yellow-400 hover:!text-red-500'"
+                                        @click.stop="cancelFavoriteSingle(row)">
+
+                                        <!-- 转圈 Loading (操作中) -->
+                                        <svg v-if="row.isToggling" class="animate-spin w-[18px] h-[18px]"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="3"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+
+                                        <!-- 实心星星 SVG (空闲态) -->
+                                        <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                            class="w-[18px] h-[18px] transition-transform active:scale-90">
+                                            <path fill-rule="evenodd"
+                                                d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
                                 </el-tooltip>
                             </div>
                         </div>
@@ -236,7 +259,7 @@ const loadDataList = async (append = false) => {
         pageNo: tableData.value.pageNo,
         pageSize: tableData.value.pageSize,
         fileNameFuzzy: fileNameFuzzy.value,
-        queryFavorite: true, // 🔴 必须搭载：查询该用户所有的收藏
+        queryFavorite: true, // 查询该用户所有的收藏
         category: 'all'      // 绕过 Pid 检查机制，在所有文件域中搜索收藏
     }
 
@@ -298,15 +321,38 @@ const preview = (data) => {
     PreviewRef.value.showReview(data, 0)
 }
 
-// 单个取消
+// 单个取消 (核心修复：加入级联行锁与真实 ID 寻找防错剔除)
 const cancelFavoriteSingle = async (row) => {
-    let res = await proxy.Request({
-        url: api.cancelFavorite,
-        params: { fileId: row.fileId }
-    });
-    if (res) {
-        proxy.Message.success("取消收藏成功");
-        loadDataList(false);
+    // 防爆点：防止用户手抖导致 Toggle 请求连发又变成「加入收藏」
+    if (row.isToggling) return;
+    row.isToggling = true;
+
+    try {
+        let res = await proxy.Request({
+            url: api.cancelFavorite,
+            params: { fileId: row.fileId },
+            showLoading: false // 静默取消全屏 Loading，由行内 Loading 接管
+        });
+
+        if (res) {
+            proxy.Message.success("已移除收藏");
+
+            // 抛弃危险不可靠的索引依赖，每次通过真实唯一 ID 校验真实下表
+            const realIndex = tableData.value.list.findIndex(item => item.fileId === row.fileId);
+            if (realIndex !== -1) {
+                // 丝滑剔除视图中的数据行，避免重绘闪烁
+                tableData.value.list.splice(realIndex, 1);
+                tableData.value.totalCount -= 1;
+            }
+
+            // 智能翻页判断：如果当前页的数据被清空
+            if (tableData.value.list.length === 0) {
+                loadDataList(false);
+            }
+        }
+    } finally {
+        // 释放行级防抖锁
+        row.isToggling = false;
     }
 }
 

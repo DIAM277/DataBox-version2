@@ -102,7 +102,6 @@
                   class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm cursor-pointer transition-all active:scale-90"
                   :class="row.status === 1 ? 'hover:text-red-500' : 'hover:text-emerald-500'"
                   @click="updateUserStatus(row)">
-                  <!-- 🔴 修复点：启用的对应 class 为 icon-ok -->
                   <span class="iconfont text-[16px]" :class="row.status === 1 ? 'icon-cancel' : 'icon-ok'"></span>
                 </div>
               </el-tooltip>

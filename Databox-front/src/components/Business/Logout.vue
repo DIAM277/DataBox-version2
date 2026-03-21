@@ -6,7 +6,7 @@
                 <!-- 红底图标容器，适配了暗色模式的微弱红底 -->
                 <div
                     class="w-16 h-16 rounded-full bg-[#fff2f0] dark:bg-red-900/30 flex items-center justify-center mb-5 shadow-sm">
-                    <span class="iconfont icon-close3 text-[32px] text-[#ff4d4f]"></span>
+                    <span class="iconfont icon-close text-[32px] text-[#ff4d4f]"></span>
                 </div>
                 <!-- 退出提示文字 -->
                 <div class="text-[17px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] tracking-wide">

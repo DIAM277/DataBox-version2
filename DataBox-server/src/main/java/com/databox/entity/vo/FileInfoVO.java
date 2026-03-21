@@ -30,4 +30,8 @@ public class FileInfoVO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date recoveryTime;
+    /**
+     * 是否已收藏 (1: 是, 0/null: 否)
+     */
+    private Integer isFavorite;
 }

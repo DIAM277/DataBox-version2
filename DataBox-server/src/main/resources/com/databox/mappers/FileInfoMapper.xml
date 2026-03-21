@@ -39,6 +39,8 @@
 		<result column="del_flag" property="delFlag"  />
 		<!--文件引用次数-->
 		<result column="reference_count" property="referenceCount"  />
+		<!--文件收藏状态-->
+		<result column="isFavorite" property="isFavorite"/>
 	</resultMap>
 
 
@@ -180,6 +182,10 @@
 		SELECT
 		<include refid="base_column_list" />
 		,(select user_name from user_info u where u.user_id = f.user_id) userName
+
+		<if test="query.userId != null">
+			,(SELECT count(1) FROM file_favorite ff WHERE ff.file_id = f.file_id AND ff.user_id = #{query.userId}) as isFavorite
+		</if>
 		FROM file_info f
 		<include refid="query_condition" />
 		<if test="query.orderBy!=null">

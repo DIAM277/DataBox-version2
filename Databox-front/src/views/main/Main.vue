@@ -494,22 +494,35 @@ const cancelShowOp = (row) => {
   row.showOp = false
 }
 
-// 核心收藏执行判定
+// 收藏执行判定 (极致丝滑版：无刷新且防手抖)
 const toggleFavorite = async (row) => {
+  // 防护：防止连点发出重复请求造成高频 Toggle 状态错乱
+  if (row.isToggling) return;
+
   if (row.folderType === 1) {
     proxy.Message.warning('目前系统暂不支持直接收藏文件夹');
     return;
   }
-  let result = await proxy.Request({
-    url: api.favorite,
-    params: {
-      fileId: row.fileId
+
+  // 施加行级别锁
+  row.isToggling = true;
+  try {
+    let result = await proxy.Request({
+      url: api.favorite,
+      params: {
+        fileId: row.fileId
+      },
+      showLoading: false // 取消任何网络层默认遮罩
+    });
+
+    if (result) {
+      // 纯前端光速反转状态，告别所有原地的重载刷新
+      row.isFavorite = row.isFavorite === 1 ? 0 : 1;
+      proxy.Message.success(row.isFavorite === 1 ? '已加入收藏' : '已取消收藏');
     }
-  });
-  if (result) {
-    proxy.Message.success("操作成功");
-    // 轻量级刷新当前列表状态
-    loadDataList(false);
+  } finally {
+    // 解除锁定
+    row.isToggling = false;
   }
 }
 

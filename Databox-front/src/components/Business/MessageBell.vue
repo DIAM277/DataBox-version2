@@ -1,22 +1,20 @@
 <template>
     <el-popover placement="bottom-end" :width="340" trigger="click" @show="loadMessageList"
         popper-class="notification-popover">
-
-        <!-- 触发器：铃铛与红点 -->
-        <template #reference>
-            <div class="cursor-pointer flex items-center justify-center mt-1 mr-3 outline-none group">
-                <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99"
-                    class="flex items-center justify-center">
-                    <!-- 若您的字体库中没有 icon-bell，原生 SVG 替代方案最稳妥 -->
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
-                        stroke="currentColor"
-                        class="w-6 h-6 text-gray-600 dark:text-gray-300 group-hover:text-[#007AFF] transition-colors duration-300">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                    </svg>
-                </el-badge>
-            </div>
-        </template>
+<template #reference>
+    <!-- 新增类名：notification-bell -->
+    <div class="notification-bell cursor-pointer flex items-center justify-center mt-1 mr-3 outline-none group">
+        <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99"
+            class="flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+                stroke="currentColor"
+                class="w-6 h-6 text-gray-400 dark:text-gray-400 group-hover:text-[#007AFF] transition-colors duration-300">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+            </svg>
+        </el-badge>
+    </div>
+</template>
 
         <!-- 纯干预：手写苹果风弹窗底座 -->
         <div
@@ -172,5 +170,32 @@ onMounted(() => {
 
 html.dark .custom-scrollbar:hover::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 鼠标悬浮圆形阴影效果 */
+.notification-bell {
+  /* 固定宽高，保证正圆形 */
+  width: 36px;
+  height: 36px;
+  /* 正圆形 */
+  border-radius: 50%;
+  /* 平滑过渡动画 */
+  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  /* 防止偏移 */
+  margin: 0;
+  margin-right: 12px;
+}
+
+/* 鼠标悬浮：圆形背景 + 柔和外阴影 */
+.notification-bell:hover {
+  background-color: rgba(0, 122, 255, 0.1);
+  /* 圆形外发光阴影（核心效果） */
+  box-shadow: 0 0 0 8px rgba(0, 122, 255, 0.05);
+}
+
+/* 暗黑模式适配 */
+html.dark .notification-bell:hover {
+  background-color: rgba(0, 122, 255, 0.15);
+  box-shadow: 0 0 0 8px rgba(0, 122, 255, 0.08);
 }
 </style>
