@@ -1,22 +1,21 @@
 package com.databox.entity.enums;
 
-public enum ShareReportEnum {
-    PENDING(0, "待处理"),
-    BAN(1, "已处理(封禁)"),
-    NORMAL(2, "已处理(正常)");
+public enum SysMessageStatusEnum {
+    DISABLE(0, "正常"),
+    ENABLE(1, "删除");
 
     private Integer status;
     private String desc;
 
-    ShareReportEnum(Integer status, String desc) {
+    SysMessageStatusEnum(Integer status, String desc) {
         this.status = status;
         this.desc = desc;
     }
 
-    public static ShareReportEnum getByStatus(Integer status) {
-        for (ShareReportEnum reportEnum : ShareReportEnum.values()) {
-            if (reportEnum.getStatus().equals(status)) {
-                return reportEnum;
+    public static SysMessageStatusEnum getByStatus(Integer status) {
+        for (SysMessageStatusEnum sysMessageStatusEnum : SysMessageStatusEnum.values()) {
+            if (sysMessageStatusEnum.getStatus().equals(status)) {
+                return sysMessageStatusEnum;
             }
         }
         return null;

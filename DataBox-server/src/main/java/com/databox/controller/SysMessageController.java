@@ -3,6 +3,8 @@ package com.databox.controller;
 import com.databox.annotation.GlobalInterceptor;
 import com.databox.annotation.VerifyParam;
 import com.databox.entity.dto.SessionWebUserDto;
+import com.databox.entity.enums.SysMessageStatusEnum;
+import com.databox.entity.po.SysMessage;
 import com.databox.entity.query.SysMessageQuery;
 import com.databox.entity.vo.PaginationResultVO;
 import com.databox.entity.vo.ResponseVO;
@@ -52,6 +54,30 @@ public class SysMessageController extends ABaseController {
 	public ResponseVO markAsRead(HttpSession session, @VerifyParam(required = true) String messageIds) {
 		SessionWebUserDto userDto = getUserInfoFromSession(session);
 		sysMessageService.markAsRead(messageIds, userDto.getUserId());
+		return getSuccessResponseVO(null);
+	}
+
+	/**
+	 * 删除消息 (支持批量，all表示清空)
+	 */
+	@RequestMapping("/delMessage")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO delMessage(HttpSession session, @VerifyParam(required = true) String messageIds) {
+		SessionWebUserDto userDto = getUserInfoFromSession(session);
+		SysMessage updateInfo = new SysMessage();
+		updateInfo.setDelFlag(SysMessageStatusEnum.ENABLE.getStatus()); // 1:软删除
+
+		SysMessageQuery query = new SysMessageQuery();
+		query.setUserId(userDto.getUserId());
+		if (!"all".equalsIgnoreCase(messageIds)) {
+			String[] idArray = messageIds.split(",");
+			Integer[] intArray = new Integer[idArray.length];
+			for (int i = 0; i < idArray.length; i++) {
+				intArray[i] = Integer.parseInt(idArray[i]);
+			}
+			query.setMessageIdArray(intArray);
+		}
+		sysMessageService.updateByParam(updateInfo, query);
 		return getSuccessResponseVO(null);
 	}
 }

@@ -4,8 +4,9 @@
             :showCancel="true" @close="dialogConfig.show = false" :showCustomTitle="true">
 
             <!-- 纯粹的 Apple 极简居中排版风格 -->
+            <!-- 新增：给form绑定回车事件 @keyup.enter="submitForm" -->
             <el-form :model="formData" ref="formDataRef" @submit.prevent
-                class="flex flex-col items-center justify-center py-6 px-8">
+                class="flex flex-col items-center justify-center py-6 px-8" @keyup.enter="submitForm">
 
                 <!-- 大头像展示与交互区 -->
                 <div
@@ -17,7 +18,9 @@
                 <!-- 极简高亮输入框：去除原生 Label，强调输入本身 -->
                 <div class="w-full mb-2">
                     <el-form-item class="mb-0 custom-form-wrapper">
-                        <el-input v-model="formData.newUserName" placeholder="你的新用户名" size="large" clearable>
+                        <!-- 核心改动：给输入框绑定回车事件 @keyup.enter="submitForm" -->
+                        <el-input v-model="formData.newUserName" placeholder="你的新用户名" size="large" clearable
+                            maxlength="20" @keyup.enter="submitForm">
                             <template #prefix>
                                 <span class="iconfont icon-account text-gray-400 text-[18px]"></span>
                             </template>
@@ -38,13 +41,15 @@
 import AvatarUpload from "@/components/Business/AvatarUpload.vue";
 import { ref, reactive, getCurrentInstance, nextTick } from "vue"
 import { useRoute, useRouter } from 'vue-router';
-// ★ 1. 引入并使用刚刚梳理好的 userStore
 import { useUserStore } from '@/store/userStore';
 
 const { proxy } = getCurrentInstance();
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+
+// 新增：添加提交状态锁，避免重复提交
+const isSubmitting = ref(false);
 
 const api = {
     updateUserAvatar: 'updateUserAvatar'
@@ -58,6 +63,8 @@ const show = (data) => {
     formData.value.avatar = { userId: data.userId }
     formData.value.newUserName = data.userName; // 初始化为当前用户名
     dialogConfig.value.show = true;
+    // 重置提交状态
+    isSubmitting.value = false;
 }
 defineExpose({ show });
 
@@ -79,6 +86,9 @@ const emit = defineEmits(['updateAvatar'])
 
 // 提交表单
 const submitForm = async () => {
+    // 新增：防止重复提交
+    if (isSubmitting.value) return;
+
     // 检查用户名是否为空
     if (!formData.value.newUserName || formData.value.newUserName.trim() === '') {
         proxy.Message.warning('用户名不能为空')
@@ -91,46 +101,54 @@ const submitForm = async () => {
         return;
     }
 
-    let params = {
-        newUserName: formData.value.newUserName
-    };
+    try {
+        // 标记为提交中
+        isSubmitting.value = true;
 
-    // 如果有新头像，添加到参数中
-    if (formData.value.avatar instanceof File) {
-        params.avatar = formData.value.avatar;
+        let params = {
+            newUserName: formData.value.newUserName
+        };
+
+        // 如果有新头像，添加到参数中
+        if (formData.value.avatar instanceof File) {
+            params.avatar = formData.value.avatar;
+        }
+
+        let result = await proxy.Request({
+            url: api.updateUserAvatar,
+            params: params
+        })
+
+        if (!result) {
+            return;
+        }
+
+        proxy.Message.success("修改成功");
+        dialogConfig.value.show = false;
+
+        // ★ 2. 彻底接管状态更新：加入时间戳突破浏览器图片强缓存，并交付给全局 Store 触发所有组件顺滑同步
+        const updates = {};
+        if (formData.value.newUserName !== formData.value.userName) {
+            updates.userName = formData.value.newUserName;
+        }
+        if (formData.value.avatar instanceof File) {
+            updates.avatar = `${proxy.globalInfo.avatarUrl}${formData.value.userId}?t=${new Date().getTime()}`;
+        }
+
+        // 执行状态下发与自动 Cookie 固化
+        if (Object.keys(updates).length > 0) {
+            userStore.updateUserInfo(updates);
+        }
+
+        // 通知父框架 (可选冗余保留)
+        emit('updateAvatar', {
+            avatar: result.data,
+            userName: formData.value.newUserName
+        });
+    } finally {
+        // 无论成功失败，重置提交状态
+        isSubmitting.value = false;
     }
-
-    let result = await proxy.Request({
-        url: api.updateUserAvatar,
-        params: params
-    })
-
-    if (!result) {
-        return;
-    }
-
-    proxy.Message.success("修改成功");
-    dialogConfig.value.show = false;
-
-    // ★ 2. 彻底接管状态更新：加入时间戳突破浏览器图片强缓存，并交付给全局 Store 触发所有组件顺滑同步
-    const updates = {};
-    if (formData.value.newUserName !== formData.value.userName) {
-        updates.userName = formData.value.newUserName;
-    }
-    if (formData.value.avatar instanceof File) {
-        updates.avatar = `${proxy.globalInfo.avatarUrl}${formData.value.userId}?t=${new Date().getTime()}`;
-    }
-
-    // 执行状态下发与自动 Cookie 固化
-    if (Object.keys(updates).length > 0) {
-        userStore.updateUserInfo(updates);
-    }
-
-    // 通知父框架 (可选冗余保留)
-    emit('updateAvatar', {
-        avatar: result.data,
-        userName: formData.value.newUserName
-    });
 };
 </script>
 

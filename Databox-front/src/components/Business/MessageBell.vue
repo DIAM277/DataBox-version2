@@ -24,10 +24,18 @@
             <div
                 class="flex items-center justify-between px-4 py-3.5 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/40 dark:bg-black/20 shrink-0">
                 <span class="text-[15px] font-semibold text-gray-900 dark:text-white tracking-wide">系统通知</span>
-                <span v-if="unreadCount > 0" @click="markAsRead('all')"
-                    class="text-[12.5px] text-[#007AFF] hover:text-[#0056b3] cursor-pointer font-medium transition-colors">
-                    全部已读
-                </span>
+                
+                <!-- 新增：右侧批量操作区聚合 -->
+                <div class="flex items-center gap-3">
+                    <span v-if="unreadCount > 0" @click="markAsRead('all')"
+                        class="text-[12.5px] text-[#007AFF] hover:text-[#0056b3] cursor-pointer font-medium transition-colors">
+                        全部已读
+                    </span>
+                    <span v-if="messageList.length > 0" @click="delMessage('all')"
+                        class="text-[12.5px] text-red-500 hover:text-red-600 cursor-pointer font-medium transition-colors">
+                        清空消息
+                    </span>
+                </div>
             </div>
 
             <!-- 面板 Body 列表区 -->
@@ -42,7 +50,8 @@
 
                 <!-- 消息数据渲染 -->
                 <div v-else class="flex flex-col gap-1">
-                    <div v-for="msg in messageList" :key="msg.messageId"
+                    <!-- 新增引入 index 以支持 Splice 无感剔除 -->
+                    <div v-for="(msg, index) in messageList" :key="msg.messageId"
                         @click="msg.status === 0 ? markAsRead(msg.messageId) : null"
                         class="relative p-3 rounded-xl transition-all duration-200 flex items-start gap-3 group"
                         :class="msg.status === 0 ? 'bg-blue-50/60 dark:bg-blue-900/10 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer' : 'hover:bg-gray-100/80 dark:hover:bg-gray-800/80'">
@@ -54,7 +63,7 @@
 
                         <!-- 文本内容 -->
                         <div class="flex-1 min-w-0">
-                            <div class="text-[13.5px] font-semibold text-gray-800 dark:text-gray-200 truncate mb-1">
+                            <div class="text-[13.5px] font-semibold text-gray-800 dark:text-gray-200 truncate mb-1 pr-4">
                                 {{ msg.title || '系统消息' }}
                             </div>
                             <div class="text-[12.5px] text-gray-500 dark:text-gray-400 leading-[1.6] line-clamp-2 pr-2">
@@ -64,6 +73,11 @@
                                 {{ msg.createTime }}
                             </div>
                         </div>
+
+                        <!-- 新增：极其隐蔽的绝对定位右下角删除小控件 -->
+                        <span @click.stop="delMessage(msg.messageId, index)"
+                            class="iconfont icon-del absolute right-3 bottom-2.5 text-[14px] text-gray-400 dark:text-gray-500 hover:!text-red-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-0.5 rounded-full hover:bg-white dark:hover:bg-gray-700">
+                        </span>
                     </div>
                 </div>
             </div>
@@ -84,7 +98,8 @@ const messageList = ref([]);
 const api = {
     getUnreadCount: '/message/getUnreadCount',
     loadDataList: '/message/loadDataList',
-    markAsRead: '/message/markAsRead'
+    markAsRead: '/message/markAsRead',
+    delMessage: '/message/delMessage' // 新增删除接口
 };
 
 // 获取未读总数
@@ -132,6 +147,35 @@ const markAsRead = async (messageIds) => {
         // 操作成功后刷新外源红点和内部列表视图
         fetchUnreadCount();
         loadMessageList();
+    }
+};
+
+// 触发伪装物理删除 (兼容全量清空与单行无感剔除)
+const delMessage = async (messageIds, index = -1) => {
+    let result = await proxy.Request({
+        url: api.delMessage,
+        showLoading: false,
+        params: {
+            messageIds
+        }
+    });
+    if (result) {
+        if (messageIds === 'all') {
+            // 全局秒刷
+            messageList.value = [];
+            proxy.Message.success("消息已清空");
+        } else if (index !== -1) {
+            // 单行丝滑剔除
+            messageList.value.splice(index, 1);
+        }
+
+        // 强同步外部红点以防刚删除了未读信息造成计数错差
+        fetchUnreadCount();
+
+        // 智能补底：若当前视窗被完全抽离且不为主动触发 all 逻辑时请求新页
+        if (messageList.value.length === 0 && messageIds !== 'all') {
+            loadMessageList();
+        }
     }
 };
 

@@ -149,7 +149,7 @@ const toggleTheme = () => {
     }
 };
 
-// 🔴 修改：增强初始加载并添加全局监听
+// 增强初始加载并添加全局监听
 let observer = null;
 onMounted(() => {
     // 初始状态读取

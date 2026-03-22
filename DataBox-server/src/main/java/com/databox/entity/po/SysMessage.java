@@ -5,6 +5,7 @@ import java.util.Date;
 import com.databox.entity.enums.DateTimePatternEnum;
 import com.databox.utils.DateUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.io.Serializable;
 /**
  * 系统消息通知表
  */
+@Data
 public class SysMessage implements Serializable {
 
 
@@ -48,54 +50,8 @@ public class SysMessage implements Serializable {
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date createTime;
 
+	private Integer delFlag;
 
-	public void setMessageId(Integer messageId){
-		this.messageId = messageId;
-	}
-
-	public Integer getMessageId(){
-		return this.messageId;
-	}
-
-	public void setUserId(String userId){
-		this.userId = userId;
-	}
-
-	public String getUserId(){
-		return this.userId;
-	}
-
-	public void setTitle(String title){
-		this.title = title;
-	}
-
-	public String getTitle(){
-		return this.title;
-	}
-
-	public void setContent(String content){
-		this.content = content;
-	}
-
-	public String getContent(){
-		return this.content;
-	}
-
-	public void setReadStatus(Integer readStatus){
-		this.readStatus = readStatus;
-	}
-
-	public Integer getReadStatus(){
-		return this.readStatus;
-	}
-
-	public void setCreateTime(Date createTime){
-		this.createTime = createTime;
-	}
-
-	public Date getCreateTime(){
-		return this.createTime;
-	}
 
 	@Override
 	public String toString (){

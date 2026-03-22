@@ -17,6 +17,7 @@
 		<result column="read_status" property="readStatus"  />
 		<!--发送时间-->
 		<result column="create_time" property="createTime"  />
+		<result column="del_flag" property="delFlag"  />
 	</resultMap>
 
 
@@ -29,6 +30,13 @@
 	<sql id="base_condition_filed">
 			<if test="query.messageId != null">
 				 and  message_id = #{query.messageId}
+			<!-- 新增：批量messageId的IN查询 -->
+			<if test="query.messageIdArray != null and query.messageIdArray.length > 0">
+				and message_id in
+				<foreach collection="query.messageIdArray" item="id" open="(" separator="," close=")">
+					#{id}
+				</foreach>
+			</if>
 			</if>
 			<if test="query.userId != null and query.userId!=''">
 				 and  user_id = #{query.userId}
@@ -57,6 +65,7 @@
 	<sql id="query_condition">
 	 <where>
 			<include refid="base_condition_filed" />
+		 	and del_flag = 0
 			<if test="query.userIdFuzzy!= null  and query.userIdFuzzy!=''">
 				 and  user_id like concat('%', #{query.userIdFuzzy}, '%')
 			</if>
@@ -245,7 +254,10 @@
 	<!--多条件修改-->
 	<update id="updateByParam" parameterType="com.databox.entity.query.SysMessageQuery">
 		 UPDATE sys_message
- 		 <set> 
+ 		 <set>
+			 <if test="bean.delFlag != null">
+				 del_flag = #{bean.delFlag},
+			 </if>
 			<if test="bean.userId != null">
 				 user_id = #{bean.userId},
 			</if>

@@ -57,4 +57,6 @@ public class SysMessageQuery extends BaseParam {
 	 */
 	private Integer[] messageIdArray;
 
+	private Integer delFlag;
+
 }
