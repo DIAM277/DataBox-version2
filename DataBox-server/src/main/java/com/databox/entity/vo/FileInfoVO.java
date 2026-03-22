@@ -34,4 +34,11 @@ public class FileInfoVO {
      * 是否已收藏 (1: 是, 0/null: 否)
      */
     private Integer isFavorite;
+
+    /**
+     * 收藏时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date favoriteTime;
 }

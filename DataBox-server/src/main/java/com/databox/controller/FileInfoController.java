@@ -74,6 +74,8 @@ public class FileInfoController extends CommonFileController{
 				return "folder_type desc, file_type";
 			case "lastUpdateTime":
 				return "last_update_time";
+			case "favoriteTime":
+				return "favorite_time";
 			default:
 				return "last_update_time";
 		}
@@ -289,15 +291,16 @@ public class FileInfoController extends CommonFileController{
 	}
 
 	/**
-	 * 收藏/取消收藏文件
+	 * 收藏/取消收藏 (支持批量)
 	 */
 	@RequestMapping("/favorite")
 	@GlobalInterceptor(checkParams = true)
-	@OpLog(module = "文件管理", action = "收藏/取消收藏文件")
-	public ResponseVO toggleFavorite(HttpSession session, @VerifyParam(required = true) String fileId){
+	public ResponseVO favorite(HttpSession session, @VerifyParam(required = true) String fileIds) {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
-		fileInfoService.toggleFavorite(fileId, webUserDto.getUserId());
-		return getSuccessResponseVO(null);
+		// 获取处理后的最终状态
+		Integer targetStatus = fileInfoService.toggleFavorite(fileIds, webUserDto.getUserId());
+		// 将状态返回给前端
+		return getSuccessResponseVO(targetStatus);
 	}
 
 

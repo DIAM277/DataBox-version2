@@ -50,6 +50,17 @@
         <!-- 高级悬浮筛选组件 -->
         <FileFilter @filter-change="handleFilterChange" />
 
+        <!-- 🔴 新增：极其优雅的批量收藏图标按钮 -->
+        <div @click="selectFileList.length > 0 ? toggleFavoriteBatch() : null"
+          class="flex items-center justify-center w-[34px] h-[34px] shadow-sm rounded-xl transition-all border group"
+          :class="selectFileList.length === 0 ? 'opacity-40 cursor-not-allowed border-gray-200 dark:border-[#38383a] text-gray-400 bg-gray-50 dark:bg-black/20' : 'cursor-pointer text-yellow-500 hover:text-yellow-600 bg-white dark:bg-[#1c1c1e] border-gray-200 dark:border-[#38383a] hover:bg-yellow-50 dark:hover:bg-yellow-900/20'">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+            stroke="currentColor" class="w-[18px] h-[18px] transition-transform group-hover:scale-110">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+          </svg>
+        </div>
+
         <!-- 极简刷新按钮 -->
         <div @click="loadDataList(false)"
           class="flex items-center justify-center w-[34px] h-[34px] text-gray-500 hover:text-[#007AFF] bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] shadow-sm rounded-xl hover:bg-gray-50 dark:hover:bg-[#2c2c2e] transition-all cursor-pointer">
@@ -212,7 +223,7 @@ import ShareFile from "./ShareFile.vue";
 import FileFilter from "@/components/Business/FileFilter.vue";
 import CategoryInfo from "@/js/CategoryInfo";
 import SkeletonLoader from "@/components/Common/SkeletonLoader.vue";
-import { ref, reactive, getCurrentInstance, nextTick, computed } from "vue"
+import { ref, reactive, getCurrentInstance, nextTick, computed, onMounted, onUnmounted } from "vue"
 const { proxy } = getCurrentInstance();
 
 const fileAccept = computed(() => {
@@ -264,6 +275,7 @@ const columns = computed(() => [
   }
 ]);
 
+const dataTableRef = ref()
 const tableData = ref({})
 const tableOptions = ref({
   tableHeight: '100%',
@@ -494,35 +506,65 @@ const cancelShowOp = (row) => {
   row.showOp = false
 }
 
-// 收藏执行判定 (极致丝滑版：无刷新且防手抖)
+// 单个文件收藏/取消
 const toggleFavorite = async (row) => {
-  // 防护：防止连点发出重复请求造成高频 Toggle 状态错乱
   if (row.isToggling) return;
-
   if (row.folderType === 1) {
     proxy.Message.warning('目前系统暂不支持直接收藏文件夹');
     return;
   }
 
-  // 施加行级别锁
   row.isToggling = true;
   try {
     let result = await proxy.Request({
       url: api.favorite,
       params: {
-        fileId: row.fileId
+        fileIds: row.fileId // 💥 匹配最新后端所需的参数命名 fileIds
       },
-      showLoading: false // 取消任何网络层默认遮罩
+      showLoading: false
     });
 
     if (result) {
-      // 纯前端光速反转状态，告别所有原地的重载刷新
-      row.isFavorite = row.isFavorite === 1 ? 0 : 1;
+      // 通过新版后端统一返回的最终状态 (1 / 0) 判断
+      row.isFavorite = result.data;
       proxy.Message.success(row.isFavorite === 1 ? '已加入收藏' : '已取消收藏');
     }
   } finally {
-    // 解除锁定
     row.isToggling = false;
+  }
+}
+
+// 批量收藏
+const toggleFavoriteBatch = async () => {
+  if (selectFileList.value.length === 0) return;
+  // 过滤文件夹
+  const validIds = tableData.value.list
+    .filter(item => selectFileList.value.includes(item.fileId) && item.folderType !== 1)
+    .map(item => item.fileId);
+
+  if (validIds.length === 0) {
+    proxy.Message.warning('选定内容中没有可收藏的文件格式');
+    return;
+  }
+  // 2. 将数组整合化发出以适应新版后端极致优化判定
+  let result = await proxy.Request({
+    url: api.favorite,
+    params: { fileIds: validIds.join(',') }
+  });
+  if (result) {
+    // 后端计算出的统一目标反转状态
+    const targetStatus = result.data;
+    tableData.value.list.forEach(item => {
+      if (validIds.includes(item.fileId)) {
+        item.isFavorite = targetStatus;
+      }
+    });
+    proxy.Message.success(targetStatus === 1 ? '批量收藏成功' : '批量取消收藏成功');
+    // 重置页面选择态
+     selectFileList.value = [];
+     if(dataTableRef.value){
+      dataTableRef.value.clearSelection();
+     }
   }
 }
 
@@ -656,7 +698,20 @@ const addFile = (fileData) => {
   emit('addFile', { file: fileData.file, filePid: currentFolder.value.fileId })
 }
 
-// ---------------- 新增：拖拽上传响应逻辑 ----------------
+// 监听全局上传组件触发文件自动刷新事件
+const handleGlobalRefresh = () => {
+  loadDataList();
+}
+
+onMounted(() => {
+  window.addEventListener('refresh-file-list', handleGlobalRefresh);
+});
+
+onUnmounted(() => {
+   window.removeEventListener('refresh-file-list', handleGlobalRefresh);
+})
+
+// ---------------- 拖拽上传响应逻辑 ----------------
 const isDragOver = ref(false);
 
 const handleDrop = (e) => {

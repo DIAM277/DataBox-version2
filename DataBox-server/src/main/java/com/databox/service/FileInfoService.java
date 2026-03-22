@@ -159,9 +159,9 @@ public interface FileInfoService {
 	List<FileInfo> getFolderImage(String userId, String filePid);
 
 	/**
-	 * 收藏/取消收藏文件
-	 * @param fileId
-	 * @param userId
+	 * 收藏/取消收藏文件 (支持批量)
+	 * @param fileIds 逗号分隔的文件ID
+	 * @param userId  用户ID
 	 */
-	void toggleFavorite(String fileId, String userId);
+	Integer toggleFavorite(String fileIds, String userId);
 }

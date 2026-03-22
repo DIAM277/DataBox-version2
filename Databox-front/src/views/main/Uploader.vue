@@ -142,8 +142,10 @@
 <script setup>
 import SparkMD5 from "spark-md5";
 // 【新增引用】：添加 computed
-import { ref, reactive, getCurrentInstance, nextTick, computed } from "vue"
+import { ref, reactive, getCurrentInstance, nextTick, computed, inject } from "vue"
 const { proxy } = getCurrentInstance();
+
+const globalActions = inject('globalActions', null);
 
 const api = {
   upload: {
@@ -384,6 +386,13 @@ const uploadFile = async (uid, chunkIndex) => {
       currentFile.uploadProgress = 100
       console.log('上传完成')
       emit("uploadCallback")
+      // 上传完成->主动触发双向自动化
+      // 静默刷新左下角容量卡片
+      if(globalActions && globalActions.reloadSpaceInfo){
+        globalActions.reloadSpaceInfo();
+      }
+      // 消息挂载到主线程，当前活动界面文件列表更新
+      window.dispatchEvent(new CustomEvent("refresh-file-list"))
       break
     }
   }

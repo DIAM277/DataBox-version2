@@ -18,6 +18,12 @@
                     <span
                         class="text-[18px] leading-none bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">✨</span>
                     <span class="text-lg font-bold text-gray-900 dark:text-white tracking-wide">AI 文档摘要</span>
+
+                    <!-- 🚨 新增：极简苹果风额度跳变胶囊 -->
+                    <span v-if="remainQuota || remainQuota === 0"
+                        class="ml-3 px-2.5 py-0.5 bg-blue-50/80 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 text-[11px] font-medium rounded-full border border-blue-100 dark:border-blue-800 shadow-sm transition-all duration-300">
+                        剩余 {{ remainQuota }} 次
+                    </span>
                 </div>
                 <!-- 缩小关闭按钮 -->
                 <div @click="showPanel = false"
@@ -82,8 +88,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, getCurrentInstance } from 'vue';
 import { marked } from 'marked';
+
+const { proxy } = getCurrentInstance();
 
 const props = defineProps({
     fileId: {
@@ -96,15 +104,33 @@ const showPanel = ref(false);
 const aiLoading = ref(false);
 const aiResult = ref('');
 const aiErrorMsg = ref('');
+// 每日额度配置
+const remainQuota = ref(0);
 
 const parsedMarkdown = computed(() => {
     if (!aiResult.value) return '';
     return marked.parse(aiResult.value);
 });
 
+// 同步获取最新AI额度
+const fetchQuota = async () => {
+    let result = await proxy.Request({
+        url: '/ai/getAiQuota',
+        showLoading: false
+    });
+    if (result !== undefined && result !== null) {
+        // 由于不同页面的封装返回特征可能不同，直接利用安全取值
+        remainQuota.value = result.data !== undefined ? result.data : result;
+    }
+};
+
 // 核心对接请求方法
 const fetchSummary = async () => {
-    showPanel.value = true;
+    // 首次点击或被隐藏后再次触发生成前，执行安全额度对齐
+    if (!showPanel.value) {
+        showPanel.value = true;
+        fetchQuota();
+    }
 
     if (aiResult.value || aiLoading.value) {
         return;
@@ -113,8 +139,6 @@ const fetchSummary = async () => {
     aiLoading.value = true;
     aiErrorMsg.value = '';
 
-    // 🔴 核心修复：彻底抛弃全局的 axios 拦截器（因为它写死了 10s 后物理掐断报错）。
-    // 改用原生 fetch 发送请求，并配合 AbortController 实现充足的 60 秒等待期闭环！
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
@@ -129,6 +153,10 @@ const fetchSummary = async () => {
 
         if (resData.code === 200) {
             aiResult.value = resData.data;
+            // 🚨 前端极其丝滑的乐观扣减反馈法：不再重复请求增加网络压力，直接更新视口数据
+            if (remainQuota.value > 0) {
+                remainQuota.value--;
+            }
         } else {
             // 后端主动拦截或解析抛错返回的异常提示
             aiErrorMsg.value = resData.info || "当前文档无法被有效读取或提取失败。";
@@ -160,8 +188,6 @@ const fetchSummary = async () => {
     margin-bottom: 14px;
 }
 
-/* 🔴 核心修复：移除了强干扰性的 #1d1d1f 锁死 */
-/* 让原生的文本随着父级容器的亮/暗（text-gray-800 / dark:text-gray-300）自动完美着色 */
 :deep(.markdown-body h1),
 :deep(.markdown-body h2),
 :deep(.markdown-body h3),

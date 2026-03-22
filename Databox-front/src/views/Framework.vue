@@ -76,7 +76,8 @@ const reloadSpaceInfo = async () => {
 provide('globalActions', {
   updateAvatar: () => uploadAvatarRef.value?.show(userStore.userInfo),
   updatePassword: () => updatePasswordRef.value?.show(),
-  logout: () => logoutRef.value?.show()
+  logout: () => logoutRef.value?.show(),
+  reloadSpaceInfo: reloadSpaceInfo
 });
 
 // 重新加载用户头像 (此时也应该同步给 store)

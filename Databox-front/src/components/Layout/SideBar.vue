@@ -71,7 +71,6 @@
 
           <!-- 类型B：带有折叠子集项的父级聚合组 -->
           <div v-else class="mb-2 px-1">
-            <!-- 聚合组标题：防呆触发与右侧箭头反馈 -->
             <div @click="toggleGroup(menuItem.title)"
               class="flex items-center justify-between px-3 py-1.5 cursor-pointer text-[#86868b] dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors select-none">
               <span class="text-[11.5px] font-semibold tracking-wider">{{ menuItem.title }}</span>
@@ -106,7 +105,7 @@
         </template>
       </div>
 
-      <!-- 【优化3】：质感空间展示卡片区 -->
+      <!-- 空间展示卡片区 -->
       <div
         class="mt-3 bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-[#38383a] rounded-2xl p-3.5 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex justify-between items-center mb-2.5">

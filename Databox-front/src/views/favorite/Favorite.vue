@@ -15,11 +15,11 @@
             <!-- 右：操作按钮 -->
             <div class="flex gap-3 items-center shrink-0 select-none">
 
-                <!-- 新增：搜索域 -->
+                <!-- 搜索域 -->
                 <el-input clearable placeholder="搜索收藏文件" v-model.trim="fileNameFuzzy" @keyup.enter="loadDataList(false)"
                     class="mac-input w-[180px]" />
 
-                <!-- 新增：查询按钮 -->
+                <!-- 查询按钮 -->
                 <button type="button" @click="loadDataList(false)"
                     class="bg-[#007AFF] hover:bg-[#0066cc] text-white rounded-xl px-3 py-1.5 text-[13.5px] font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 mr-1">
                     <span class="iconfont icon-search text-[14px]"></span>查询
@@ -29,7 +29,12 @@
                 <div @click="selectFileList.length > 0 ? cancelBatch() : null"
                     class="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium border rounded-xl transition-all shadow-sm"
                     :class="selectFileList.length === 0 ? 'opacity-40 cursor-not-allowed border-gray-200 dark:border-[#38383a] text-gray-400 bg-gray-50 dark:bg-black/20' : 'cursor-pointer text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100 dark:border-orange-900/50 dark:bg-orange-900/20 dark:hover:bg-orange-900/40'">
-                    <span class="text-[14px] leading-none mb-[2px]">☆</span>取消收藏
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-[15px] h-[15px]">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                    </svg>取消收藏
                 </div>
 
                 <!-- 极简刷新按钮 -->
@@ -200,7 +205,7 @@ const columns = [
     },
     {
         label: '收藏时间',
-        prop: 'lastUpdateTime',
+        prop: 'favoriteTime',
         width: 250,
         align: 'center',
         sortable: true
@@ -218,7 +223,7 @@ const tableOptions = ref({
 const isLoading = ref(false);
 
 const sortConfig = ref({
-    prop: 'lastUpdateTime',
+    prop: 'favoriteTime',
     order: 'descending'
 });
 
@@ -330,7 +335,7 @@ const cancelFavoriteSingle = async (row) => {
     try {
         let res = await proxy.Request({
             url: api.cancelFavorite,
-            params: { fileId: row.fileId },
+            params: { fileIds: row.fileId },
             showLoading: false // 静默取消全屏 Loading，由行内 Loading 接管
         });
 
@@ -376,16 +381,18 @@ const cancelBatch = () => {
 
 // 批量取消执行
 const confirmCancelBatch = async () => {
-    try {
-        // 利用 Promise.all 支持并行向后端发出针对每一个 fileId 的移除请求。
-        await Promise.all(selectFileList.value.map(fileId =>
-            proxy.Request({ url: api.cancelFavorite, params: { fileId: fileId }, showError: false })
-        ));
-        proxy.Message.success("取消收藏成功");
+    if (selectFileList.value.length === 0) return;
+
+        let result = await proxy.Request({
+        url: api.cancelFavorite,
+        params: { 
+            fileIds: selectFileList.value.join(',') // 将选中列表拼接后通过网络发送一次即可
+        }
+    });
+
+    if(result) {
+        proxy.Message.success("批量取消收藏成功");
         cancelDialogConfig.value.show = false;
-    } catch (e) {
-        // 降级吞错处理
-    } finally {
         selectFileList.value = [];
         loadDataList(false);
     }

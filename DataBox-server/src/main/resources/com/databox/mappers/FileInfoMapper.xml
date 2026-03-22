@@ -41,6 +41,8 @@
 		<result column="reference_count" property="referenceCount"  />
 		<!--文件收藏状态-->
 		<result column="isFavorite" property="isFavorite"/>
+		<!--文件收藏时间-->
+		<result column="favorite_time" property="favoriteTime"/>
 	</resultMap>
 
 
@@ -185,6 +187,9 @@
 
 		<if test="query.userId != null">
 			,(SELECT count(1) FROM file_favorite ff WHERE ff.file_id = f.file_id AND ff.user_id = #{query.userId}) as isFavorite
+		</if>
+		<if test="query.queryFavorite != null and query.queryFavorite">
+			,(SELECT create_time FROM file_favorite ff WHERE ff.file_id = f.file_id AND ff.user_id = #{query.userId}) as favorite_time
 		</if>
 		FROM file_info f
 		<include refid="query_condition" />

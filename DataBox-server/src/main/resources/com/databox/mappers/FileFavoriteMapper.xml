@@ -19,4 +19,28 @@
         WHERE user_id = #{userId} AND file_id = #{fileId}
     </delete>
 
+    <select id="selectFavoritedFileIds" resultType="java.lang.String">
+        SELECT file_id FROM file_favorite
+        WHERE user_id = #{userId} AND file_id IN
+        <foreach collection="fileIdArray" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <delete id="deleteBatch">
+        DELETE FROM file_favorite
+        WHERE user_id = #{userId} AND file_id IN
+        <foreach collection="fileIdArray" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO file_favorite(user_id, file_id, create_time) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.userId}, #{item.fileId}, #{item.createTime})
+        </foreach>
+    </insert>
+
+
 </mapper>

@@ -1031,22 +1031,42 @@ public class FileInfoServiceImpl implements FileInfoService {
 	}
 
 	/**
-	 * 收藏/取消收藏文件
+	 * 收藏/取消收藏文件 (极致优化的批量处理)
+	 * @return 返回最终状态：1(全被收藏), 0(全被取消)
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public void toggleFavorite(String fileId, String userId) {
-		FileFavorite favorite = fileFavoriteMapper.selectByUserIdAndFileId(userId, fileId);
-		if (favorite != null) {
-			// 如果已经收藏过，则执行取消收藏
-			fileFavoriteMapper.deleteByUserIdAndFileId(userId, fileId);
+	public Integer toggleFavorite(String fileIds, String userId) {
+		String[] fileIdArray = fileIds.split(",");
+		List<String> fileIdList = Arrays.asList(fileIdArray);
+
+		// 1. 只用 1 次查询，查出选中的文件中，哪些是已经被收藏过的
+		List<String> existingFavoritedIds = fileFavoriteMapper.selectFavoritedFileIds(userId, fileIdArray);
+
+		// 2. 核心交互逻辑：处理混合状态
+		if (existingFavoritedIds.size() == fileIdList.size()) {
+			// 【情况 A】：选中的文件已经【全部】在收藏夹里了 -> 用户的意图是“批量取消”
+			fileFavoriteMapper.deleteBatch(userId, fileIdArray);
+			return FileFavoriteStatusEnum.NORMAL.getStatus(); // 返回 0，告诉前端状态已变成未收藏
 		} else {
-			// 如果没有收藏过，则新加收藏
-			FileFavorite newFavorite = new FileFavorite();
-			newFavorite.setUserId(userId);
-			newFavorite.setFileId(fileId);
-			newFavorite.setCreateTime(new Date());
-			fileFavoriteMapper.insert(newFavorite);
+			// 【情况 B】：选中的文件中，有未被收藏的（即混合状态，或全未收藏） -> 用户的意图是“全部收藏”
+			List<FileFavorite> toInsertList = new ArrayList<>();
+			Date now = new Date();
+
+			for (String fileId : fileIdList) {
+				// 只挑出那些还没被收藏的，进行批量插入（防止主键冲突）
+				if (!existingFavoritedIds.contains(fileId)) {
+					FileFavorite favorite = new FileFavorite();
+					favorite.setUserId(userId);
+					favorite.setFileId(fileId);
+					favorite.setCreateTime(now);
+					toInsertList.add(favorite);
+				}
+			}
+			if (!toInsertList.isEmpty()) {
+				fileFavoriteMapper.insertBatch(toInsertList);
+			}
+			return FileFavoriteStatusEnum.COLLECTION.getStatus(); // 返回 1，告诉前端状态已变成已收藏
 		}
 	}
 }
