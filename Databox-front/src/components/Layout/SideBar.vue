@@ -182,6 +182,7 @@ const bottomAdminMenus = computed(() => {
     { name: "用户文件", path: "/settings/fileList", icon: "icon-doc", requireAdmin: true },
     { name: "登录日志", path: "/settings/loginLog", icon: "icon-import", requireAdmin: false }, // 普通用户可看自己的
     { name: "操作日志", path: "/settings/operationLog", icon: "icon-edit", requireAdmin: false },
+    { name: "举报处理", path: "/settings/shareReport", icon: "icon-cancel" }
   ];
 
   // 进行权限映射与过滤过滤

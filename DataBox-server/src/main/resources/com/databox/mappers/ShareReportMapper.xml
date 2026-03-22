@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.databox.mappers.ShareReportMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.databox.entity.po.ShareReport">
+		<!--举报ID-->
+		<id column="report_id" property="reportId"  />
+		<!--分享ID-->
+		<result column="share_id" property="shareId"  />
+		<!--文件ID-->
+		<result column="file_id" property="fileId"  />
+		<!--举报人ID(未登录为空)-->
+		<result column="report_user_id" property="reportUserId"  />
+		<!--举报人IP(防刷必备)-->
+		<result column="report_ip" property="reportIp"  />
+		<!--举报原因-->
+		<result column="reason" property="reason"  />
+		<!--状态 0:待处理 1:已封禁(通过) 2:正常(驳回)-->
+		<result column="status" property="status"  />
+		<!--举报时间-->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 report_id,share_id,file_id,report_user_id,report_ip,
+		 reason,status,create_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.reportId != null">
+				 and  report_id = #{query.reportId}
+			</if>
+			<if test="query.shareId != null and query.shareId!=''">
+				 and  share_id = #{query.shareId}
+			</if>
+			<if test="query.fileId != null and query.fileId!=''">
+				 and  file_id = #{query.fileId}
+			</if>
+			<if test="query.reportUserId != null and query.reportUserId!=''">
+				 and  report_user_id = #{query.reportUserId}
+			</if>
+			<if test="query.reportIp != null and query.reportIp!=''">
+				 and  report_ip = #{query.reportIp}
+			</if>
+			<if test="query.reason != null and query.reason!=''">
+				 and  reason = #{query.reason}
+			</if>
+			<if test="query.status != null">
+				 and  status = #{query.status}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+	<!-- 通用条件列-->
+	<sql id="base_condition">
+	 <where>
+		 <include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.shareIdFuzzy!= null  and query.shareIdFuzzy!=''">
+				 and  share_id like concat('%', #{query.shareIdFuzzy}, '%')
+			</if>
+			<if test="query.fileIdFuzzy!= null  and query.fileIdFuzzy!=''">
+				 and  file_id like concat('%', #{query.fileIdFuzzy}, '%')
+			</if>
+			<if test="query.reportUserIdFuzzy!= null  and query.reportUserIdFuzzy!=''">
+				 and  report_user_id like concat('%', #{query.reportUserIdFuzzy}, '%')
+			</if>
+			<if test="query.reportIpFuzzy!= null  and query.reportIpFuzzy!=''">
+				 and  report_ip like concat('%', #{query.reportIpFuzzy}, '%')
+			</if>
+			<if test="query.reasonFuzzy!= null  and query.reasonFuzzy!=''">
+				 and  reason like concat('%', #{query.reasonFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM share_report <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM share_report <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.databox.entity.po.ShareReport">
+		<selectKey keyProperty="bean.reportId" resultType="Integer" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO share_report
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.shareId != null">
+				 share_id,
+			</if>
+			<if test="bean.fileId != null">
+				 file_id,
+			</if>
+			<if test="bean.reportUserId != null">
+				 report_user_id,
+			</if>
+			<if test="bean.reportIp != null">
+				 report_ip,
+			</if>
+			<if test="bean.reason != null">
+				 reason,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.shareId!=null">
+				 #{bean.shareId},
+			</if>
+			<if test="bean.fileId!=null">
+				 #{bean.fileId},
+			</if>
+			<if test="bean.reportUserId!=null">
+				 #{bean.reportUserId},
+			</if>
+			<if test="bean.reportIp!=null">
+				 #{bean.reportIp},
+			</if>
+			<if test="bean.reason!=null">
+				 #{bean.reason},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.databox.entity.po.ShareReport">
+		 INSERT INTO share_report
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.reportId != null">
+				 report_id,
+			</if>
+			<if test="bean.shareId != null">
+				 share_id,
+			</if>
+			<if test="bean.fileId != null">
+				 file_id,
+			</if>
+			<if test="bean.reportUserId != null">
+				 report_user_id,
+			</if>
+			<if test="bean.reportIp != null">
+				 report_ip,
+			</if>
+			<if test="bean.reason != null">
+				 reason,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.reportId!=null">
+				 #{bean.reportId},
+			</if>
+			<if test="bean.shareId!=null">
+				 #{bean.shareId},
+			</if>
+			<if test="bean.fileId!=null">
+				 #{bean.fileId},
+			</if>
+			<if test="bean.reportUserId!=null">
+				 #{bean.reportUserId},
+			</if>
+			<if test="bean.reportIp!=null">
+				 #{bean.reportIp},
+			</if>
+			<if test="bean.reason!=null">
+				 #{bean.reason},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.shareId!=null">
+				 share_id = VALUES(share_id),
+			</if>
+			<if test="bean.fileId!=null">
+				 file_id = VALUES(file_id),
+			</if>
+			<if test="bean.reportUserId!=null">
+				 report_user_id = VALUES(report_user_id),
+			</if>
+			<if test="bean.reportIp!=null">
+				 report_ip = VALUES(report_ip),
+			</if>
+			<if test="bean.reason!=null">
+				 reason = VALUES(reason),
+			</if>
+			<if test="bean.status!=null">
+				 status = VALUES(status),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.databox.entity.po.ShareReport" useGeneratedKeys="true" keyProperty="reportId">
+		 INSERT INTO share_report(
+			 share_id,
+			 file_id,
+			 report_user_id,
+			 report_ip,
+			 reason,
+			 status,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.shareId},
+				 #{item.fileId},
+				 #{item.reportUserId},
+				 #{item.reportIp},
+				 #{item.reason},
+				 #{item.status},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.databox.entity.po.ShareReport">
+		 INSERT INTO share_report(
+			 share_id,
+			 file_id,
+			 report_user_id,
+			 report_ip,
+			 reason,
+			 status,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.shareId},
+				 #{item.fileId},
+				 #{item.reportUserId},
+				 #{item.reportIp},
+				 #{item.reason},
+				 #{item.status},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			share_id = VALUES(share_id),
+			file_id = VALUES(file_id),
+			report_user_id = VALUES(report_user_id),
+			report_ip = VALUES(report_ip),
+			reason = VALUES(reason),
+			status = VALUES(status),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.databox.entity.query.ShareReportQuery">
+		 UPDATE share_report
+ 		 <set> 
+			<if test="bean.shareId != null">
+				 share_id = #{bean.shareId},
+			</if>
+			<if test="bean.fileId != null">
+				 file_id = #{bean.fileId},
+			</if>
+			<if test="bean.reportUserId != null">
+				 report_user_id = #{bean.reportUserId},
+			</if>
+			<if test="bean.reportIp != null">
+				 report_ip = #{bean.reportIp},
+			</if>
+			<if test="bean.reason != null">
+				 reason = #{bean.reason},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete from share_report
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据ReportId修改-->
+	<update id="updateByReportId" parameterType="com.databox.entity.po.ShareReport">
+		 UPDATE share_report
+ 		 <set> 
+			<if test="bean.shareId != null">
+				 share_id = #{bean.shareId},
+			</if>
+			<if test="bean.fileId != null">
+				 file_id = #{bean.fileId},
+			</if>
+			<if test="bean.reportUserId != null">
+				 report_user_id = #{bean.reportUserId},
+			</if>
+			<if test="bean.reportIp != null">
+				 report_ip = #{bean.reportIp},
+			</if>
+			<if test="bean.reason != null">
+				 reason = #{bean.reason},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where report_id=#{reportId}
+	</update>
+
+	<!-- 根据ReportId删除-->
+	<delete id="deleteByReportId">
+		delete from share_report where report_id=#{reportId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByReportId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from share_report where report_id=#{reportId}
+	</select>
+
+</mapper>

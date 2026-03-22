@@ -1,23 +1,23 @@
 package com.databox.entity.enums;
 
-
-public enum UserStatusEnum {
-
-    DISABLE(0, "禁用"),
-    ENABLE(1, "启用");
+public enum ShareReportEnum {
+    PENDING(0, "待处理"),
+    BAN(1, "已处理(封禁)"),
+    NORMAL(2, "已处理(正常)");
 
     private Integer status;
     private String desc;
 
-    UserStatusEnum(Integer status, String desc) {
+    ShareReportEnum(Integer status, String desc) {
         this.status = status;
         this.desc = desc;
     }
 
-    public static UserStatusEnum getByStatus(Integer status) {
-        for (UserStatusEnum userStatusEnum : UserStatusEnum.values()) {
-            if (userStatusEnum.getStatus().equals(status)) {
-                return userStatusEnum;
+    // 修复了这里的返回值和遍历目标
+    public static ShareReportEnum getByStatus(Integer status) {
+        for (ShareReportEnum reportEnum : ShareReportEnum.values()) {
+            if (reportEnum.getStatus().equals(status)) {
+                return reportEnum;
             }
         }
         return null;

@@ -72,4 +72,26 @@ public class RedisUtils<V> {
             return null;
         }
     }
+
+    /**
+     * 删除 Redis 中的键
+     * @param key 键
+     */
+    public void delete(String key) {
+        redisTemplate.delete(key);
+    }
+
+    /**
+     * 判断Redis中指定Key是否存在
+     * @param key 键
+     * @return true:存在 false:不存在
+     */
+    public boolean hasKey(String key) {
+        try {
+            return redisTemplate.hasKey(key);
+        } catch (Exception e) {
+            log.error("判断Redis Key是否存在失败, key:{}", key, e);
+            return false; // 异常时默认返回不存在，避免影响业务逻辑
+        }
+    }
 }

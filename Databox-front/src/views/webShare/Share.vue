@@ -71,11 +71,24 @@
             </button>
 
             <!-- 场景 B：访客视角 -->
-            <button v-else @click="save2MyPan" :disabled="selectFileList.length == 0"
-              class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all duration-300 shadow-md flex items-center justify-center gap-1.5 focus:outline-none"
-              :class="selectFileList.length === 0 ? 'opacity-50 cursor-not-allowed border-transparent text-white bg-blue-400' : 'text-white bg-[#007AFF] hover:bg-[#0066cc] border-transparent hover:shadow-lg hover:shadow-blue-500/20 active:scale-95'">
-              <span class="iconfont icon-import leading-none text-[16px]"></span>保存到我的网盘
-            </button>
+            <template v-else>
+              <!-- 🚨 新增：防越界独立边缘行为 -->
+              <button @click="showReportDialog"
+                class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-300 flex items-center justify-center gap-1.5 focus:outline-none text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 border border-transparent hover:border-red-200 dark:hover:border-red-800">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                  class="w-[16px] h-[16px]">
+                  <path
+                    d="M3.5 2.75a.75.75 0 0 0-1.5 0v14.5a.75.75 0 0 0 1.5 0v-4.328l1.765-1.04c1.642-.969 3.518-1.127 5.234-.33l1.83 .85a6 6 0 0 0 5.426 0l2.161-1.026a.75.75 0 0 0 .434-.676V3.812a.75.75 0 0 0-1.09-.675l-2.162 1.026a4.5 4.5 0 0 1-4.07 0l-1.83-.85a7.502 7.502 0 0 0-6.541.411L3.5 4.39V2.75Z" />
+                </svg>
+                举报分享
+              </button>
+
+              <button @click="save2MyPan" :disabled="selectFileList.length == 0"
+                class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all duration-300 shadow-md flex items-center justify-center gap-1.5 focus:outline-none"
+                :class="selectFileList.length === 0 ? 'opacity-50 cursor-not-allowed border-transparent text-white bg-blue-400' : 'text-white bg-[#007AFF] hover:bg-[#0066cc] border-transparent hover:shadow-lg hover:shadow-blue-500/20 active:scale-95'">
+                <span class="iconfont icon-import leading-none text-[16px]"></span>保存到我的网盘
+              </button>
+            </template>
           </div>
         </div>
 
@@ -181,6 +194,32 @@
           <div class="text-[13px] text-[#86868b] dark:text-[#a1a1a6]">取消后，所有拥有此链接的用户将无法再访问该页面</div>
         </div>
       </Dialog>
+
+      <!-- 🚨 新增：系统防空刷举报弹窗面板 -->
+      <Dialog :show="reportDialogConfig.show" :title="reportDialogConfig.title" :buttons="reportDialogConfig.buttons"
+        width="460px" :showCancel="true" @close="reportDialogConfig.show = false" :showCustomTitle="true">
+        <div class="px-2 py-4">
+          <el-form :model="reportFormData" @submit.prevent>
+            <el-form-item class="mb-5">
+              <el-input type="textarea" :rows="4" v-model.trim="reportFormData.reason"
+                placeholder="请详细描述举报理由（如：包含色情低俗、侵权盗版等违规内容），以便管理员快速核实。" resize="none" maxlength="200" show-word-limit />
+            </el-form-item>
+            <el-form-item class="mb-0">
+              <div class="flex items-center w-full gap-3">
+                <el-input v-model.trim="reportFormData.checkCode" placeholder="输入图片验证码" maxlength="5"
+                  class="flex-1 h-[40px]" @keyup.enter="submitReport" clearable>
+                  <template #prefix><span class="iconfont icon-checkcode text-gray-400"></span></template>
+                </el-input>
+                <div
+                  class="h-[40px] w-[110px] rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white/50 cursor-pointer shadow-sm hover:opacity-80 transition-opacity shrink-0 flex items-center justify-center p-0.5"
+                  @click="changeCheckCode">
+                  <img class="w-full h-full object-fit rounded-lg" :src="checkCodeUrl" alt="点击更换验证码" title="点击更换验证码" />
+                </div>
+              </div>
+            </el-form-item>
+          </el-form>
+        </div>
+      </Dialog>
     </div>
   </div>
 </template>
@@ -200,7 +239,8 @@ const api = {
   createDownloadUrl: '/showShare/createDownloadUrl',
   download: '/api/showShare/download',
   cancelShare: '/share/cancelShare',
-  saveShare: '/showShare/saveShare'
+  saveShare: '/showShare/saveShare',
+  reportShare: '/showShare/reportShare'
 }
 
 const currentUserInfo = proxy.VueCookies.get("userInfo")
@@ -519,296 +559,97 @@ const jumpToHome = () => {
   router.push('/')
 }
 
+// ======================== 举报模块核心控制闭环 ========================
+const reportDialogConfig = ref({
+  show: false,
+  title: "举报分享",
+  buttons: [
+    {
+      text: "提交举报",
+      type: "danger", // Apple-esque 红色按键渲染
+      click: () => {
+        submitReport();
+      }
+    }
+  ]
+});
+
+const reportFormData = ref({
+  reason: '',
+  checkCode: '',
+  checkCodeKey: ''
+});
+const checkCodeUrl = ref('');
+const isSubmittingReport = ref(false);
+
+// 切图安全码并生成 Redis 短生命期 Key
+const changeCheckCode = () => {
+  reportFormData.value.checkCodeKey = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    let r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+  // 绕通后端拦截：带上 vue-proxy 所需要的 '/api' 前缀
+  checkCodeUrl.value = `/api/showShare/createReportCheckCode?checkCodeKey=${reportFormData.value.checkCodeKey}&t=${Date.now()}`;
+};
+
+// 重置并展开反馈面板
+const showReportDialog = () => {
+  reportFormData.value = { reason: '', checkCode: '', checkCodeKey: '' };
+  // 防御补丁：每次打开面板强制解锁，确保不会受上一次异常状态残留影响
+  isSubmittingReport.value = false;
+  reportDialogConfig.value.buttons[0].text = "提交举报";
+
+  changeCheckCode();
+  reportDialogConfig.value.show = true;
+};
+
+// 并发锁与网络提交
+const submitReport = async () => {
+  if (!reportFormData.value.reason) {
+    proxy.Message.warning("请详细描述举报理由");
+    return;
+  }
+  if (!reportFormData.value.checkCode) {
+    proxy.Message.warning("请输入图片验证码以完成人机校验");
+    return;
+  }
+  if (isSubmittingReport.value) return;
+
+  isSubmittingReport.value = true;
+  reportDialogConfig.value.buttons[0].text = "提交中...";
+
+  try {
+    let result = await proxy.Request({
+      url: api.reportShare,
+      params: {
+        shareId: shareId,
+        fileId: shareInfo.value.fileId, // ShareInfo 对象记录源件底层 FileId
+        reason: reportFormData.value.reason,
+        checkCodeKey: reportFormData.value.checkCodeKey,
+        checkCode: reportFormData.value.checkCode
+      }
+    });
+
+    if (result) {
+      proxy.Message.success("举报已提交，感谢您共建良好环境！");
+      reportDialogConfig.value.show = false;
+    } else {
+      // 遭遇后端断层（包含校验码不匹配等情况）防假死：强刷图床
+      changeCheckCode();
+      reportFormData.value.checkCode = '';
+    }
+  } catch (e) {
+    changeCheckCode();
+  } finally {
+    // 将状态重置放进 finally 块。
+    // 无论请求成功、后台拦截业务抛错，还是网络奔溃，都必定会执行释放锁的操作。
+    isSubmittingReport.value = false;
+    reportDialogConfig.value.buttons[0].text = "提交举报";
+  }
+};
+
 onMounted(() => {
   getShareInfo()
   initTableData()
 })
 </script>
-
-<style lang="scss" scoped>
-@use "../../assets/main.scss" as *;
-
-.share-page {
-  background: linear-gradient(135deg, #c3cfe2 0%, #f5f7fa 100%);
-  min-height: 100vh;
-  user-select: none;
-  display: flex;
-  flex-direction: column;
-}
-
-.header {
-  background: #c3cfe2;
-  box-shadow: 0 3px 15px 0 rgba(0, 0, 0, 0.25);
-  height: 60px;
-  padding: 0 24px;
-  position: relative;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  transition: all 0.3s ease;
-
-  .header-content {
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    width: 95%;
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      margin-left: auto;
-      margin-right: 10px;
-
-      .avatar {
-        cursor: pointer;
-        transition: transform 0.2s ease;
-
-        &:hover {
-          transform: scale(1.05);
-        }
-      }
-    }
-  }
-}
-
-.share-body {
-  width: 80%;
-  max-width: 1500px;
-  margin: 0 auto;
-  padding-top: 30px;
-  flex: 1;
-
-  @media (max-width: 768px) {
-    width: 95%;
-    padding-top: 30px;
-  }
-
-  .loading {
-    height: 300px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .share-panel {
-    background-color: rgba(255, 255, 255, 0.116);
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    padding: 24px;
-    margin-top: 0px;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-
-    @media (max-width: 768px) {
-      padding: 16px;
-    }
-
-    .share-user-info {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-
-      .avatar {
-        margin-right: 16px;
-        transition: transform 0.2s ease;
-
-        &:hover {
-          transform: scale(1.1);
-        }
-      }
-
-      .share-info {
-        flex: 1;
-
-        .user-info {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 10px;
-
-          .user-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #303133;
-          }
-
-          .share-time {
-            font-size: 14px;
-            color: #909399;
-            font-style: italic;
-          }
-        }
-
-        .file-name {
-          margin-top: 10px;
-          font-size: 14px;
-          color: #606266;
-          display: flex;
-          align-items: center;
-
-          &::before {
-            content: '';
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23606266"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1v5h5v10H6V3h7z"/></svg>');
-            background-size: contain;
-            margin-right: 6px;
-          }
-        }
-      }
-    }
-
-    .share-op-btn {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 20px;
-
-      .el-button {
-        padding: 12px 24px;
-        border-radius: 8px;
-        width: 140px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .iconfont {
-          margin-right: 3px;
-          font-size: 16px;
-        }
-
-        &:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
-      }
-    }
-
-    .navigation-container {
-      border-top: 1px solid rgba(0, 0, 0, 0.05);
-      padding-top: 10px;
-    }
-
-    .file-container {
-      width: 100%;
-    }
-  }
-}
-
-.file-list {
-  background-color: transparent;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-
-  .file-name {
-    display: flex;
-    align-items: center;
-    position: relative;
-    padding: 8px 0;
-
-    .file-text {
-      margin-left: 10px;
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-
-      .file-name-1 {
-        cursor: pointer;
-        transition: color 0.2s ease;
-
-        &:hover {
-          color: #409EFF;
-          text-decoration: underline;
-        }
-      }
-    }
-
-    .op {
-      position: absolute;
-      right: 5px;
-      display: flex;
-      gap: 15px;
-
-      .iconfont {
-        cursor: pointer;
-        padding: 5px 8px;
-        border-radius: 4px;
-        font-size: 14px;
-        transition: all 0.2s ease;
-        color: #606266;
-
-        &:hover {
-          background-color: #f0f2f5;
-          color: #409EFF;
-        }
-
-        &.icon-download:hover {
-          color: #409EFF;
-        }
-
-        &.icon-import:hover {
-          color: #E6A23C;
-        }
-      }
-    }
-  }
-}
-
-/* 无数据样式 */
-.no-data {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 0;
-
-  .no-data-inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    .tips {
-      margin-top: 20px;
-      font-size: 16px;
-      color: #909399;
-    }
-  }
-}
-
-.delete-confirm-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-
-  .icon-container {
-    margin-bottom: 20px;
-
-    img {
-      width: 60px;
-      height: 60px;
-    }
-  }
-
-  .message {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: #303133;
-  }
-
-  .sub-message {
-    font-size: 14px;
-    color: #909399;
-  }
-}
-</style>

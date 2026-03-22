@@ -140,4 +140,21 @@ public class RedisComponent {
     public Long increment(String key, long delta) {
         return redisUtils.increment(key, delta);
     }
+
+    /**
+     * 删除 Redis 中的键
+     * @param key 键
+     */
+    public void delete(String key) {
+        redisUtils.delete(key);
+    }
+
+    /**
+     * 判断Redis中指定Key是否存在
+     * @param key 键
+     * @return true:存在 false:不存在
+     */
+    public boolean hasKey(String key) {
+        return redisUtils.hasKey(key);
+    }
 }

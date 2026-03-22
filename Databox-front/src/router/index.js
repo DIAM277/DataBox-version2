@@ -32,9 +32,9 @@ const router = createRouter({
           meta: {
             needLogin: true,
             menuCode: "favorites",
-            title: "我的收藏"
+            title: "我的收藏",
           },
-          component: () => import("@/views/favorite/Favorite.vue")
+          component: () => import("@/views/favorite/Favorite.vue"),
         },
         {
           path: "/myshare",
@@ -100,6 +100,12 @@ const router = createRouter({
             menuCode: "settings",
           },
           component: () => import("@/views/admin/OperationLog.vue"),
+        },
+        {
+          path: "/settings/shareReport",
+          name: "举报处理",
+          meta: { needLogin: true, menuCode: "settings", requireAdmin: true },
+          component: () => import("@/views/admin/ShareReport.vue"),
         },
       ],
     },

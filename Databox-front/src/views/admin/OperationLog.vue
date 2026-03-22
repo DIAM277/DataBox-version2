@@ -167,14 +167,14 @@ const columns = computed(() => {
     {
       label: '操作模块',
       prop: 'module',
-      width: 120,
+      width: 200,
       align: 'center',
       scopedSlots: 'module'
     },
     {
       label: '操作动作',
       prop: 'action',
-      width: 180,
+      width: 200,
       align: 'center',
       scopedSlots: 'action'
     },
@@ -187,7 +187,7 @@ const columns = computed(() => {
     {
       label: '状态',
       prop: 'status',
-      width: 100,
+      width: 200,
       align: 'center',
       scopedSlots: 'status',
     },
@@ -206,7 +206,7 @@ const columns = computed(() => {
       {
         label: '用户ID',
         prop: 'userId',
-        width: 150,
+        width: 200,
         align: 'center',
         scopedSlots: 'userId'
       }

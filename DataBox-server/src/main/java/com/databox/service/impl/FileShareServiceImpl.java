@@ -158,14 +158,15 @@ public class FileShareServiceImpl implements FileShareService {
 
 	/**
 	 * 批量取消分享
-	 * @param shareArray
-	 * @param userId
+	 * @param shareArray 分享ID数组
+	 * @param userId 用户ID (为null时表示管理员强制删除，不校验归属和数量)
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public void deleteFileShareBatch(String[] shareArray, String userId) {
 		Integer count = this.fileShareMapper.deleteFileShareBatch(shareArray, userId);
-		if(count != shareArray.length){
+		// 如果是普通用户自己删除，才严格校验 count；管理员删除则不强制校验
+		if(userId != null && count != shareArray.length){
 			throw new BusinessException(ResponseCodeEnum.CODE_600);
 		}
 	}

@@ -3,13 +3,17 @@ package com.databox.controller;
 import com.databox.annotation.GlobalInterceptor;
 import com.databox.annotation.OpLog;
 import com.databox.annotation.VerifyParam;
+import com.databox.component.RedisComponent;
 import com.databox.entity.constants.Constants;
+import com.databox.entity.dto.CreateImageCode;
 import com.databox.entity.dto.SessionShareDto;
 import com.databox.entity.dto.SessionWebUserDto;
 import com.databox.entity.enums.FileDelFlagEnum;
 import com.databox.entity.enums.ResponseCodeEnum;
+import com.databox.entity.enums.ShareReportEnum;
 import com.databox.entity.po.FileInfo;
 import com.databox.entity.po.FileShare;
+import com.databox.entity.po.ShareReport;
 import com.databox.entity.po.UserInfo;
 import com.databox.entity.query.FileInfoQuery;
 import com.databox.entity.vo.FileInfoVO;
@@ -19,8 +23,10 @@ import com.databox.entity.vo.ShareInfoVO;
 import com.databox.exception.BusinessException;
 import com.databox.service.FileInfoService;
 import com.databox.service.FileShareService;
+import com.databox.service.ShareReportService;
 import com.databox.service.UserInfoService;
 import com.databox.utils.CopyTools;
+import com.databox.utils.IpUtils;
 import com.databox.utils.StringTools;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +35,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.util.Date;
 
 @RestController("webShareController")
@@ -42,6 +49,12 @@ public class WebShareController extends CommonFileController{
 
     @Resource
     private UserInfoService userInfoService;
+
+    @Resource
+    private ShareReportService shareReportService;
+
+    @Resource
+    private RedisComponent redisComponent;
 
     /**
      * 获取文件分享登录信息
@@ -268,4 +281,64 @@ public class WebShareController extends CommonFileController{
         fileInfoService.saveShare(shareSessionDto.getFileId(), shareFileIds, myFolderId, shareSessionDto.getShareUserId(), webUserDto.getUserId());
         return getSuccessResponseVO(null);
     }
+
+    /**
+     * 生成举报验证码
+     * @param response
+     * @param checkCodeKey
+     * @throws IOException
+     */
+    @RequestMapping("/createReportCheckCode")
+    @GlobalInterceptor(checkParams = false, checkLogin = false)
+    public void createReportCheckCode(HttpServletResponse response, @VerifyParam(required = true) String checkCodeKey) throws IOException {
+        CreateImageCode vCode = new CreateImageCode(130, 38, 5, 10);
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+        response.setContentType("image/jpeg");
+        String code = vCode.getCode();
+        // 将验证码存入 Redis，5分钟有效
+        redisComponent.setex(Constants.CHECK_CODE_KEY_REPORT + checkCodeKey, code, 60 * 5);
+        vCode.write(response.getOutputStream());
+    }
+
+    /**
+     * 提交举报信息
+     * @param session
+     * @param request
+     * @param shareId
+     * @param fileId
+     * @param reason
+     * @param checkCodeKey
+     * @param checkCode
+     * @return
+     */
+    @RequestMapping("/reportShare")
+    @GlobalInterceptor(checkParams = true, checkLogin = false)
+    public ResponseVO reportShare(HttpSession session, HttpServletRequest request,
+                                  @VerifyParam(required = true) String shareId,
+                                  @VerifyParam(required = true) String fileId,
+                                  @VerifyParam(required = true) String reason,
+                                  @VerifyParam(required = true) String checkCodeKey,
+                                  @VerifyParam(required = true) String checkCode) {
+
+        // 1. 校验图片验证码 (防脚本恶意轰炸)
+        String redisCheckCode = (String) redisComponent.get(Constants.CHECK_CODE_KEY_REPORT + checkCodeKey);
+        if (StringTools.isEmpty(redisCheckCode) || !redisCheckCode.equalsIgnoreCase(checkCode)) {
+            throw new BusinessException("图片验证码不正确或已失效");
+        }
+        // 验证成功后立刻删掉，防止二次使用
+        redisComponent.delete(Constants.CHECK_CODE_KEY_REPORT + checkCodeKey);
+
+        // 2. 获取用户维度标识
+        SessionWebUserDto userDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
+        String userId = userDto != null ? userDto.getUserId() : null;
+        String ip = IpUtils.getIpAddr(request); // 获取真实IP
+
+        // 3. 调用 Service 层的防刷保护和入库逻辑
+        shareReportService.submitReport(shareId, fileId, userId, ip, reason);
+
+        return getSuccessResponseVO(null);
+    }
+
 }

@@ -41,8 +41,10 @@ public class Constants {
     public static final String REDIS_KEY_AI_SUMMARY_COUNT = "databox:ai_summary:count:";
     public static final Integer SYS_MESSAGE_UNREAD = 0;
     public static final Integer SYS_MESSAGE_READ = 1;
-    /**
-     * 用户未读消息数量 Redis Key 前缀
-     */
+    // 用户未读消息数量 Redis Key 前缀
     public static final String REDIS_KEY_UNREAD_MSG_COUNT = "databox:message:unread:";
+    // 未登录用户举报 24 小时限流 Redis Key
+    public static final String REDIS_KEY_REPORT_IP_LIMIT = "databox:report:ip:";
+    //举报验证码 Redis Key
+    public static final String CHECK_CODE_KEY_REPORT = "databox:checkcode:report:";
 }
