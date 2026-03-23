@@ -23,10 +23,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-
 @RestController("adminController")
 @RequestMapping("/admin")
-public class AdminController extends CommonFileController{
+public class AdminController extends CommonFileController {
 
     @Resource
     private FileInfoService fileInfoService;
@@ -42,24 +41,26 @@ public class AdminController extends CommonFileController{
 
     /**
      * 获取系统设置
+     * 
      * @return
      */
     @RequestMapping("/getSysSetting")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
-    public ResponseVO getSysSetting(){
+    public ResponseVO getSysSetting() {
         return getSuccessResponseVO(redisComponent.getSysSettingDto());
     }
 
     /**
      * 保存系统设置
+     * 
      * @return
      */
     @RequestMapping("/saveSysSetting")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
     public ResponseVO saveSysSetting(@VerifyParam(required = true) String registerEmailTitle,
-                                     @VerifyParam(required = true) String registerEmailContent,
-                                     @VerifyParam(required = true) Integer userInitUseSpace,
-                                     @VerifyParam(required = true) Integer userAiSummaryCount){
+            @VerifyParam(required = true) String registerEmailContent,
+            @VerifyParam(required = true) Integer userInitUseSpace,
+            @VerifyParam(required = true) Integer userAiSummaryCount) {
         SysSettingDto sysSettingDto = new SysSettingDto();
         sysSettingDto.setRegisterEmailTitle(registerEmailTitle);
         sysSettingDto.setRegisterEmailContent(registerEmailContent);
@@ -71,13 +72,14 @@ public class AdminController extends CommonFileController{
 
     /**
      * 获取用户列表
+     * 
      * @param userInfoQuery
      * @return
      */
     @RequestMapping("/loadUserList")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
-    public ResponseVO loadUserList(UserInfoQuery userInfoQuery, String sortField, String sortOrder){
-        if(sortField == null || sortField.isEmpty()){
+    public ResponseVO loadUserList(UserInfoQuery userInfoQuery, String sortField, String sortOrder) {
+        if (sortField == null || sortField.isEmpty()) {
             userInfoQuery.setOrderBy("create_time desc");
         } else {
             // 根据前端传入的排序字段和排序方向构建orderBy
@@ -89,9 +91,9 @@ public class AdminController extends CommonFileController{
         return getSuccessResponseVO(convert2PaginationVO(resultVO, UserInfoVO.class));
     }
 
-
     /**
      * 更新用户状态
+     * 
      * @param userId
      * @param status
      * @return
@@ -99,13 +101,14 @@ public class AdminController extends CommonFileController{
     @RequestMapping("/updateUserStatus")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
     public ResponseVO updateUserStatus(@VerifyParam(required = true) String userId,
-                                       @VerifyParam(required = true) Integer status){
+            @VerifyParam(required = true) Integer status) {
         userInfoService.updateUserStatus(userId, status);
         return getSuccessResponseVO(null);
     }
 
     /**
      * 修改用户空间
+     * 
      * @param userId
      * @param totalSpace 新的总空间大小（GB）
      * @return
@@ -113,20 +116,21 @@ public class AdminController extends CommonFileController{
     @RequestMapping("/updateUserSpace")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
     public ResponseVO updateUserSpace(@VerifyParam(required = true) String userId,
-                                      @VerifyParam(required = true) Long totalSpace){
+            @VerifyParam(required = true) Long totalSpace) {
         userInfoService.setUserTotalSpace(userId, totalSpace);
         return getSuccessResponseVO(null);
     }
 
     /**
      * 获取所有文件
+     * 
      * @param query
      * @return
      */
     @RequestMapping("/loadFileList")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
-    public ResponseVO loadFileList(FileInfoQuery query,String sortField, String sortOrder){
-        if(sortField == null || sortField.isEmpty()){
+    public ResponseVO loadFileList(FileInfoQuery query, String sortField, String sortOrder) {
+        if (sortField == null || sortField.isEmpty()) {
             query.setOrderBy("create_time desc");
         } else {
             // 根据前端传入的排序字段和排序方向构建orderBy
@@ -153,7 +157,7 @@ public class AdminController extends CommonFileController{
             case "recoveryTime":
                 return "recovery_time";
             case "userName":
-                return "user_name";
+                return "userName";
             case "email":
                 return "email";
             case "lastLoginTime":
@@ -167,30 +171,33 @@ public class AdminController extends CommonFileController{
 
     /**
      * 获取当前目录信息
+     * 
      * @param path
      * @return
      */
     @RequestMapping("/getFolderInfo")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
-    public ResponseVO getFolderInfo(@VerifyParam(required = true) String path){
+    public ResponseVO getFolderInfo(@VerifyParam(required = true) String path) {
         return super.getFolderInfo(path, null);
     }
 
     /**
      * 获取文件信息
+     * 
      * @param userId
      * @param fileId
      */
     @RequestMapping("/getFile/{userId}/{fileId}")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
     public void getFile(HttpServletResponse response,
-                        @PathVariable("userId") String userId,
-                        @PathVariable("fileId") String fileId){
+            @PathVariable("userId") String userId,
+            @PathVariable("fileId") String fileId) {
         super.getFile(response, fileId, userId);
     }
 
     /**
      * 获取视频信息
+     * 
      * @param response
      * @param userId
      * @param fileId
@@ -198,24 +205,26 @@ public class AdminController extends CommonFileController{
     @RequestMapping("/ts/getVideoInfo/{userId}/{fileId}")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
     public void getVideo(HttpServletResponse response,
-                         @PathVariable("userId") String userId,
-                         @PathVariable("fileId") String fileId){
+            @PathVariable("userId") String userId,
+            @PathVariable("fileId") String fileId) {
         super.getFile(response, fileId, userId);
     }
 
     /**
      * 创建下载链接
+     * 
      * @param userId
      * @param fileId
      */
     @RequestMapping("/createDownloadUrl/{userId}/{fileId}")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
-    public ResponseVO createDownloadUrl(@PathVariable("userId") String userId, @PathVariable("fileId") String fileId){
+    public ResponseVO createDownloadUrl(@PathVariable("userId") String userId, @PathVariable("fileId") String fileId) {
         return super.createDownloadUrl(fileId, userId);
     }
 
     /**
      * 下载文件
+     * 
      * @param request
      * @param response
      * @param code
@@ -223,20 +232,22 @@ public class AdminController extends CommonFileController{
      */
     @RequestMapping("/download/{code}")
     @GlobalInterceptor(checkParams = true, checkLogin = false)
-    public void download(HttpServletRequest request, HttpServletResponse response, @PathVariable("code") String code) throws Exception {
+    public void download(HttpServletRequest request, HttpServletResponse response, @PathVariable("code") String code)
+            throws Exception {
         super.download(request, response, code);
     }
 
     /**
      * 删除文件
+     * 
      * @param fileIdAndUserIds
      * @return
      */
     @RequestMapping("/delFile")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
-    public ResponseVO delFile(@VerifyParam(required = true) String fileIdAndUserIds){
+    public ResponseVO delFile(@VerifyParam(required = true) String fileIdAndUserIds) {
         String[] fileIdAndUserIdArray = fileIdAndUserIds.split(",");
-        for (String fileIdAndUserId : fileIdAndUserIdArray){
+        for (String fileIdAndUserId : fileIdAndUserIdArray) {
             String[] itemArray = fileIdAndUserId.split("_");
             fileInfoService.delFileBatch(itemArray[0], itemArray[1], true);
         }
@@ -245,13 +256,14 @@ public class AdminController extends CommonFileController{
 
     /**
      * 获取操作日志列表
+     * 
      * @param query
      * @return
      */
     @RequestMapping("/loadOperationLog")
     public ResponseVO loadOperationLog(HttpSession session, SysOpLogQuery query) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
-        if(!webUserDto.getIsAdmin()){
+        if (!webUserDto.getIsAdmin()) {
             // 普通用户只能查自己的日志
             query.setUserId(webUserDto.getUserId());
         }

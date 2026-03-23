@@ -31,6 +31,43 @@
                 <Table ref="dataTableRef" :columns="columns" :dataSource="tableData" :fetch="loadDataList"
                     :initFetch="false" :options="tableOptions">
 
+                    <!-- 新增 1：极其优雅的复合双源文件展现体 -->
+                    <template #fileInfo="{ row }">
+                        <div class="flex items-center gap-2.5 w-full pr-2">
+                            <!-- [ 图标位 ] 物理失效警告图 -->
+                            <template v-if="!row.fileName">
+                                <span class="iconfont icon-warning text-red-500 text-[26px]"></span>
+                            </template>
+                            <!-- [ 图标位 ] 正常复用文件图标渲染逻辑 -->
+                            <template v-else>
+                                <template v-if="(row.fileType === 3 || row.fileType === 1)">
+                                    <Icon :cover="row.fileCover" :width="32"></Icon>
+                                </template>
+                                <template v-else>
+                                    <Icon v-if="row.folderType === 0" :fileType="row.fileType"></Icon>
+                                    <Icon v-if="row.folderType === 1" :fileType="0"></Icon>
+                                </template>
+                            </template>
+
+                            <!-- [ 名字位 ] 兼容长度溢出策略 -->
+                            <div class="flex-1 min-w-0 truncate text-[13.5px] font-medium leading-tight"
+                                :title="row.fileName || '文件/分享已失效'"
+                                :class="!row.fileName ? 'text-red-500/80 italic' : 'text-gray-700 dark:text-gray-300'">
+                                {{ row.fileName || '源文件/分享已失效' }}
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 新增 2：分享提取码展示 -->
+                    <template #shareCode="{ row }">
+                        <el-tag v-if="row.shareCode" size="small" type="info"
+                            class="font-mono bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700">
+                            {{ row.shareCode }}
+                        </el-tag>
+                        <span v-else
+                            class="text-gray-300 dark:text-gray-600 text-sm font-medium tracking-widest">-</span>
+                    </template>
+
                     <!-- 举报人/IP -->
                     <template #reporter="{ row }">
                         <span v-if="!row.reportUserId || row.reportUserId === 'guest'"
@@ -71,22 +108,37 @@
 
                     <!-- 操作栏 -->
                     <template #op="{ row }">
-                        <div class="flex items-center justify-center gap-3 w-full" v-if="row.status === 0">
-                            <!-- 封禁 -->
-                            <el-tooltip content="判定违规并封禁分享" placement="top" effect="dark" :show-after="300">
+                        <div class="flex items-center justify-center gap-3 w-full">
+
+                            <!-- 强制通用的直通审查特权挂载区 -->
+                            <el-tooltip content="前往审查" placement="top" effect="dark" :show-after="300">
                                 <span
-                                    class="text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1 rounded cursor-pointer font-semibold transition-all active:scale-95"
-                                    @click="showProcessDialog(row, 1)">封禁</span>
+                                    class="text-sm text-[#007AFF] hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded cursor-pointer font-semibold transition-all active:scale-95 flex items-center gap-1"
+                                    @click="reviewShare(row)">
+                                    <span class="iconfont icon-explore text-[13px]"></span>审查
+                                </span>
                             </el-tooltip>
 
-                            <!-- 放行 -->
-                            <el-tooltip content="判定无违规并放行" placement="top" effect="dark" :show-after="300">
-                                <span
-                                    class="text-sm text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 px-2 py-1 rounded cursor-pointer font-semibold transition-all active:scale-95"
-                                    @click="showProcessDialog(row, 2)">正常</span>
-                            </el-tooltip>
+                            <template v-if="row.status === 0">
+                                <!-- 封禁 -->
+                                <el-tooltip content="判定违规并封禁分享" placement="top" effect="dark" :show-after="300">
+                                    <span
+                                        class="text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1 rounded cursor-pointer font-semibold transition-all active:scale-95"
+                                        @click="showProcessDialog(row, 1)">封禁</span>
+                                </el-tooltip>
+
+                                <!-- 放行 -->
+                                <el-tooltip content="判定无违规并放行" placement="top" effect="dark" :show-after="300">
+                                    <span
+                                        class="text-sm text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 px-2 py-1 rounded cursor-pointer font-semibold transition-all active:scale-95"
+                                        @click="showProcessDialog(row, 2)">正常</span>
+                                </el-tooltip>
+                            </template>
+
+                            <!-- 已结束反馈 -->
+                            <div v-else class="text-gray-300 dark:text-gray-600 text-sm font-medium tracking-widest">-
+                            </div>
                         </div>
-                        <div v-else class="text-gray-300 dark:text-gray-600 text-sm font-medium tracking-widest">-</div>
                     </template>
 
                 </Table>
@@ -140,11 +192,17 @@ const api = {
 };
 
 const columns = [
-    { label: '分享ID', prop: 'shareId', width: 250, align: 'center' },
+    // 隐藏了冗杂且无体验意义的 ID 字段
+    // { label: '举报ID', prop: 'reportId', width: 80, align: 'center' },
+    // { label: '分享ID', prop: 'shareId', width: 120, align: 'center' },
+
+    // 全新优雅的高信息密度组合列
+    { label: '举报文件', prop: 'fileInfo', scopedSlots: 'fileInfo', width: 280, align: 'center' },
+    { label: '提取码', prop: 'shareCode', scopedSlots: 'shareCode', width: 100, align: 'center' },
     { label: '举报原因', prop: 'reason', scopedSlots: 'reason', align: 'center' },
-    { label: '举报人/来源', prop: 'reporter', scopedSlots: 'reporter', width: 200, align: 'center' },
-    { label: '举报时间', prop: 'createTime', width: 200, align: 'center' },
-    { label: '处理状态', prop: 'status', scopedSlots: 'status', width: 200, align: 'center' },
+    { label: '举报人/来源', prop: 'reporter', scopedSlots: 'reporter', width: 180, align: 'center' },
+    { label: '举报时间', prop: 'createTime', width: 180, align: 'center' },
+    { label: '处理状态', prop: 'status', scopedSlots: 'status', width: 120, align: 'center' },
     { label: '处理操作', prop: 'op', scopedSlots: 'op', width: 200, align: 'center' }
 ];
 
@@ -248,6 +306,18 @@ const submitProcess = async () => {
         // 光速刷新对应行的前端属性，彻底消灭二次请求延迟闪烁
         currentProcessRow.value.status = processDialogConfig.value.processStatus;
     }
+};
+
+// 交互一键审查直通车
+const reviewShare = (row) => {
+    // 拦截物理失效的文件
+    if (!row.shareCode || !row.fileName) {
+        proxy.Message.warning("该分享链接可能已被原作者删除，无法预览");
+        return;
+    }
+
+    // 将提取码通过 URL 直接抛给检验界面 实现防查自动进盘
+    window.open(`/shareCheck/${row.shareId}?code=${row.shareCode}`, '_blank');
 };
 
 onMounted(() => {

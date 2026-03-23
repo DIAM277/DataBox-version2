@@ -38,7 +38,12 @@ public enum SysMessageEnum {
     /*
     6. 新用户注册通知
      */
-    REGISTER_SUCCESS("欢迎使用DataBox", "欢迎您注册成为DataBox的用户，祝您使用愉快！");
+    REGISTER_SUCCESS("欢迎使用DataBox", "欢迎您注册成为DataBox的用户，祝您使用愉快！"),
+
+    /*
+    7. 分享文件因违规被取消
+     */
+    SHARE_VIOLATION("分享违规通知", "您的分享【%s】因违规被强制取消，如有疑问请联系管理员");
 
 
     // 消息标题

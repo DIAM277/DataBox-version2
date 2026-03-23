@@ -8,8 +8,14 @@ import javax.annotation.Resource;
 import com.databox.component.RedisComponent;
 import com.databox.entity.constants.Constants;
 import com.databox.entity.enums.ShareReportEnum;
+import com.databox.entity.enums.SysMessageEnum;
+import com.databox.entity.po.FileInfo;
+import com.databox.entity.po.FileShare;
+import com.databox.entity.query.FileInfoQuery;
 import com.databox.exception.BusinessException;
+import com.databox.mappers.FileInfoMapper;
 import com.databox.service.FileShareService;
+import com.databox.service.SysMessageService;
 import org.springframework.stereotype.Service;
 
 import com.databox.entity.enums.PageSize;
@@ -37,6 +43,12 @@ public class ShareReportServiceImpl implements ShareReportService {
 
 	@Resource
 	private FileShareService fileShareService;
+
+	@Resource
+	private SysMessageService sysMessageService;
+
+	@Resource
+	private FileInfoMapper<FileInfo, FileInfoQuery> fileInfoMapper;
 
 	/**
 	 * 根据条件查询列表
@@ -222,9 +234,22 @@ public class ShareReportServiceImpl implements ShareReportService {
 		// 3. 业务联动：如果管理员判定违规并封禁 (status = 1)
 		if (ShareReportEnum.BAN.getStatus().equals(status)) {
 			try {
-				// 直接删除该分享记录（强行失效）
-				fileShareService.deleteFileShareBatch(new String[]{report.getShareId()}, null);
-				// TODO：调用 sysMessageService 发一条消息通知分享人：您的分享因违规已被强制取消。
+				// 获取原分享作者的真实userId，填入批处理删除接口以绕过由于传 null 导致的SQL不匹配失效问题
+				FileShare share = fileShareService.getFileShareByShareId(report.getShareId());
+				if(share != null) {
+					String shareOwnerId = share.getUserId();
+					String fileName = "未知文件";
+					FileInfo fileInfo = fileInfoMapper.selectByFileIdAndUserId(report.getFileId(), shareOwnerId);
+					if(fileInfo != null) {
+						fileName = fileInfo.getFileName();
+					}
+					// 携带原主人ID强制下架
+					fileShareService.deleteFileShareBatch(new String[]{report.getShareId()}, shareOwnerId);
+					// 调用 sysMessageService 发一条消息通知分享人：您的分享因违规已被强制取消。
+					sysMessageService.saveMessage(shareOwnerId, SysMessageEnum.SHARE_VIOLATION, fileName);
+				} else {
+					System.out.println("分享违规举报处理：无法获取原分享作者ID，无法发送违规通知消息");
+				}
 			} catch (Exception e) {
 				// 防止由于分享记录已经被原主人主动删除而导致的异常，仅打印日志
 				System.out.println("删除违规分享失败（可能已被原分享者删除）: " + e.getMessage());

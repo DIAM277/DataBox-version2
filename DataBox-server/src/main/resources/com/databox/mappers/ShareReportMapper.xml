@@ -21,6 +21,12 @@
 		<result column="status" property="status"  />
 		<!--举报时间-->
 		<result column="create_time" property="createTime"  />
+		<result column="file_name" property="fileName"/>
+		<result column="file_cover" property="fileCover"/>
+		<result column="folder_type" property="folderType"/>
+		<result column="file_category" property="fileCategory"/>
+		<result column="share_code" property="shareCode"/>
+		<result column="file_type" property="fileType"/>
 	</resultMap>
 
 
@@ -92,14 +98,25 @@
 	</sql>
 
 	<!-- 查询集合-->
-	<select id="selectList" resultMap="base_result_map" >
-		 SELECT <include refid="base_column_list" /> FROM share_report <include refid="query_condition" />
-		 <if test="query.orderBy!=null">
-			 order by ${query.orderBy}
-		 </if>
-		 <if test="query.simplePage!=null">
-			 limit #{query.simplePage.start},#{query.simplePage.end}
-		 </if>
+	<select id="selectList" resultMap="base_result_map">
+		SELECT
+		r.report_id, r.share_id, r.file_id, r.report_user_id, r.report_ip, r.reason, r.status, r.create_time,
+		f.file_name, f.file_cover, f.folder_type, f.file_category,f.file_type,
+		s.code as share_code
+		FROM share_report r
+		LEFT JOIN file_info f ON r.file_id = f.file_id
+		LEFT JOIN file_share s ON r.share_id = s.share_id
+		<where>
+			<if test="query.status != null">
+				and r.status = #{query.status}
+			</if>
+		</where>
+		<if test="query.orderBy!=null">
+			order by r.${query.orderBy}
+		</if>
+		<if test="query.simplePage!=null">
+			limit #{query.simplePage.start},#{query.simplePage.end}
+		</if>
 	</select>
 
 	<!-- 查询数量-->

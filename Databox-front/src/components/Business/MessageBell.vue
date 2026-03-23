@@ -1,20 +1,20 @@
 <template>
     <el-popover placement="bottom-end" :width="340" trigger="click" @show="loadMessageList"
         popper-class="notification-popover">
-<template #reference>
-    <!-- 新增类名：notification-bell -->
-    <div class="notification-bell cursor-pointer flex items-center justify-center mt-1 mr-3 outline-none group">
-        <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99"
-            class="flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
-                stroke="currentColor"
-                class="w-6 h-6 text-gray-400 dark:text-gray-400 group-hover:text-[#007AFF] transition-colors duration-300">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-            </svg>
-        </el-badge>
-    </div>
-</template>
+        <template #reference>
+            <!-- 新增类名：notification-bell -->
+            <div class="notification-bell cursor-pointer flex items-center justify-center mt-1 mr-3 outline-none group">
+                <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99"
+                    class="flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+                        stroke="currentColor"
+                        class="w-6 h-6 text-gray-400 dark:text-gray-400 group-hover:text-[#007AFF] transition-colors duration-300">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                    </svg>
+                </el-badge>
+            </div>
+        </template>
 
         <!-- 纯干预：手写苹果风弹窗底座 -->
         <div
@@ -24,7 +24,7 @@
             <div
                 class="flex items-center justify-between px-4 py-3.5 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/40 dark:bg-black/20 shrink-0">
                 <span class="text-[15px] font-semibold text-gray-900 dark:text-white tracking-wide">系统通知</span>
-                
+
                 <!-- 新增：右侧批量操作区聚合 -->
                 <div class="flex items-center gap-3">
                     <span v-if="unreadCount > 0" @click="markAsRead('all')"
@@ -63,21 +63,33 @@
 
                         <!-- 文本内容 -->
                         <div class="flex-1 min-w-0">
-                            <div class="text-[13.5px] font-semibold text-gray-800 dark:text-gray-200 truncate mb-1 pr-4">
-                                {{ msg.title || '系统消息' }}
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="text-[14px] font-semibold text-gray-800 dark:text-gray-200 truncate pr-2">
+                                    {{ msg.title }}
+                                </span>
+                                <!-- 小红点 -->
+                                <div class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" v-if="msg.readStatus === 0">
+                                </div>
                             </div>
-                            <div class="text-[12.5px] text-gray-500 dark:text-gray-400 leading-[1.6] line-clamp-2 pr-2">
+
+                            <!-- 🔴 核心修复：去除 line-clamp 等截断类，使用 break-words 配合 whitespace-normal 实现文字自适应完美包覆换行 -->
+                            <div
+                                class="text-[13px] text-gray-500 mt-1 leading-relaxed break-words whitespace-normal opacity-90 pb-1">
                                 {{ msg.content }}
                             </div>
-                            <div class="text-[11px] text-[#86868b] dark:text-gray-500 mt-2 font-medium">
-                                {{ msg.createTime }}
+
+                            <!-- 底部时间栏 -->
+                            <div class="mt-1 flex items-center justify-between">
+                                <div class="text-[11px] text-[#86868b] dark:text-gray-500 font-medium">
+                                    {{ msg.createTime }}
+                                </div>
+
+                                <!-- 新增：右侧删除控件 -->
+                                <span @click.stop="delMessage(msg.messageId, index)"
+                                    class="iconfont icon-del text-[14px] text-gray-400 dark:text-gray-500 hover:!text-red-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-0.5 rounded-full hover:bg-white dark:hover:bg-gray-700">
+                                </span>
                             </div>
                         </div>
-
-                        <!-- 新增：极其隐蔽的绝对定位右下角删除小控件 -->
-                        <span @click.stop="delMessage(msg.messageId, index)"
-                            class="iconfont icon-del absolute right-3 bottom-2.5 text-[14px] text-gray-400 dark:text-gray-500 hover:!text-red-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-0.5 rounded-full hover:bg-white dark:hover:bg-gray-700">
-                        </span>
                     </div>
                 </div>
             </div>
@@ -218,28 +230,28 @@ html.dark .custom-scrollbar:hover::-webkit-scrollbar-thumb {
 
 /* 鼠标悬浮圆形阴影效果 */
 .notification-bell {
-  /* 固定宽高，保证正圆形 */
-  width: 36px;
-  height: 36px;
-  /* 正圆形 */
-  border-radius: 50%;
-  /* 平滑过渡动画 */
-  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
-  /* 防止偏移 */
-  margin: 0;
-  margin-right: 12px;
+    /* 固定宽高，保证正圆形 */
+    width: 36px;
+    height: 36px;
+    /* 正圆形 */
+    border-radius: 50%;
+    /* 平滑过渡动画 */
+    transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+    /* 防止偏移 */
+    margin: 0;
+    margin-right: 12px;
 }
 
 /* 鼠标悬浮：圆形背景 + 柔和外阴影 */
 .notification-bell:hover {
-  background-color: rgba(0, 122, 255, 0.1);
-  /* 圆形外发光阴影（核心效果） */
-  box-shadow: 0 0 0 8px rgba(0, 122, 255, 0.05);
+    background-color: rgba(0, 122, 255, 0.1);
+    /* 圆形外发光阴影（核心效果） */
+    box-shadow: 0 0 0 8px rgba(0, 122, 255, 0.05);
 }
 
 /* 暗黑模式适配 */
 html.dark .notification-bell:hover {
-  background-color: rgba(0, 122, 255, 0.15);
-  box-shadow: 0 0 0 8px rgba(0, 122, 255, 0.08);
+    background-color: rgba(0, 122, 255, 0.15);
+    box-shadow: 0 0 0 8px rgba(0, 122, 255, 0.08);
 }
 </style>

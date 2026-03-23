@@ -5,6 +5,7 @@ import java.util.Date;
 import com.databox.entity.enums.DateTimePatternEnum;
 import com.databox.utils.DateUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.io.Serializable;
 /**
  * 分享违规举报表
  */
+@Data
 public class ShareReport implements Serializable {
 
 
@@ -58,70 +60,18 @@ public class ShareReport implements Serializable {
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date createTime;
 
-
-	public void setReportId(Integer reportId){
-		this.reportId = reportId;
-	}
-
-	public Integer getReportId(){
-		return this.reportId;
-	}
-
-	public void setShareId(String shareId){
-		this.shareId = shareId;
-	}
-
-	public String getShareId(){
-		return this.shareId;
-	}
-
-	public void setFileId(String fileId){
-		this.fileId = fileId;
-	}
-
-	public String getFileId(){
-		return this.fileId;
-	}
-
-	public void setReportUserId(String reportUserId){
-		this.reportUserId = reportUserId;
-	}
-
-	public String getReportUserId(){
-		return this.reportUserId;
-	}
-
-	public void setReportIp(String reportIp){
-		this.reportIp = reportIp;
-	}
-
-	public String getReportIp(){
-		return this.reportIp;
-	}
-
-	public void setReason(String reason){
-		this.reason = reason;
-	}
-
-	public String getReason(){
-		return this.reason;
-	}
-
-	public void setStatus(Integer status){
-		this.status = status;
-	}
-
-	public Integer getStatus(){
-		return this.status;
-	}
-
-	public void setCreateTime(Date createTime){
-		this.createTime = createTime;
-	}
-
-	public Date getCreateTime(){
-		return this.createTime;
-	}
+	/** 冗余显示字段：文件名 */
+	private String fileName;
+	/** 冗余显示字段：文件封面 */
+	private String fileCover;
+	/** 冗余显示字段：文件夹类型 (0:文件 1:目录) */
+	private Integer folderType;
+	/** 冗余显示字段：文件分类 (1:视频 2:音频 3:图片 ...) */
+	private Integer fileCategory;
+	/** 冗余显示字段：该分享的提取码 */
+	private String shareCode;
+	/** 真实的文件精细类型 (用于精确渲染各个后缀的图标) */
+	private Integer fileType;
 
 	@Override
 	public String toString (){

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-full py-3 bg-transparent select-none">
+  <div class="flex flex-col h-full py-5 bg-transparent select-none">
 
     <!-- 上半部分：主菜单列表区 (溢出滚动) -->
     <div class="flex-1 overflow-y-auto no-scrollbar pb-4">
