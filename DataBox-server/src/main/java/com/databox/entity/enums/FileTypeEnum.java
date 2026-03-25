@@ -45,6 +45,23 @@ public enum FileTypeEnum {
         return null;
     }
 
+    /**
+     * 判断后缀是否是WORD文件
+     * @param suffix
+     * @return
+     */
+    public static boolean isWordFile(String suffix) {
+        // 处理后缀格式：统一补点（比如传入"doc"→".doc"，和枚举中的格式对齐）
+        String targetSuffix = suffix.startsWith(".") ? suffix : "." + suffix;
+        // 遍历WORD枚举项的后缀数组
+        for (String s : WORD.getSuffix()) {
+            if (s.equalsIgnoreCase(targetSuffix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public FileCategoryEnum getCategory() {
         return category;
     }

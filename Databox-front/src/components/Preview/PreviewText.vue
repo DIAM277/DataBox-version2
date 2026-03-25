@@ -26,8 +26,14 @@
           </el-select>
         </div>
 
-        <!-- 换行与否 -->
-        <div class="flex items-center mt-0.5">
+        <!-- 🚨 新增：Markdown 动态预览切换器（当侦测到扩展名为 md 时才显示） -->
+        <div class="flex items-center mt-0.5" v-if="isMdFile">
+          <el-switch v-model="mdPreviewMode" active-text="MD预览" inactive-text="查看源码"
+            style="--el-switch-on-color: #007AFF;" />
+        </div>
+
+        <!-- 换行与否 (当正在预览渲染好的 MD 时隐藏此项无意义控制) -->
+        <div class="flex items-center mt-0.5" v-show="!isMdFile || !mdPreviewMode">
           <el-switch v-model="wordWrap" active-text="自动换行" inactive-text="原定格式" @change="toggleWordWrap"
             style="--el-switch-on-color: #34C759;" />
         </div>
@@ -43,10 +49,18 @@
       </div>
     </div>
 
-    <!-- 文本主体展示区：外层动态绑定换行模式 -->
+    <!-- 文本主体展示区：外层动态绑定换行模式 (🚨修复了txt默认不换行的漏洞) -->
     <div class="flex-1 w-full h-full overflow-auto p-5 md:p-8 bg-transparent transition-all"
-      :class="wordWrap ? 'wrap-mode' : 'nowrap-mode'">
-      <highlightjs language="" :code="txtContent"
+      :class="(!isMdFile || !mdPreviewMode) && wordWrap ? 'wrap-mode' : 'nowrap-mode'">
+
+      <!-- 🚨 核心：Markdown 沉浸式富文本渲染态 -->
+      <div v-if="isMdFile && mdPreviewMode"
+        class="custom-markdown max-w-4xl mx-auto text-[15px] leading-[1.75] text-gray-800 dark:text-gray-200 selection:bg-blue-200 dark:selection:bg-blue-900 tracking-wide select-text"
+        v-html="parsedMarkdown">
+      </div>
+
+      <!-- 原有原生文本代码渲染态 -->
+      <highlightjs v-else language="" :code="txtContent"
         class="font-mono text-[13.5px] leading-[1.65] text-gray-800 dark:text-[#d4d4d4]"></highlightjs>
     </div>
 
@@ -56,8 +70,10 @@
 <script setup>
 import useClipboard from "vue-clipboard3"
 const { toClipboard } = useClipboard()
-import { ref, reactive, getCurrentInstance, nextTick, onMounted, watch } from "vue"
-import hljs from 'highlight.js' // 导入 highlight.js
+// 🚨 加载 marked 来解析 md
+import { marked } from 'marked';
+import { ref, reactive, getCurrentInstance, nextTick, onMounted, watch, computed } from "vue"
+import hljs from 'highlight.js'
 const { proxy } = getCurrentInstance();
 
 // 动态导入主题CSS
@@ -80,14 +96,47 @@ const props = defineProps({
   url: {
     type: String,
   },
+  // 🚨 接收外部文件名
+  fileName: {
+    type: String,
+    default: ""
+  }
 })
 
 const txtContent = ref("")
 const blobResult = ref()
 const encode = ref("utf8")
-const utf8 = "utf8" // 定义utf8变量
-const gbk = "gbk"   // 定义gbk变量
-const wordWrap = ref(true) // 默认不自动换行
+const utf8 = "utf8"
+const gbk = "gbk"
+const wordWrap = ref(true)
+
+// ============= 新增 Markdown 处理控制区域 =============
+// 判定是否为 MD 文件
+const isMdFile = computed(() => {
+  if (!props.fileName) return false;
+  return props.fileName.toLowerCase().endsWith('.md');
+});
+
+// 若是md文件，则默认开启 MD 渲染模式
+const mdPreviewMode = ref(true);
+
+// 实时转化 Markdown 文本
+const parsedMarkdown = computed(() => {
+  if (!txtContent.value) return '';
+  return marked.parse(txtContent.value);
+});
+
+// 监听富文本渲染完成，顺带将里面插入的代码块也用当前 hljs 主题高亮！
+watch(parsedMarkdown, () => {
+  if (isMdFile.value && mdPreviewMode.value) {
+    nextTick(() => {
+      document.querySelectorAll('.custom-markdown pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    });
+  }
+});
+// ====================================================
 
 // 主题列表
 const themes = [
@@ -151,7 +200,6 @@ const copy = async () => {
 }
 
 onMounted(() => {
-  // 初始化加载默认主题
   loadThemeCSS(currentTheme.value);
   readTxt()
 })
@@ -179,22 +227,130 @@ onMounted(() => {
   word-break: normal !important;
 }
 
-/* 覆写下沉式控制栏表单组件 */
-:deep(.mac-select .el-input__wrapper) {
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset !important;
-  background-color: rgba(255, 255, 255, 0.5) !important;
-  border-radius: 8px;
-  height: 32px;
+/* ================== 新增：极致优雅的 Apple 风 Markdown 排版层补偿 ================== */
+:deep(.custom-markdown p) {
+  margin-bottom: 16px;
 }
 
-html.dark :deep(.mac-select .el-input__wrapper) {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
-  background-color: rgba(0, 0, 0, 0.2) !important;
+:deep(.custom-markdown h1),
+:deep(.custom-markdown h2),
+:deep(.custom-markdown h3),
+:deep(.custom-markdown h4),
+:deep(.custom-markdown h5) {
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  color: #1d1d1f;
 }
 
-:deep(.mac-select .el-input__inner) {
-  font-size: 13px;
-  font-weight: 500;
+html.dark :deep(.custom-markdown h1),
+html.dark :deep(.custom-markdown h2),
+html.dark :deep(.custom-markdown h3),
+html.dark :deep(.custom-markdown h4),
+html.dark :deep(.custom-markdown h5) {
+  color: #f5f5f7;
+}
+
+:deep(.custom-markdown h1) {
+  font-size: 1.8em;
+  border-bottom: 1px solid rgba(125, 125, 125, 0.2);
+  padding-bottom: 0.3em;
+}
+
+:deep(.custom-markdown h2) {
+  font-size: 1.5em;
+  border-bottom: 1px solid rgba(125, 125, 125, 0.2);
+  padding-bottom: 0.3em;
+}
+
+:deep(.custom-markdown h3) {
+  font-size: 1.25em;
+}
+
+:deep(.custom-markdown ul) {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin-bottom: 16px;
+}
+
+:deep(.custom-markdown ol) {
+  list-style-type: decimal;
+  padding-left: 20px;
+  margin-bottom: 16px;
+}
+
+:deep(.custom-markdown li) {
+  margin-bottom: 6px;
+}
+
+:deep(.custom-markdown strong) {
+  font-weight: 700;
+  color: #000;
+}
+
+html.dark :deep(.custom-markdown strong) {
+  color: #fff;
+}
+
+:deep(.custom-markdown blockquote) {
+  border-left: 4px solid #007AFF;
+  background: rgba(0, 122, 255, 0.05);
+  padding: 10px 16px;
+  border-radius: 0 8px 8px 0;
+  color: #555;
+  margin: 16px 0;
+}
+
+html.dark :deep(.custom-markdown blockquote) {
+  border-left-color: #0a84ff;
+  color: #98989d;
+  background: rgba(10, 132, 255, 0.1);
+}
+
+:deep(.custom-markdown pre) {
+  padding: 16px;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  border: 1px solid rgba(125, 125, 125, 0.2);
+}
+
+:deep(.custom-markdown pre code) {
+  background-color: transparent !important;
+  padding: 0;
+}
+
+:deep(.custom-markdown code:not(pre code)) {
+  background-color: rgba(125, 125, 125, 0.12);
+  color: #FF2D55;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9em;
+  margin: 0 2px;
+}
+
+html.dark :deep(.custom-markdown code:not(pre code)) {
+  color: #FF375F;
+}
+
+:deep(.custom-markdown a) {
+  color: #007AFF;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+:deep(.custom-markdown a:hover) {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+:deep(.custom-markdown img) {
+  max-width: 100%;
+  border-radius: 12px;
+  margin: 12px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 </style>
 

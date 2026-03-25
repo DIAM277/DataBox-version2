@@ -32,20 +32,17 @@
                 <PreviewVideo ref="videoPlayerRef" :url="url" v-if="fileInfo.fileCategory == 1" class="w-full">
                 </PreviewVideo>
 
-                <!-- PDF文档预览 -->
-                <PreviewPdf :url="url" v-else-if="fileInfo.fileType == 4"
+                <!-- PDF及Office文档预览 (由于后端已将 Word 转为 PDF 渲染引擎，直接复用 PDF 纸张容器来接管 fileType 为 4 或 5 的文件) -->
+                <PreviewPdf :url="url" v-else-if="fileInfo.fileType == 4 || fileInfo.fileType == 5"
                     class="w-full h-full overflow-auto rounded-xl shadow-2xl"></PreviewPdf>
-
-                <!-- docx文档预览 -->
-                <PreviewDoc :url="url" v-else-if="fileInfo.fileType == 5"
-                    class="w-full h-full overflow-auto rounded-xl shadow-2xl max-w-6xl"></PreviewDoc>
 
                 <!-- excel文档预览 -->
                 <PreviewExcel :url="url" v-else-if="fileInfo.fileType == 6"
                     class="w-full h-full overflow-hidden rounded-xl shadow-2xl max-w-7xl"></PreviewExcel>
 
-                <!-- 文本文件与代码预览 -->
-                <PreviewText :url="url" v-else-if="fileInfo.fileType == 7 || fileInfo.fileType == 8"
+                <!-- 文本文件与代码预览：🚨新增 :fileName 透传属性 -->
+                <PreviewText :url="url" :fileName="fileInfo.fileName"
+                    v-else-if="fileInfo.fileType == 7 || fileInfo.fileType == 8"
                     class="w-full h-full overflow-hidden rounded-xl shadow-2xl max-w-6xl"></PreviewText>
 
                 <!-- 音乐文件预览 (组件本身是自带背板效果的控制盘) -->
@@ -73,7 +70,6 @@ import PreviewPdf from "./PreviewPdf.vue";
 import PreviewExcel from "./PreviewExcel.vue";
 import PreviewVideo from "./PreviewVideo.vue";
 import PreviewImage from "./PreviewImage.vue";
-import PreviewDoc from "./PreviewDoc.vue";
 import PreviewText from "./PreviewText.vue";
 // 导入AI 组件
 import AiSummary from "./AiSummary.vue";
