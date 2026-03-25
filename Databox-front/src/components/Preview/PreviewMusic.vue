@@ -120,7 +120,7 @@ const displayTime = ref(0) // 用于双向绑定滑动条显示的时间
 const isDragging = ref(false) // 标记推拽状态防抖
 
 // ======================= 音量控制状态 ====================
-const volume = ref(100)
+const volume = ref(50)
 const isMuted = ref(false)
 let lastVolume = 100
 
