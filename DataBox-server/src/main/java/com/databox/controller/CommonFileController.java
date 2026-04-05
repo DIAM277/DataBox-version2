@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -99,10 +100,13 @@ public class CommonFileController extends ABaseController {
                 return;
             }
             // ================= LibreOffice 文档转换旁路逻辑 ====================
-            String fileExtName = StringTools.getFileSuffix(fileInfo.getFileName()); // 获取文件后缀(.doc,.docx)
-            if (fileExtName != null && FileTypeEnum.isWordFile(fileExtName)) {
-                // 定义缓存的PDF路径(与原文件同目录，文件名后缀改为.pdf)
+            String fileExtName = StringTools.getFileSuffix(fileInfo.getFileName());// 获取文件后缀
+            // 需要被引擎接管的后缀池
+            List<String> officeExts = Arrays.asList(".doc", ".docx", ".ppt", ".pptx");
+
+            if (fileExtName != null && officeExts.contains(fileExtName.toLowerCase())) {
                 File pdfCacheFile = new File(file.getParent(), file.getName() + ".pdf");
+
                 try {
                     // 若pdf缓存不存在，则触发引擎进行高保真转换
                     if (!pdfCacheFile.exists()) {
